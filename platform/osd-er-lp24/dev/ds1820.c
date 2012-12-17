@@ -59,7 +59,8 @@ unsigned char ds1820_ok[8];
 
 /* 1-wire is at PortE.3 */
 #define SERIAL_ID_PIN_READ PINE
-#define SERIAL_ID_PIN_MASK _BV(PE3)
+//#define SERIAL_ID_PIN_MASK _BV(PE3)
+#define SERIAL_ID_PIN_MASK _BV(PE4)
 #define SERIAL_ID_PxOUT PORTE
 #define SERIAL_ID_PxDIR DDRE
 
