@@ -46,6 +46,7 @@
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
 #define REST_RES_DS1820 0
+#define REST_RES_DHT11 1
 #define REST_RES_HELLO 0
 #define REST_RES_MIRROR 0 /* causes largest code size */
 #define REST_RES_CHUNKS 0
@@ -73,6 +74,10 @@
 #include "dev/led.h"
 #if REST_RES_DS1820
 #include "dev/ds1820.h"
+#endif
+#if REST_RES_DHT11
+#include "dev/dht11.h"
+uint8_t out_temp=0, humidity=0;
 #endif
 
 #if defined (PLATFORM_HAS_BUTTON)
@@ -323,6 +328,50 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
   }
 }
 #endif //REST_RES_DS1820
+
+#if REST_RES_DHT11
+/*A simple getter example. Returns the reading from ds1820 sensor*/
+RESOURCE(dht11, METHOD_GET, "DHT11", "title=\"TempHumidity\";rt=\"Temperatur\"");
+void
+dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+
+  char message[100];
+  int length = 0; /*           |<-------->| */
+  int ret=0;
+//  out_temp=DHT_Read_Data(DHT_Temp);
+//  humidity=DHT_Read_Data(DHT_RH);
+
+  uint16_t *accept = NULL;
+  int num = REST.get_header_accept(request, &accept);
+
+  if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
+  {
+    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "%2d %2d",out_temp,humidity);
+
+    length = strlen(message);
+    memcpy(buffer, message,length );
+
+    REST.set_response_payload(response, buffer, length);
+  }
+  else if (num && (accept[0]==REST.type.APPLICATION_JSON))
+  {
+    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d\",\"hum\":\"%d\"}",out_temp,humidity);
+
+    length = strlen(message);
+    memcpy(buffer, message,length );
+
+    REST.set_response_payload(response, buffer, length);
+  }
+  else
+  {
+    REST.set_response_status(response, REST.status.UNSUPPORTED_MADIA_TYPE);
+    REST.set_response_payload(response, (uint8_t *)"Supporting content-types text/plain and application/json", 56);
+  }
+}
+#endif //REST_RES_DHT11
 
 #if REST_RES_HELLO
 /*
@@ -991,8 +1040,12 @@ hw_init()
 #if REST_RES_DS1820
   ds1820_temp();
 #endif
+#if REST_RES_DHT11
+  out_temp=DHT_Read_Data(DHT_Temp);
+  humidity=DHT_Read_Data(DHT_RH);
+#endif
 }
-#define MESURE_INTERVAL		(10 * CLOCK_SECOND)
+#define MESURE_INTERVAL		(20 * CLOCK_SECOND)
 #define READ_TIME		( 2 * CLOCK_SECOND)
 
 PROCESS(rest_server_example, "Erbium Example Server");
@@ -1000,8 +1053,8 @@ AUTOSTART_PROCESSES(&rest_server_example);
 
 PROCESS_THREAD(rest_server_example, ev, data)
 {
-#if REST_RES_DS1820
   static struct etimer ds_periodic_timer;
+#if REST_RES_DS1820
   static struct etimer ds_read_timer;
 #endif
 
@@ -1041,6 +1094,9 @@ PROCESS_THREAD(rest_server_example, ev, data)
   /* Activate the application-specific resources. */
 #if REST_RES_DS1820
   rest_activate_resource(&resource_ds1820);
+#endif
+#if REST_RES_DHT11
+  rest_activate_resource(&resource_dht11);
 #endif
 #if REST_RES_INFO
   rest_activate_resource(&resource_info);
@@ -1092,9 +1148,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #endif
 
   /* Define application-specific events here. */
-#if REST_RES_DS1820
   etimer_set(&ds_periodic_timer, MESURE_INTERVAL);
-#endif
   while(1) {
     PROCESS_WAIT_EVENT();
 #if defined (PLATFORM_HAS_BUTTON)
@@ -1110,14 +1164,20 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #endif
     }
 #endif /* PLATFORM_HAS_BUTTON */
-#if REST_RES_DS1820
     if(etimer_expired(&ds_periodic_timer)) {
-        PRINTF("DS1820_Periodic\n");
+        PRINTF("Periodic\n");
         etimer_reset(&ds_periodic_timer);
+#if REST_RES_DHT11
+        out_temp=DHT_Read_Data(DHT_Temp);
+        humidity=DHT_Read_Data(DHT_RH);
+#endif
+#if REST_RES_DS1820
         if(ds1820_convert()){
           etimer_set(&ds_read_timer, READ_TIME);
         }
+#endif
     }
+#if REST_RES_DS1820
     if(etimer_expired(&ds_read_timer)) {
         PRINTF("DS1820_Read\n");
         ds1820_read();
