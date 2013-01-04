@@ -32,6 +32,13 @@
 #ifndef __PROJECT_RPL_WEB_CONF_H__
 #define __PROJECT_RPL_WEB_CONF_H__
 
+//#define PLATFORM_HAS_LEDS    1
+//#define PLATFORM_HAS_BUTTON  1
+//#define PLATFORM_HAS_LIGHT   1
+#define PLATFORM_HAS_TEMPERATURE   1
+//#define PLATFORM_HAS_BATTERY 1
+//#define PLATFORM_HAS_SHT11   1
+
 #define SICSLOWPAN_CONF_FRAG	1
 
 /* Disabling RDC for demo purposes. Core updates often require more memory. */
