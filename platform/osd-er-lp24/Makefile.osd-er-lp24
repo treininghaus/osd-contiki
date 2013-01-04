@@ -4,7 +4,7 @@ CONTIKI_CORE=contiki-main
 CONTIKI_TARGET_MAIN = ${CONTIKI_CORE}.o
 CONTIKI_TARGET_SOURCEFILES += contiki-main.c params.c node-id.c
 #Needed for slip
-CONTIKI_TARGET_SOURCEFILES += button-sensor.c sensors.c slip_uart0.c slip.c
+CONTIKI_TARGET_SOURCEFILES += temperature-sensor.c adc.c button-sensor.c sensors.c slip_uart0.c slip.c
 #Needed for DHT11 humidity sensor
 CONTIKI_TARGET_SOURCEFILES += dht11.c
 
