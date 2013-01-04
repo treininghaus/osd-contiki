@@ -45,8 +45,9 @@
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
-#define REST_RES_DS1820 0
+#define REST_RES_DS1820 1
 #define REST_RES_DHT11 1
+#define REST_RES_TEMPERATURE 1
 #define REST_RES_HELLO 0
 #define REST_RES_MIRROR 0 /* causes largest code size */
 #define REST_RES_CHUNKS 0
@@ -88,6 +89,9 @@ uint8_t out_temp=0, humidity=0;
 #endif
 #if defined (PLATFORM_HAS_LIGHT)
 #include "dev/light-sensor.h"
+#endif
+#if defined (PLATFORM_HAS_TEMPERATURE)
+#include "dev/temperature-sensor.h"
 #endif
 #if defined (PLATFORM_HAS_BATTERY)
 #include "dev/battery-sensor.h"
@@ -314,7 +318,7 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
   else if (num && (accept[0]==REST.type.APPLICATION_JSON))
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d.%d °C\"}",grad,kgrad);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d.%d\"}",grad,kgrad);
 
     length = strlen(message);
     memcpy(buffer, message,length );
@@ -937,6 +941,41 @@ light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
 #endif /* PLATFORM_HAS_LIGHT */
 
 /******************************************************************************/
+#if REST_RES_TEMPERATURE && defined (PLATFORM_HAS_TEMPERATURE)
+/* A simple getter example. Returns the reading from light sensor with a simple etag */
+RESOURCE(temperature, METHOD_GET, "sensors/temperature", "title=\"Temperature status\";rt=\"Temperature\"");
+void
+temperature_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  int temperature = temperature_sensor.value(0);
+
+  const uint16_t *accept = NULL;
+  int num = REST.get_header_accept(request, &accept);
+
+  if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
+  {
+    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d", temperature);
+
+    REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
+  }
+  else if (num && (accept[0]==REST.type.APPLICATION_JSON))
+  {
+    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'temperature':%d}", temperature);
+
+    REST.set_response_payload(response, buffer, strlen((char *)buffer));
+  }
+  else
+  {
+    REST.set_response_status(response, REST.status.UNSUPPORTED_MADIA_TYPE);
+    const char *msg = "Supporting content-types text/plain and application/json";
+    REST.set_response_payload(response, msg, strlen(msg));
+  }
+}
+#endif /* PLATFORM_HAS_TEMPERATURE */
+
+/******************************************************************************/
 #if REST_RES_BATTERY && defined (PLATFORM_HAS_BATTERY)
 /* A simple getter example. Returns the reading from light sensor with a simple etag */
 RESOURCE(battery, METHOD_GET, "sensors/battery", "title=\"Battery status\";rt=\"Battery\"");
@@ -1137,6 +1176,10 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #if defined (PLATFORM_HAS_LIGHT) && REST_RES_LIGHT
   SENSORS_ACTIVATE(light_sensor);
   rest_activate_resource(&resource_light);
+#endif
+#if defined (PLATFORM_HAS_TEMPERATURE) && REST_RES_TEMPERATURE
+  SENSORS_ACTIVATE(temperature_sensor);
+  rest_activate_resource(&resource_temperature);
 #endif
 #if defined (PLATFORM_HAS_BATTERY) && REST_RES_BATTERY
   SENSORS_ACTIVATE(battery_sensor);
