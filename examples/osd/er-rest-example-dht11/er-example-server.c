@@ -78,7 +78,7 @@
 #endif
 #if REST_RES_DHT11
 #include "dev/dht11.h"
-uint8_t out_temp=0, humidity=0;
+uint8_t dht11_temp=0, dht11_hum=0;
 #endif
 
 #if defined (PLATFORM_HAS_BUTTON)
@@ -156,7 +156,7 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
   /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
        // jSON Format
      index += sprintf(message + index,"{\n \"version\" : \"V0.3\",\n");
-     index += sprintf(message + index," \"name\" : \"Button,LED\"\n");
+     index += sprintf(message + index," \"name\" : \"6lowpan-climate\"\n");
      index += sprintf(message + index,"}\n");
 
     length = strlen(message);
@@ -169,7 +169,7 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 
 // mybutton
 /*A simple actuator example. read the key button status*/
-RESOURCE(button, METHOD_GET | METHOD_PUT , "button",  "title=\"Button\";rt=\"Text\"");
+RESOURCE(button, METHOD_GET | METHOD_PUT , "sensors/button",  "title=\"Button\";rt=\"button\"");
 void
 button_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -218,7 +218,7 @@ button_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 }
 
 /*A simple actuator example, post variable mode, relay is activated or deactivated*/
-RESOURCE(led1, METHOD_GET | METHOD_PUT , "led1",  "title=\"Led1\";rt=\"Text\"");
+RESOURCE(led1, METHOD_GET | METHOD_PUT , "aktors/led1",  "title=\"Led1\";rt=\"led\"");
 void
 led1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -286,7 +286,7 @@ led1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 
 #if REST_RES_DS1820
 /*A simple getter example. Returns the reading from ds1820 sensor*/
-RESOURCE(ds1820, METHOD_GET, "DS1820", "title=\"Temperatur\";rt=\"Temperatur\"");
+RESOURCE(ds1820, METHOD_GET, "sensors/temp", "title=\"Temperatur DS1820\";rt=\"temperature-c\"");
 void
 ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -308,7 +308,7 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
   if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
   {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "%2d.%d °C",grad,kgrad);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "%2d.%d C",grad,kgrad);
 
     length = strlen(message);
     memcpy(buffer, message,length );
@@ -335,16 +335,15 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 
 #if REST_RES_DHT11
 /*A simple getter example. Returns the reading from ds1820 sensor*/
-RESOURCE(dht11, METHOD_GET, "DHT11", "title=\"TempHumidity\";rt=\"Temperatur\"");
+RESOURCE(dht11, METHOD_GET, "sensors/hum", "title=\"Humidity DHT11\";rt=\"humidity-%\"");
 void
 dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-
   char message[100];
   int length = 0; /*           |<-------->| */
   int ret=0;
-//  out_temp=DHT_Read_Data(DHT_Temp);
-//  humidity=DHT_Read_Data(DHT_RH);
+//  dht11_temp=DHT_Read_Data(DHT_Temp);
+//  dht11_hum=DHT_Read_Data(DHT_RH);
 
   uint16_t *accept = NULL;
   int num = REST.get_header_accept(request, &accept);
@@ -352,7 +351,7 @@ dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
   if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
   {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "%2d %2d",out_temp,humidity);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "%2d %2d",dht11_temp,dht11_hum);
 
     length = strlen(message);
     memcpy(buffer, message,length );
@@ -362,7 +361,7 @@ dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
   else if (num && (accept[0]==REST.type.APPLICATION_JSON))
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d\",\"hum\":\"%d\"}",out_temp,humidity);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d\",\"hum\":\"%d\"}",dht11_temp,dht11_hum);
 
     length = strlen(message);
     memcpy(buffer, message,length );
@@ -943,7 +942,7 @@ light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
 /******************************************************************************/
 #if REST_RES_TEMPERATURE && defined (PLATFORM_HAS_TEMPERATURE)
 /* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(temperature, METHOD_GET, "sensors/temperature", "title=\"Temperature status\";rt=\"Temperature\"");
+RESOURCE(temperature, METHOD_GET, "sensors/cputemp", "title=\"Temperature status\";rt=\"temperature-c\"");
 void
 temperature_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -1080,8 +1079,8 @@ hw_init()
   ds1820_temp();
 #endif
 #if REST_RES_DHT11
-  out_temp=DHT_Read_Data(DHT_Temp);
-  humidity=DHT_Read_Data(DHT_RH);
+  dht11_temp=DHT_Read_Data(DHT_Temp);
+  dht11_hum=DHT_Read_Data(DHT_RH);
 #endif
 }
 #define MESURE_INTERVAL		(20 * CLOCK_SECOND)
@@ -1211,8 +1210,8 @@ PROCESS_THREAD(rest_server_example, ev, data)
         PRINTF("Periodic\n");
         etimer_reset(&ds_periodic_timer);
 #if REST_RES_DHT11
-        out_temp=DHT_Read_Data(DHT_Temp);
-        humidity=DHT_Read_Data(DHT_RH);
+        dht11_temp=DHT_Read_Data(DHT_Temp);
+        dht11_hum=DHT_Read_Data(DHT_RH);
 #endif
 #if REST_RES_DS1820
         if(ds1820_convert()){
