@@ -118,9 +118,6 @@
 
 #include "dev/key.c"	// todo: move platform /dev 
 #include "dev/led.c"
-#if REST_RES_DS1820
-#include "dev/ds1820.c"
-#endif
 
 /******************************************************************************/
 
