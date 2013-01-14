@@ -135,7 +135,7 @@ uint8_t dht11_temp=0, dht11_hum=0;
  * Resources are defined by the RESOURCE macro.
  * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
  */
-RESOURCE(info, METHOD_GET, "info", "title=\"Info\";rt=\"Text\"");
+RESOURCE(info, METHOD_GET, "info", "title=\"Info\";rt=\"text\"");
 
 /*
  * A handler function named [resource name]_handler must be implemented for each RESOURCE.
@@ -167,7 +167,7 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 // mybutton
 /*A simple actuator example. read the key button status*/
 //RESOURCE(button, METHOD_GET | METHOD_PUT , "sensors/button",  "title=\"Button\";rt=\"button\"");
-RESOURCE(button, METHOD_GET | METHOD_PUT , "sensors/button",  "title=\"Button\";rt=\"button\";if=\"sensor\"");
+RESOURCE(button, METHOD_GET | METHOD_PUT , "sensors/button",  "title=\"Button\";rt=\"button\"");
 void
 button_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -216,7 +216,7 @@ button_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 }
 
 /*A simple actuator example, post variable mode, relay is activated or deactivated*/
-RESOURCE(led1, METHOD_GET | METHOD_PUT , "aktors/led1",  "title=\"Led1\";rt=\"led\";if=\"aktor\"");
+RESOURCE(led1, METHOD_GET | METHOD_PUT , "aktors/led1",  "title=\"Led1\";rt=\"led\"");
 void
 led1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -284,7 +284,7 @@ led1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 
 #if REST_RES_DS1820
 /*A simple getter example. Returns the reading from ds1820 sensor*/
-RESOURCE(ds1820, METHOD_GET, "sensors/temp", "title=\"Temperatur DS1820\";rt=\"temperature-c\";if=\"sensor\"");
+RESOURCE(ds1820, METHOD_GET, "sensors/temp", "title=\"Temperatur DS1820\";rt=\"temperature-c\"");
 void
 ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -333,7 +333,7 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 
 #if REST_RES_DHT11
 /*A simple getter example. Returns the reading from ds1820 sensor*/
-RESOURCE(dht11, METHOD_GET, "sensors/hum", "title=\"Humidity DHT11\";rt=\"humidity-%\";if=\"sensor\"");
+RESOURCE(dht11, METHOD_GET, "sensors/hum", "title=\"Humidity DHT11\";rt=\"humidity-%\"");
 void
 dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -835,7 +835,7 @@ sub_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_s
 /******************************************************************************/
 #if REST_RES_LEDS
 /*A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated*/
-RESOURCE(leds, METHOD_POST | METHOD_PUT , "actuators/leds", "title=\"LEDs: ?color=r|g|b, POST/PUT mode=on|off\";rt=\"Control\";if=\"aktor\"");
+RESOURCE(leds, METHOD_POST | METHOD_PUT , "actuators/leds", "title=\"LEDs: ?color=r|g|b, POST/PUT mode=on|off\";rt=\"Control\"");
 
 void
 leds_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
@@ -885,7 +885,7 @@ leds_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 /******************************************************************************/
 #if REST_RES_TOGGLE
 /* A simple actuator example. Toggles the red led */
-RESOURCE(toggle, METHOD_GET | METHOD_PUT | METHOD_POST, "actuators/toggle", "title=\"Red LED\";rt=\"Control\";if=\"aktor\"");
+RESOURCE(toggle, METHOD_GET | METHOD_PUT | METHOD_POST, "actuators/toggle", "title=\"Red LED\";rt=\"Control\"");
 void
 toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -897,7 +897,7 @@ toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 /******************************************************************************/
 #if REST_RES_LIGHT && defined (PLATFORM_HAS_LIGHT)
 /* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(light, METHOD_GET, "sensors/light", "title=\"Photosynthetic and solar light (supports JSON)\";rt=\"LightSensor\";if=\"sensor\"");
+RESOURCE(light, METHOD_GET, "sensors/light", "title=\"Photosynthetic and solar light (supports JSON)\";rt=\"LightSensor\"");
 void
 light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -940,7 +940,7 @@ light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
 /******************************************************************************/
 #if REST_RES_TEMPERATURE && defined (PLATFORM_HAS_TEMPERATURE)
 /* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(temperature, METHOD_GET, "sensors/cputemp", "title=\"Temperature status\";rt=\"temperature-c\";if=\"sensor\"");
+RESOURCE(temperature, METHOD_GET, "sensors/cputemp", "title=\"Temperature status\";rt=\"temperature-c\"");
 void
 temperature_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -975,7 +975,7 @@ temperature_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
 /******************************************************************************/
 #if REST_RES_BATTERY && defined (PLATFORM_HAS_BATTERY)
 /* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(battery, METHOD_GET, "sensors/battery", "title=\"Battery status\";rt=\"Battery\";if=\"sensor\"");
+RESOURCE(battery, METHOD_GET, "sensors/battery", "title=\"Battery status\";rt=\"Battery\"");
 void
 battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -1010,7 +1010,7 @@ battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 
 #if defined (PLATFORM_HAS_RADIO) && REST_RES_RADIO
 /* A simple getter example. Returns the reading of the rssi/lqi from radio sensor */
-RESOURCE(radio, METHOD_GET, "sensor/radio", "title=\"RADIO: ?p=lqi|rssi\";rt=\"RadioSensor\";if=\"sensor\"");
+RESOURCE(radio, METHOD_GET, "sensor/radio", "title=\"RADIO: ?p=lqi|rssi\";rt=\"RadioSensor\"");
 
 void
 radio_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
