@@ -35,6 +35,12 @@
 #define UIP_FALLBACK_INTERFACE rpl_interface
 #endif
 
+/* Save some memory for the sky platform. */
+#undef UIP_CONF_DS6_NBR_NBU
+#define UIP_CONF_DS6_NBR_NBU     15
+#undef UIP_CONF_DS6_ROUTE_NBU
+#define UIP_CONF_DS6_ROUTE_NBU   50
+
 #ifndef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM          4
 #endif
