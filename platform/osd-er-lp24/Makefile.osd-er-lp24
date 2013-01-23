@@ -9,7 +9,8 @@ CONTIKI_TARGET_SOURCEFILES += temperature-sensor.c adc.c button-sensor.c sensors
 CONTIKI_TARGET_SOURCEFILES += dht11.c
 #Needed for DS18S20 temperature sensor
 CONTIKI_TARGET_SOURCEFILES += ds1820.c
-
+#Needed for Battery test
+CONTIKI_TARGET_SOURCEFILES += battery-sensor.c
 CONTIKIAVR=$(CONTIKI)/cpu/avr
 CONTIKIBOARD=.
 BOOTLOADER_START = 0x1F000

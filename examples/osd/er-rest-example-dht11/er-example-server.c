@@ -58,7 +58,7 @@
 #define REST_RES_LEDS 0
 #define REST_RES_TOGGLE 0
 #define REST_RES_LIGHT 0
-#define REST_RES_BATTERY 0
+#define REST_RES_BATTERY 1
 #define REST_RES_RADIO 0
 
 

@@ -31,30 +31,23 @@
 
 /**
 * \file
-* Battery sensor header file for Atmega128rfa1.
+* Battery sensor file for Atmega128rfa1.
 * \author
 * Paulo Louro <paulolouro@binarylabs.dk>
 * Harald Pichler <harald@the-develop.net>
 */
 
-#include "dev/battery-sensor.h"
-#include "adc.h"
-
-/* Connect Battery(+) to pin A1, via a 1000/470 voltage divider.
-* This will case a battery voltage of 5.0V to read as the max analog
-* voltage of 1.6V.
-*
-* Connect Battery(+) to pin A1, via a 1000/(470+470) voltage divider.
-* This will case a battery voltage of 3.3V to read as the max analog
-* voltage of 1.6V.
+/**
+*The atmel rf23x radios have a low voltage detector that can be configured in units of 75 millivolts. Here is example *code for the ATmega128rfa1, where the BATMON register is in extended io space [dak664]
 */
-#define INPUT_CHANNEL 1
+
+#include "dev/battery-sensor.h"
 
 const struct sensors_sensor battery_sensor;
 /*---------------------------------------------------------------------------*/
 
 /**
-* \return Voltage on battery measurement pin, 4096 is 5V.
+* \return Voltage on battery measurement with BATMON register.
 */
 static int
 value(int type)
@@ -67,10 +60,11 @@ value(int type)
 /* Use BATMON register instead */
   for ( p1=16; p1<31; p1++) {
     BATMON = p1;
- // delay_us(100); //delay needed?
+    clock_delay_usec(100); // delay needed !!
     if ((BATMON&(1<<BATMON_OK))==0) break;
   }
   h=2550-75*16-75+75*p1; //-75 to take the floor of the 75 mv transition window
+
 
   return h;
 }
