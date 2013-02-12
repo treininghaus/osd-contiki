@@ -101,10 +101,10 @@ typedef unsigned long off_t;
 
 /* RADIOSTATS is used in rf230bb, clock.c and the webserver cgi to report radio usage */
 /* It has less overhead than ENERGEST */
-#define RADIOSTATS                1
+#define RADIOSTATS                0
 
 /* More extensive stats, via main loop printfs or webserver status pages */
-#define ENERGEST_CONF_ON          1
+#define ENERGEST_CONF_ON          0
 
 /* Packet statistics */
 typedef unsigned short uip_stats_t;
@@ -182,8 +182,8 @@ typedef unsigned short uip_stats_t;
 #define UIP_CONF_DHCP_LIGHT      1
 
 
-#if 1 /* No radio cycling */
-//#if 0 /* radio cycling */
+//#if 1 /* No radio cycling */
+#if 0 /* radio cycling */
 
 #define NETSTACK_CONF_MAC         nullmac_driver
 #define NETSTACK_CONF_RDC         sicslowmac_driver
