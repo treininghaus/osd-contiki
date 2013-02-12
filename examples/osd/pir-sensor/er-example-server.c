@@ -45,15 +45,15 @@
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
-#define REST_RES_DS1820 1
-#define REST_RES_DHT11 1
-#define REST_RES_TEMPERATURE 1
+#define REST_RES_DS1820 0
+#define REST_RES_DHT11 0
+#define REST_RES_TEMPERATURE 0
 #define REST_RES_HELLO 0
 #define REST_RES_MIRROR 0 /* causes largest code size */
 #define REST_RES_CHUNKS 0
 #define REST_RES_SEPARATE 0
 #define REST_RES_PUSHING 0
-#define REST_RES_EVENT 0
+#define REST_RES_EVENT 1
 #define REST_RES_SUB 0
 #define REST_RES_LEDS 0
 #define REST_RES_TOGGLE 0
@@ -765,7 +765,7 @@ pushing_periodic_handler(resource_t *r)
  * Additionally takes a period parameter that defines the interval to call [name]_periodic_handler().
  * A default post_handler takes care of subscriptions and manages a list of subscribers to notify.
  */
-EVENT_RESOURCE(event, METHOD_GET, "sensors/button", "title=\"Event demo\";obs");
+EVENT_RESOURCE(event, METHOD_GET, "sensors/pir", "title=\"Event demo\";obs");
 
 void
 event_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
