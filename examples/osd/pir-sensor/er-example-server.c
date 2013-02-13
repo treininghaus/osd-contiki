@@ -31,9 +31,10 @@
 
 /**
  * \file
- *      Erbium (Er) REST Engine example (with CoAP-specific code)
+ *      Erbium (Er) PIR REST Engine example (with CoAP-specific code)
  * \author
  *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
+ *      Harald Pichler <harald@the-develop.net>
  */
 
 #include <stdio.h>
@@ -45,23 +46,11 @@
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
-#define REST_RES_DS1820 0
-#define REST_RES_DHT11 0
 #define REST_RES_TEMPERATURE 0
-#define REST_RES_HELLO 0
-#define REST_RES_MIRROR 0 /* causes largest code size */
-#define REST_RES_CHUNKS 0
-#define REST_RES_SEPARATE 0
-#define REST_RES_PUSHING 0
 #define REST_RES_EVENT 1
-#define REST_RES_SUB 0
 #define REST_RES_LEDS 0
 #define REST_RES_TOGGLE 0
-#define REST_RES_LIGHT 0
 #define REST_RES_BATTERY 1
-#define REST_RES_RADIO 0
-
-
 
 #if !UIP_CONF_IPV6_RPL && !defined (CONTIKI_TARGET_MINIMAL_NET) && !defined (CONTIKI_TARGET_NATIVE)
 #warning "Compiling with static routing!"
@@ -70,37 +59,21 @@
 
 #include "erbium.h"
 
-// todo OSD-Testboard move to platform/dev
-#include "dev/key.h"
 #include "dev/led.h"
-#if REST_RES_DS1820
-#include "dev/ds1820.h"
-#endif
-#if REST_RES_DHT11
-#include "dev/dht11.h"
-uint8_t dht11_temp=0, dht11_hum=0;
-#endif
-
 #if defined (PLATFORM_HAS_BUTTON)
 #include "dev/button-sensor.h"
 #endif
 #if defined (PLATFORM_HAS_LEDS)
 #include "dev/leds.h"
 #endif
-#if defined (PLATFORM_HAS_LIGHT)
-#include "dev/light-sensor.h"
+#if defined (PLATFORM_HAS_PIR)
+#include "dev/pir-sensor.h"
 #endif
 #if defined (PLATFORM_HAS_TEMPERATURE)
 #include "dev/temperature-sensor.h"
 #endif
 #if defined (PLATFORM_HAS_BATTERY)
 #include "dev/battery-sensor.h"
-#endif
-#if defined (PLATFORM_HAS_SHT11)
-#include "dev/sht11-sensor.h"
-#endif
-#if defined (PLATFORM_HAS_RADIO)
-#include "dev/radio-sensor.h"
 #endif
 
 
@@ -123,10 +96,6 @@ uint8_t dht11_temp=0, dht11_hum=0;
 #define PRINT6ADDR(addr)
 #define PRINTLLADDR(addr)
 #endif
-
-
-#include "dev/key.c"	// todo: move platform /dev 
-#include "dev/led.c"
 
 /******************************************************************************/
 
@@ -152,8 +121,8 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 
   /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
        // jSON Format
-     index += sprintf(message + index,"{\n \"version\" : \"V0.3\",\n");
-     index += sprintf(message + index," \"name\" : \"6lowpan-climate\"\n");
+     index += sprintf(message + index,"{\n \"Version\" : \"V1.0pre1\",\n");
+     index += sprintf(message + index," \"name\" : \"6lowpan-PIR\"\n");
      index += sprintf(message + index,"}\n");
 
     length = strlen(message);
@@ -164,56 +133,6 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 }
 #endif
 
-// mybutton
-/*A simple actuator example. read the key button status*/
-//RESOURCE(button, METHOD_GET | METHOD_PUT , "sensors/button",  "title=\"Button\";rt=\"button\"");
-RESOURCE(button, METHOD_GET | METHOD_PUT , "sensors/button",  "title=\"Button\";rt=\"button\"");
-void
-button_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  static char bname[17]="button1";
-  int success = 1;
-
-  char temp[100];
-  int index = 0;
-  int length = 0; /*           |<-------->| */
-  const char *name = NULL;
-  size_t len = 0;
-
-  switch(REST.get_method_type(request)){
-   case METHOD_GET:
-     // jSON Format
-     index += sprintf(temp + index,"{\n \"name\" : \"%s\",\n",bname);
-     if(is_button())
-         index += sprintf(temp + index," \"state\" : \"on\"\n");
-     else
-         index += sprintf(temp + index," \"state\" : \"off\"\n");
-     index += sprintf(temp + index,"}\n");
-
-     length = strlen(temp);
-     memcpy(buffer, temp,length );
-
-     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-     REST.set_response_payload(response, buffer, length);
-
-     break;
-   case METHOD_PUT:
-
-     if (success &&  (len=REST.get_post_variable(request, "name", &name))) {
-       PRINTF("name %s\n", name);
-       memcpy(bname, name,len);
-       bname[len]=0;
-     } else {
-       success = 0;
-     }
-     break;
-  default:
-    success = 0;
-  }
-  if (!success) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
-  }
-}
 
 /*A simple actuator example, post variable mode, relay is activated or deactivated*/
 RESOURCE(led1, METHOD_GET | METHOD_PUT , "aktors/led1",  "title=\"Led1\";rt=\"led\"");
@@ -282,493 +201,17 @@ led1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
   }
 }
 
-#if REST_RES_DS1820
-/*A simple getter example. Returns the reading from ds1820 sensor*/
-RESOURCE(ds1820, METHOD_GET, "sensors/temp", "title=\"Temperatur DS1820\";rt=\"temperature-c\"");
-void
-ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-
-  char message[100];
-  int length = 0; /*           |<-------->| */
-  int ret=0;
-  int grad=0;
-  int kgrad=0;
-//  ret=ds1820_temp();
-  if(ds1820_ok[0] & 0x01){
-	kgrad=5;
-  }
-  grad = (int)((ds1820_ok[1] << 8) | (ds1820_ok[0])) >> 1;
-
-  uint16_t *accept = NULL;
-  int num = REST.get_header_accept(request, &accept);
-
-  if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
-  {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "%2d.%d C",grad,kgrad);
-
-    length = strlen(message);
-    memcpy(buffer, message,length );
-
-    REST.set_response_payload(response, buffer, length);
-  }
-  else if (num && (accept[0]==REST.type.APPLICATION_JSON))
-  {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d.%d\"}",grad,kgrad);
-
-    length = strlen(message);
-    memcpy(buffer, message,length );
-
-    REST.set_response_payload(response, buffer, length);
-  }
-  else
-  {
-    REST.set_response_status(response, REST.status.UNSUPPORTED_MADIA_TYPE);
-    REST.set_response_payload(response, (uint8_t *)"Supporting content-types text/plain and application/json", 56);
-  }
-}
-#endif //REST_RES_DS1820
-
-#if REST_RES_DHT11
-/*A simple getter example. Returns the reading from ds1820 sensor*/
-RESOURCE(dht11, METHOD_GET, "sensors/hum", "title=\"Humidity DHT11\";rt=\"humidity-%\"");
-void
-dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  char message[100];
-  int length = 0; /*           |<-------->| */
-  int ret=0;
-//  dht11_temp=DHT_Read_Data(DHT_Temp);
-//  dht11_hum=DHT_Read_Data(DHT_RH);
-
-  uint16_t *accept = NULL;
-  int num = REST.get_header_accept(request, &accept);
-
-  if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
-  {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "%2d %2d",dht11_temp,dht11_hum);
-
-    length = strlen(message);
-    memcpy(buffer, message,length );
-
-    REST.set_response_payload(response, buffer, length);
-  }
-  else if (num && (accept[0]==REST.type.APPLICATION_JSON))
-  {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d\",\"hum\":\"%d\"}",dht11_temp,dht11_hum);
-
-    length = strlen(message);
-    memcpy(buffer, message,length );
-
-    REST.set_response_payload(response, buffer, length);
-  }
-  else
-  {
-    REST.set_response_status(response, REST.status.UNSUPPORTED_MADIA_TYPE);
-    REST.set_response_payload(response, (uint8_t *)"Supporting content-types text/plain and application/json", 56);
-  }
-}
-#endif //REST_RES_DHT11
-
-#if REST_RES_HELLO
-/*
- * Resources are defined by the RESOURCE macro.
- * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
- */
-RESOURCE(helloworld, METHOD_GET, "hello", "title=\"Hello world: ?len=0..\";rt=\"Text\"");
-
-/*
- * A handler function named [resource name]_handler must be implemented for each RESOURCE.
- * A buffer for the response payload is provided through the buffer pointer. Simple resources can ignore
- * preferred_size and offset, but must respect the REST_MAX_CHUNK_SIZE limit for the buffer.
- * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
- */
-void
-helloworld_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  const char *len = NULL;
-  /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
-  char const * const message = "Hello World! ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxy";
-  int length = 12; /*           |<-------->| */
-
-  /* The query string can be retrieved by rest_get_query() or parsed for its key-value pairs. */
-  if (REST.get_query_variable(request, "len", &len)) {
-    length = atoi(len);
-    if (length<0) length = 0;
-    if (length>REST_MAX_CHUNK_SIZE) length = REST_MAX_CHUNK_SIZE;
-    memcpy(buffer, message, length);
-  } else {
-    memcpy(buffer, message, length);
-  }
-
-  REST.set_header_content_type(response, REST.type.TEXT_PLAIN); /* text/plain is the default, hence this option could be omitted. */
-  REST.set_header_etag(response, (uint8_t *) &length, 1);
-  REST.set_response_payload(response, buffer, length);
-}
-#endif
-
 /******************************************************************************/
-#if REST_RES_MIRROR
-/* This resource mirrors the incoming request. It shows how to access the options and how to set them for the response. */
-RESOURCE(mirror, METHOD_GET | METHOD_POST | METHOD_PUT | METHOD_DELETE, "debug/mirror", "title=\"Returns your decoded message\";rt=\"Debug\"");
-
-void
-mirror_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  /* The ETag and Token is copied to the header. */
-  uint8_t opaque[] = {0x0A, 0xBC, 0xDE};
-
-  /* Strings are not copied, so use static string buffers or strings in .text memory (char *str = "string in .text";). */
-  static char location[] = {'/','f','/','a','?','k','&','e', 0};
-
-  /* Getter for the header option Content-Type. If the option is not set, text/plain is returned by default. */
-  unsigned int content_type = REST.get_header_content_type(request);
-
-  /* The other getters copy the value (or string/array pointer) to the given pointers and return 1 for success or the length of strings/arrays. */
-  uint32_t max_age = 0;
-  const char *str = NULL;
-  uint32_t observe = 0;
-  const uint8_t *bytes = NULL;
-  uint32_t block_num = 0;
-  uint8_t block_more = 0;
-  uint16_t block_size = 0;
-  const char *query = "";
-  int len = 0;
-
-  /* Mirror the received header options in the response payload. Unsupported getters (e.g., rest_get_header_observe() with HTTP) will return 0. */
-
-  int strpos = 0;
-  /* snprintf() counts the terminating '\0' to the size parameter.
-   * The additional byte is taken care of by allocating REST_MAX_CHUNK_SIZE+1 bytes in the REST framework.
-   * Add +1 to fill the complete buffer. */
-  strpos += snprintf((char *)buffer, REST_MAX_CHUNK_SIZE+1, "CT %u\n", content_type);
-
-  /* Some getters such as for ETag or Location are omitted, as these options should not appear in a request.
-   * Max-Age might appear in HTTP requests or used for special purposes in CoAP. */
-  if (strpos<=REST_MAX_CHUNK_SIZE && REST.get_header_max_age(request, &max_age))
-  {
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "MA %lu\n", max_age);
-  }
-
-  if (strpos<=REST_MAX_CHUNK_SIZE && (len = REST.get_header_host(request, &str)))
-  {
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "UH %.*s\n", len, str);
-  }
-
-/* CoAP-specific example: actions not required for normal RESTful Web service. */
-#if WITH_COAP > 1
-  if (strpos<=REST_MAX_CHUNK_SIZE && coap_get_header_observe(request, &observe))
-  {
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "Ob %lu\n", observe);
-  }
-  if (strpos<=REST_MAX_CHUNK_SIZE && (len = coap_get_header_token(request, &bytes)))
-  {
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "To 0x");
-    int index = 0;
-    for (index = 0; index<len; ++index) {
-        strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "%02X", bytes[index]);
-    }
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "\n");
-  }
-  if (strpos<=REST_MAX_CHUNK_SIZE && (len = coap_get_header_etag(request, &bytes)))
-  {
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "ET 0x");
-    int index = 0;
-    for (index = 0; index<len; ++index) {
-        strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "%02X", bytes[index]);
-    }
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "\n");
-  }
-  if (strpos<=REST_MAX_CHUNK_SIZE && (len = coap_get_header_uri_path(request, &str)))
-  {
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "UP ");
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "%.*s\n", len, str);
-  }
-#if WITH_COAP == 3
-  if (strpos<=REST_MAX_CHUNK_SIZE && (len = coap_get_header_location(request, &str)))
-  {
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "Lo %.*s\n", len, str);
-  }
-  if (strpos<=REST_MAX_CHUNK_SIZE && coap_get_header_block(request, &block_num, &block_more, &block_size, NULL)) /* This getter allows NULL pointers to get only a subset of the block parameters. */
-  {
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "Bl %lu%s (%u)\n", block_num, block_more ? "+" : "", block_size);
-  }
-#else
-  if (strpos<=REST_MAX_CHUNK_SIZE && (len = coap_get_header_location_path(request, &str)))
-  {
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "LP %.*s\n", len, str);
-  }
-  if (strpos<=REST_MAX_CHUNK_SIZE && (len = coap_get_header_location_query(request, &str)))
-  {
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "LQ %.*s\n", len, str);
-  }
-  if (strpos<=REST_MAX_CHUNK_SIZE && coap_get_header_block2(request, &block_num, &block_more, &block_size, NULL)) /* This getter allows NULL pointers to get only a subset of the block parameters. */
-  {
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "B2 %lu%s (%u)\n", block_num, block_more ? "+" : "", block_size);
-  }
-  /*
-   * Critical Block1 option is currently rejected by engine.
-   *
-  if (strpos<=REST_MAX_CHUNK_SIZE && coap_get_header_block1(request, &block_num, &block_more, &block_size, NULL))
-  {
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "B1 %lu%s (%u)\n", block_num, block_more ? "+" : "", block_size);
-  }
-  */
-#endif /* CoAP > 03 */
-#endif /* CoAP-specific example */
-
-  if (strpos<=REST_MAX_CHUNK_SIZE && (len = REST.get_query(request, &query)))
-  {
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "Qu %.*s\n", len, query);
-  }
-  if (strpos<=REST_MAX_CHUNK_SIZE && (len = REST.get_request_payload(request, &bytes)))
-  {
-    strpos += snprintf((char *)buffer+strpos, REST_MAX_CHUNK_SIZE-strpos+1, "%.*s", len, bytes);
-  }
-
-  if (strpos >= REST_MAX_CHUNK_SIZE)
-  {
-      buffer[REST_MAX_CHUNK_SIZE-1] = 0xBB; /* '»' to indicate truncation */
-  }
-
-  REST.set_response_payload(response, buffer, strpos);
-
-  PRINTF("/mirror options received: %s\n", buffer);
-
-  /* Set dummy header options for response. Like getters, some setters are not implemented for HTTP and have no effect. */
-  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-  REST.set_header_max_age(response, 10); /* For HTTP, browsers will not re-request the page for 10 seconds. CoAP action depends on the client. */
-  REST.set_header_etag(response, opaque, 2);
-  REST.set_header_location(response, location); /* Initial slash is omitted by framework */
-
-/* CoAP-specific example: actions not required for normal RESTful Web service. */
-#if WITH_COAP > 1
-  coap_set_header_uri_host(response, "tiki");
-  coap_set_header_observe(response, 10);
-#if WITH_COAP == 3
-  coap_set_header_block(response, 42, 0, 64); /* The block option might be overwritten by the framework when blockwise transfer is requested. */
-#else
-  coap_set_header_proxy_uri(response, "ftp://x");
-  coap_set_header_block2(response, 42, 0, 64); /* The block option might be overwritten by the framework when blockwise transfer is requested. */
-  coap_set_header_block1(response, 23, 0, 16);
-  coap_set_header_accept(response, TEXT_PLAIN);
-  coap_set_header_if_none_match(response);
-#endif /* CoAP > 03 */
-#endif /* CoAP-specific example */
-}
-#endif /* REST_RES_MIRROR */
-
-/******************************************************************************/
-#if REST_RES_CHUNKS
-/*
- * For data larger than REST_MAX_CHUNK_SIZE (e.g., stored in flash) resources must be aware of the buffer limitation
- * and split their responses by themselves. To transfer the complete resource through a TCP stream or CoAP's blockwise transfer,
- * the byte offset where to continue is provided to the handler as int32_t pointer.
- * These chunk-wise resources must set the offset value to its new position or -1 of the end is reached.
- * (The offset for CoAP's blockwise transfer can go up to 2'147'481'600 = ~2047 M for block size 2048 (reduced to 1024 in observe-03.)
- */
-RESOURCE(chunks, METHOD_GET, "test/chunks", "title=\"Blockwise demo\";rt=\"Data\"");
-
-#define CHUNKS_TOTAL    2050
-
-void
-chunks_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  int32_t strpos = 0;
-
-  /* Check the offset for boundaries of the resource data. */
-  if (*offset>=CHUNKS_TOTAL)
-  {
-    REST.set_response_status(response, REST.status.BAD_OPTION);
-    /* A block error message should not exceed the minimum block size (16). */
-
-    const char *error_msg = "BlockOutOfScope";
-    REST.set_response_payload(response, error_msg, strlen(error_msg));
-    return;
-  }
-
-  /* Generate data until reaching CHUNKS_TOTAL. */
-  while (strpos<preferred_size)
-  {
-    strpos += snprintf((char *)buffer+strpos, preferred_size-strpos+1, "|%ld|", *offset);
-  }
-
-  /* snprintf() does not adjust return value if truncated by size. */
-  if (strpos > preferred_size)
-  {
-    strpos = preferred_size;
-  }
-
-  /* Truncate if above CHUNKS_TOTAL bytes. */
-  if (*offset+(int32_t)strpos > CHUNKS_TOTAL)
-  {
-    strpos = CHUNKS_TOTAL - *offset;
-  }
-
-  REST.set_response_payload(response, buffer, strpos);
-
-  /* IMPORTANT for chunk-wise resources: Signal chunk awareness to REST engine. */
-  *offset += strpos;
-
-  /* Signal end of resource representation. */
-  if (*offset>=CHUNKS_TOTAL)
-  {
-    *offset = -1;
-  }
-}
-#endif
-
-/******************************************************************************/
-#if REST_RES_SEPARATE && defined (PLATFORM_HAS_BUTTON) && WITH_COAP > 3
-/* Required to manually (=not by the engine) handle the response transaction. */
-#include "er-coap-07-separate.h"
-#include "er-coap-07-transactions.h"
-/*
- * CoAP-specific example for separate responses.
- * Note the call "rest_set_pre_handler(&resource_separate, coap_separate_handler);" in the main process.
- * The pre-handler takes care of the empty ACK and updates the MID and message type for CON requests.
- * The resource handler must store all information that required to finalize the response later.
- */
-RESOURCE(separate, METHOD_GET, "test/separate", "title=\"Separate demo\"");
-
-/* A structure to store the required information */
-typedef struct application_separate_store {
-  /* Provided by Erbium to store generic request information such as remote address and token. */
-  coap_separate_t request_metadata;
-  /* Add fields for addition information to be stored for finalizing, e.g.: */
-  char buffer[16];
-} application_separate_store_t;
-
-static uint8_t separate_active = 0;
-static application_separate_store_t separate_store[1];
-
-void
-separate_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  /*
-   * Example allows only one open separate response.
-   * For multiple, the application must manage the list of stores.
-   */
-  if (separate_active)
-  {
-    coap_separate_reject();
-  }
-  else
-  {
-    separate_active = 1;
-
-    /* Take over and skip response by engine. */
-    coap_separate_accept(request, &separate_store->request_metadata);
-    /* Be aware to respect the Block2 option, which is also stored in the coap_separate_t. */
-
-    /*
-     * At the moment, only the minimal information is stored in the store (client address, port, token, MID, type, and Block2).
-     * Extend the store, if the application requires additional information from this handler.
-     * buffer is an example field for custom information.
-     */
-    snprintf(separate_store->buffer, sizeof(separate_store->buffer), "StoredInfo");
-  }
-}
-
-void
-separate_finalize_handler()
-{
-  if (separate_active)
-  {
-    coap_transaction_t *transaction = NULL;
-    if ( (transaction = coap_new_transaction(separate_store->request_metadata.mid, &separate_store->request_metadata.addr, separate_store->request_metadata.port)) )
-    {
-      coap_packet_t response[1]; /* This way the packet can be treated as pointer as usual. */
-
-      /* Restore the request information for the response. */
-      coap_separate_resume(response, &separate_store->request_metadata, CONTENT_2_05);
-
-      coap_set_payload(response, separate_store->buffer, strlen(separate_store->buffer));
-
-      /*
-       * Be aware to respect the Block2 option, which is also stored in the coap_separate_t.
-       * As it is a critical option, this example resource pretends to handle it for compliance.
-       */
-      coap_set_header_block2(response, separate_store->request_metadata.block2_num, 0, separate_store->request_metadata.block2_size);
-
-      /* Warning: No check for serialization error. */
-      transaction->packet_len = coap_serialize_message(response, transaction->packet);
-      coap_send_transaction(transaction);
-      /* The engine will clear the transaction (right after send for NON, after acked for CON). */
-
-      separate_active = 0;
-    }
-    else
-    {
-      /*
-       * Set timer for retry, send error message, ...
-       * The example simply waits for another button press.
-       */
-    }
-  } /* if (separate_active) */
-}
-#endif
-
-/******************************************************************************/
-#if REST_RES_PUSHING
-/*
- * Example for a periodic resource.
- * It takes an additional period parameter, which defines the interval to call [name]_periodic_handler().
- * A default post_handler takes care of subscriptions by managing a list of subscribers to notify.
- */
-PERIODIC_RESOURCE(pushing, METHOD_GET, "test/push", "title=\"Periodic demo\";obs", 5*CLOCK_SECOND);
-
-void
-pushing_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-
-  /* Usually, a CoAP server would response with the resource representation matching the periodic_handler. */
-  const char *msg = "It's periodic!";
-  REST.set_response_payload(response, msg, strlen(msg));
-
-  /* A post_handler that handles subscriptions will be called for periodic resources by the REST framework. */
-}
-
-/*
- * Additionally, a handler function named [resource name]_handler must be implemented for each PERIODIC_RESOURCE.
- * It will be called by the REST manager process with the defined period.
- */
-void
-pushing_periodic_handler(resource_t *r)
-{
-  static uint16_t obs_counter = 0;
-  static char content[11];
-
-  ++obs_counter;
-
-  PRINTF("TICK %u for /%s\n", obs_counter, r->url);
-
-  /* Build notification. */
-  coap_packet_t notification[1]; /* This way the packet can be treated as pointer as usual. */
-  coap_init_message(notification, COAP_TYPE_NON, CONTENT_2_05, 0 );
-  coap_set_payload(notification, content, snprintf(content, sizeof(content), "TICK %u", obs_counter));
-
-  /* Notify the registered observers with the given message type, observe option, and payload. */
-  REST.notify_subscribers(r, obs_counter, notification);
-}
-#endif
-
-/******************************************************************************/
-#if REST_RES_EVENT && defined (PLATFORM_HAS_BUTTON)
+#if REST_RES_EVENT && defined (PLATFORM_HAS_PIR)
 /*
  * Example for an event resource.
  * Additionally takes a period parameter that defines the interval to call [name]_periodic_handler().
  * A default post_handler takes care of subscriptions and manages a list of subscribers to notify.
  */
-EVENT_RESOURCE(event, METHOD_GET, "sensors/pir", "title=\"Event demo\";obs");
+EVENT_RESOURCE(pir, METHOD_GET, "sensors/pir", "title=\"Event demo\";obs");
 
 void
-event_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+pir_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
   /* Usually, a CoAP server would response with the current resource representation. */
@@ -781,14 +224,14 @@ event_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
 /* Additionally, a handler function named [resource name]_event_handler must be implemented for each PERIODIC_RESOURCE defined.
  * It will be called by the REST manager process with the defined period. */
 void
-event_event_handler(resource_t *r)
+pir_event_handler(resource_t *r)
 {
   static uint16_t event_counter = 0;
   static char content[12];
 
   ++event_counter;
 
-  PRINTF("TICK %u for /%s\n", event_counter, r->url);
+  PRINTF("PIR TICK %u for /%s\n", event_counter, r->url);
 
   /* Build notification. */
   coap_packet_t notification[1]; /* This way the packet can be treated as pointer as usual. */
@@ -798,37 +241,7 @@ event_event_handler(resource_t *r)
   /* Notify the registered observers with the given message type, observe option, and payload. */
   REST.notify_subscribers(r, event_counter, notification);
 }
-#endif /* PLATFORM_HAS_BUTTON */
-
-/******************************************************************************/
-#if REST_RES_SUB
-/*
- * Example for a resource that also handles all its sub-resources.
- * Use REST.get_url() to multiplex the handling of the request depending on the Uri-Path.
- */
-RESOURCE(sub, METHOD_GET | HAS_SUB_RESOURCES, "test/path", "title=\"Sub-resource demo\"");
-
-void
-sub_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-
-  const char *uri_path = NULL;
-  int len = REST.get_url(request, &uri_path);
-  int base_len = strlen(resource_sub.url);
-
-  if (len==base_len)
-  {
-	snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "Request any sub-resource of /%s", resource_sub.url);
-  }
-  else
-  {
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, ".%s", uri_path+base_len);
-  }
-
-  REST.set_response_payload(response, buffer, strlen((char *)buffer));
-}
-#endif
+#endif /* PLATFORM_HAS_PIR */
 
 /******************************************************************************/
 #if defined (PLATFORM_HAS_LEDS)
@@ -895,47 +308,6 @@ toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 #endif /* PLATFORM_HAS_LEDS */
 
 /******************************************************************************/
-#if REST_RES_LIGHT && defined (PLATFORM_HAS_LIGHT)
-/* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(light, METHOD_GET, "sensors/light", "title=\"Photosynthetic and solar light (supports JSON)\";rt=\"LightSensor\"");
-void
-light_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  uint16_t light_photosynthetic = light_sensor.value(LIGHT_SENSOR_PHOTOSYNTHETIC);
-  uint16_t light_solar = light_sensor.value(LIGHT_SENSOR_TOTAL_SOLAR);
-
-  const uint16_t *accept = NULL;
-  int num = REST.get_header_accept(request, &accept);
-
-  if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
-  {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%u;%u", light_photosynthetic, light_solar);
-
-    REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
-  }
-  else if (num && (accept[0]==REST.type.APPLICATION_XML))
-  {
-    REST.set_header_content_type(response, REST.type.APPLICATION_XML);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "<light photosynthetic=\"%u\" solar=\"%u\"/>", light_photosynthetic, light_solar);
-
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  }
-  else if (num && (accept[0]==REST.type.APPLICATION_JSON))
-  {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'light':{'photosynthetic':%u,'solar':%u}}", light_photosynthetic, light_solar);
-
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  }
-  else
-  {
-    REST.set_response_status(response, REST.status.UNSUPPORTED_MADIA_TYPE);
-    const char *msg = "Supporting content-types text/plain, application/xml, and application/json";
-    REST.set_response_payload(response, msg, strlen(msg));
-  }
-}
-#endif /* PLATFORM_HAS_LIGHT */
 
 /******************************************************************************/
 #if REST_RES_TEMPERATURE && defined (PLATFORM_HAS_TEMPERATURE)
@@ -1006,98 +378,21 @@ battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
   }
 }
 #endif /* PLATFORM_HAS_BATTERY */
-
-
-#if defined (PLATFORM_HAS_RADIO) && REST_RES_RADIO
-/* A simple getter example. Returns the reading of the rssi/lqi from radio sensor */
-RESOURCE(radio, METHOD_GET, "sensor/radio", "title=\"RADIO: ?p=lqi|rssi\";rt=\"RadioSensor\"");
-
-void
-radio_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  size_t len = 0;
-  const char *p = NULL;
-  uint8_t param = 0;
-  int success = 1;
-
-  const uint16_t *accept = NULL;
-  int num = REST.get_header_accept(request, &accept);
-
-  if ((len=REST.get_query_variable(request, "p", &p))) {
-    PRINTF("p %.*s\n", len, p);
-    if (strncmp(p, "lqi", len)==0) {
-      param = RADIO_SENSOR_LAST_VALUE;
-    } else if(strncmp(p,"rssi", len)==0) {
-      param = RADIO_SENSOR_LAST_PACKET;
-    } else {
-      success = 0;
-    }
-  } else {
-    success = 0;
-  }
-
-  if (success) {
-    if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
-    {
-      REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-      snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d", radio_sensor.value(param));
-
-      REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
-    }
-    else if (num && (accept[0]==REST.type.APPLICATION_JSON))
-    {
-      REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-
-      if (param == RADIO_SENSOR_LAST_VALUE) {
-        snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'lqi':%d}", radio_sensor.value(param));
-      } else if (param == RADIO_SENSOR_LAST_PACKET) {
-        snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'rssi':%d}", radio_sensor.value(param));
-      }
-
-      REST.set_response_payload(response, buffer, strlen((char *)buffer));
-    }
-    else
-    {
-      REST.set_response_status(response, REST.status.UNSUPPORTED_MADIA_TYPE);
-      const char *msg = "Supporting content-types text/plain and application/json";
-      REST.set_response_payload(response, msg, strlen(msg));
-    }
-  } else {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
-  }
-}
-#endif
+/******************************************************************************/
 
 void 
 hw_init()
 {
-  key_init();
   led1_off();
-#if REST_RES_DS1820
-  ds1820_temp();
-#endif
-#if REST_RES_DHT11
-  dht11_temp=DHT_Read_Data(DHT_Temp);
-  dht11_hum=DHT_Read_Data(DHT_RH);
-#endif
 }
-#define MESURE_INTERVAL		(20 * CLOCK_SECOND)
-#define READ_TIME		( 2 * CLOCK_SECOND)
 
 PROCESS(rest_server_example, "Erbium Example Server");
-AUTOSTART_PROCESSES(&rest_server_example);
+
+AUTOSTART_PROCESSES(&rest_server_example, &sensors_process);
 
 PROCESS_THREAD(rest_server_example, ev, data)
 {
-  static struct etimer ds_periodic_timer;
-#if REST_RES_DS1820
-  static struct etimer ds_read_timer;
-#endif
-
   PROCESS_BEGIN();
-
-
-
   PRINTF("Starting Erbium Example Server\n");
 
 #ifdef RF_CHANNEL
@@ -1120,47 +415,19 @@ PROCESS_THREAD(rest_server_example, ev, data)
 
   /* Initialize the OSD Hardware. */
   hw_init();
-
   /* Initialize the REST engine. */
   rest_init_engine();
 
   /* Activate the application-specific resources. */
-  rest_activate_resource(&resource_button);
   rest_activate_resource(&resource_led1);
-  /* Activate the application-specific resources. */
-#if REST_RES_DS1820
-  rest_activate_resource(&resource_ds1820);
-#endif
-#if REST_RES_DHT11
-  rest_activate_resource(&resource_dht11);
-#endif
 #if REST_RES_INFO
   rest_activate_resource(&resource_info);
 #endif
-#if REST_RES_HELLO
-  rest_activate_resource(&resource_helloworld);
-#endif
-#if REST_RES_MIRROR
-  rest_activate_resource(&resource_mirror);
-#endif
-#if REST_RES_CHUNKS
-  rest_activate_resource(&resource_chunks);
-#endif
-#if REST_RES_PUSHING
-  rest_activate_periodic_resource(&periodic_resource_pushing);
-#endif
-#if defined (PLATFORM_HAS_BUTTON) && REST_RES_EVENT
-  rest_activate_event_resource(&resource_event);
-#endif
-#if defined (PLATFORM_HAS_BUTTON) && REST_RES_SEPARATE && WITH_COAP > 3
-  /* No pre-handler anymore, user coap_separate_accept() and coap_separate_reject(). */
-  rest_activate_resource(&resource_separate);
-#endif
-#if defined (PLATFORM_HAS_BUTTON) && (REST_RES_EVENT || (REST_RES_SEPARATE && WITH_COAP > 3))
-  SENSORS_ACTIVATE(button_sensor);
-#endif
-#if REST_RES_SUB
-  rest_activate_resource(&resource_sub);
+  /* Activate the application-specific resources. */
+#if defined (PLATFORM_HAS_PIR) && (REST_RES_EVENT)
+  SENSORS_ACTIVATE(pir_sensor);
+  rest_activate_event_resource(&resource_pir);
+  PRINTF("ACTIVATE PIR\n");
 #endif
 #if defined (PLATFORM_HAS_LEDS)
 #if REST_RES_LEDS
@@ -1170,10 +437,6 @@ PROCESS_THREAD(rest_server_example, ev, data)
   rest_activate_resource(&resource_toggle);
 #endif
 #endif /* PLATFORM_HAS_LEDS */
-#if defined (PLATFORM_HAS_LIGHT) && REST_RES_LIGHT
-  SENSORS_ACTIVATE(light_sensor);
-  rest_activate_resource(&resource_light);
-#endif
 #if defined (PLATFORM_HAS_TEMPERATURE) && REST_RES_TEMPERATURE
   SENSORS_ACTIVATE(temperature_sensor);
   rest_activate_resource(&resource_temperature);
@@ -1182,47 +445,23 @@ PROCESS_THREAD(rest_server_example, ev, data)
   SENSORS_ACTIVATE(battery_sensor);
   rest_activate_resource(&resource_battery);
 #endif
-#if defined (PLATFORM_HAS_RADIO) && REST_RES_RADIO
-  SENSORS_ACTIVATE(radio_sensor);
-  rest_activate_resource(&resource_radio);
-#endif
 
   /* Define application-specific events here. */
-  etimer_set(&ds_periodic_timer, MESURE_INTERVAL);
   while(1) {
     PROCESS_WAIT_EVENT();
-#if defined (PLATFORM_HAS_BUTTON)
-    if (ev == sensors_event && data == &button_sensor) {
-      PRINTF("BUTTON\n");
-#if REST_RES_EVENT
-      /* Call the event_handler for this application-specific event. */
-      event_event_handler(&resource_event);
-#endif
-#if REST_RES_SEPARATE && WITH_COAP>3
-      /* Also call the separate response example handler. */
-      separate_finalize_handler();
-#endif
+#if defined (REST_RES_EVENT)
+    if (ev == sensors_event ) {
+      PRINTF("EVENT\n");
+#if (REST_RES_EVENT && defined (PLATFORM_HAS_PIR))
+    if (data == &pir_sensor) {
+      PRINTF("PIR EVENT\n");
+        /* Call the event_handler for this application-specific event. */
+        pir_event_handler(&resource_pir);
+        PRINTF("CALL EVENT HANDLER\n");
+      }
+#endif /* PLATFORM_HAS_PIR */
     }
-#endif /* PLATFORM_HAS_BUTTON */
-    if(etimer_expired(&ds_periodic_timer)) {
-        PRINTF("Periodic\n");
-        etimer_reset(&ds_periodic_timer);
-#if REST_RES_DHT11
-        dht11_temp=DHT_Read_Data(DHT_Temp);
-        dht11_hum=DHT_Read_Data(DHT_RH);
-#endif
-#if REST_RES_DS1820
-        if(ds1820_convert()){
-          etimer_set(&ds_read_timer, READ_TIME);
-        }
-#endif
-    }
-#if REST_RES_DS1820
-    if(etimer_expired(&ds_read_timer)) {
-        PRINTF("DS1820_Read\n");
-        ds1820_read();
-    }
-#endif
+#endif /* REST_RES_EVENT */
   } /* while (1) */
 
   PROCESS_END();
