@@ -4,13 +4,17 @@ CONTIKI_CORE=contiki-main
 CONTIKI_TARGET_MAIN = ${CONTIKI_CORE}.o
 CONTIKI_TARGET_SOURCEFILES += contiki-main.c params.c node-id.c
 #Needed for slip
-CONTIKI_TARGET_SOURCEFILES += temperature-sensor.c adc.c button-sensor.c sensors.c slip_uart0.c slip.c
+CONTIKI_TARGET_SOURCEFILES += temperature-sensor.c adc.c led.c sensors.c slip_uart0.c slip.c
+#Needed for Button
+CONTIKI_TARGET_SOURCEFILES += button-sensor.c
 #Needed for DHT11 humidity sensor
 CONTIKI_TARGET_SOURCEFILES += dht11.c
 #Needed for DS18S20 temperature sensor
 CONTIKI_TARGET_SOURCEFILES += ds1820.c
 #Needed for Battery test
 CONTIKI_TARGET_SOURCEFILES += battery-sensor.c
+#Needed for PIR
+CONTIKI_TARGET_SOURCEFILES += pir-sensor.c
 CONTIKIAVR=$(CONTIKI)/cpu/avr
 CONTIKIBOARD=.
 BOOTLOADER_START = 0x1F000

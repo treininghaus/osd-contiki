@@ -144,6 +144,11 @@ FUSES ={.low = 0xF6, .high = 0x98, .extended = 0xfd,};
 FUSES ={.low = 0xC2, .high = 0x99, .extended = 0xfe,};
 #endif
 
+#include "lib/sensors.h"
+#include "dev/button-sensor.h"
+#include "dev/pir-sensor.h"
+SENSORS(&button_sensor, &pir_sensor);
+
 uint8_t
 rng_get_uint8(void) {
 #if 1
@@ -314,6 +319,8 @@ uint8_t i;
 #ifdef RAVEN_LCD_INTERFACE
   process_start(&raven_lcd_process, NULL);
 #endif
+  
+  process_start(&sensors_process, NULL);
 
   /* Autostart other processes */
   autostart_start(autostart_processes);
