@@ -14,12 +14,12 @@ static int enabled = 0;
 struct sensors_sensor *sensors[1];
 unsigned char sensors_flags[1];
 
-#define BUTTON_BIT INTF6
+#define BUTTON_BIT INTF5
 #define BUTTON_CHECK_IRQ() (EIFR & BUTTON_BIT) ? 0 : 1
 
 #define PRINTF(...) printf(__VA_ARGS__)
 /*---------------------------------------------------------------------------*/
-ISR(INT6_vect)
+ISR(INT5_vect)
 {
 
 //  leds_toggle(LEDS_YELLOW);
@@ -39,7 +39,7 @@ ISR(INT6_vect)
 static int
 value(int type)
 {
- return (PORTE & _BV(PE6) ? 0 : 1) || !timer_expired(&debouncetimer);
+ return (PORTE & _BV(PE5) ? 0 : 1) || !timer_expired(&debouncetimer);
  //return 0;
 }
 
@@ -54,10 +54,10 @@ configure(int type, int c)
     led1_on();
 				timer_set(&debouncetimer, 0);
 				PRINTF("Setup sensor started\n");
-				DDRE |= (0<<DDE6); // Set pin as input
-				PORTE |= (1<<PORTE6); // Set port PORTE bint 6 with pullup resistor
-				EICRB |= (2<<ISC60); // For falling edge
-				EIMSK |= (1<<INT6); // Set int
+				DDRE |= (0<<DDE5); // Set pin as input
+				PORTE |= (1<<PORTE5); // Set port PORTE bint 5 with pullup resistor
+				EICRB |= (2<<ISC50); // For falling edge
+				EIMSK |= (1<<INT5); // Set int
 				enabled = 1;
 				sei();
     led1_off();
@@ -65,7 +65,7 @@ configure(int type, int c)
 			PRINTF("Sensor EIMSK set\n");
 		} else {
 				enabled = 0;
-				EIMSK &= ~(1<<INT6); // clear int
+				EIMSK &= ~(1<<INT5); // clear int
 				PRINTF("Setup sensor failed\n");
 		}
 		return 1;
@@ -79,7 +79,7 @@ status(int type)
 	switch (type) {
 	case SENSORS_ACTIVE:
 	case SENSORS_READY:
-		return enabled;//(EIMSK & (1<<INT6) ? 0 : 1);//BUTTON_IRQ_ENABLED();
+		return enabled;//(EIMSK & (1<<INT5) ? 0 : 1);//BUTTON_IRQ_ENABLED();
 	}
 	return 0;
 }
