@@ -146,8 +146,9 @@ FUSES ={.low = 0xC2, .high = 0x99, .extended = 0xfe,};
 
 #include "lib/sensors.h"
 #include "dev/button-sensor.h"
+#include "dev/battery-sensor.h"
 #include "dev/pir-sensor.h"
-SENSORS(&button_sensor, &pir_sensor);
+SENSORS(&button_sensor, &battery_sensor, &pir_sensor);
 
 uint8_t
 rng_get_uint8(void) {

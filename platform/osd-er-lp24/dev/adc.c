@@ -54,9 +54,9 @@ int readADC(uint8_t pin)
 
   ADMUX = _BV(REFS1) | _BV(REFS0) | ( pin & 7 ) ;
   ADCSRA = _BV(ADEN) | _BV(ADPS0) | _BV(ADPS2) ;
-  
   sbi(ADCSRA,ADSC);
   loop_until_bit_is_clear(ADCSRA,ADSC);
+
 
   result = ADC;
   
@@ -76,10 +76,9 @@ int readInternalTemp(void)
   ADCSRB |= _BV(MUX5);
   ADMUX = _BV(REFS1) | _BV(REFS0) | 0b1001 ;
   ADCSRA = _BV(ADEN) | _BV(ADPS0) | _BV(ADPS2) ;
-  
+
   sbi(ADCSRA,ADSC);
   loop_until_bit_is_clear(ADCSRA,ADSC);
-  
   reading = ADC;
 
   ADCSRA=0; //disable ADC

@@ -46,14 +46,12 @@ value(int type)
 static int
 configure(int type, int c)
 {
- PRINTF("Sensor Button Configure called: %d, %d\n",type,c);
 	switch (type) {
 	case SENSORS_ACTIVE:
 		if (c) {
 			if(!status(SENSORS_ACTIVE)) {
     led1_on();
 				timer_set(&debouncetimer, 0);
-				PRINTF("Setup sensor started\n");
 				DDRE |= (0<<DDE5); // Set pin as input
 				PORTE |= (1<<PORTE5); // Set port PORTE bint 5 with pullup resistor
 				EICRB |= (2<<ISC50); // For falling edge
@@ -62,11 +60,9 @@ configure(int type, int c)
 				sei();
     led1_off();
 			}
-			PRINTF("Sensor EIMSK set\n");
 		} else {
 				enabled = 0;
 				EIMSK &= ~(1<<INT5); // clear int
-				PRINTF("Setup sensor failed\n");
 		}
 		return 1;
 	}
