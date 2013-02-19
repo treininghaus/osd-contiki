@@ -1,7 +1,14 @@
 A Quick Introduction to the Erbium (Er) REST Engine
 ===================================================
+Compile the Example
+-------------------
+./run.sh
 
-sudo avrdude -pm128rfa1 -c arduino -P/dev/ttyUSB0 -b57600 -e -U flash:w:er-example-server.osd-er-lp24.hex:a -U eeprom:w:er-example-server.osd-er-lp24.eep:a
+OSD-Merkur Board
+----------------------
+write the images to the OSD-Merkur Board:
+
+./flash.sh
 
 EXAMPLE FILES
 -------------
@@ -39,25 +46,6 @@ With client:
 3) $ make connect-router-cooja
 4) Wait until red LED toggles on mote 2 (server)
 5) Choose "Click button on Sky 3" from the context menu of mote 3 (client) and watch serial output
-
-TMOTES HOWTO
-------------
-Server:
-1) Connect two Tmote Skys (check with $ make TARGET=sky sky-motelist)
-2) $ make TARGET=sky er-example-server.upload MOTE=2
-3) $ make TARGET=sky login MOTE=2
-4) Press reset button, get address, abort with Ctrl+C:
-   Line: "Tentative link-local IPv6 address fe80:0000:0000:0000:____:____:____:____"
-5) $ cd ../ipv6/rpl-border-router/
-6) $ make TARGET=sky border-router.upload MOTE=1
-7) $ make connect-router
-   For a BR tty other than USB0: $ make connect-router-port PORT=X
-8) Start Copper and discover resources at coap://[aaaa::____:____:____:____]:5683/
-
-Add a client:
-1) Change the hard-coded server address in er-example-client.c to aaaa::____:____:____:____
-2) Connect a third Tmote Sky
-3) $ make TARGET=sky er-example-client.upload MOTE=3
 
 DETAILS
 -------
