@@ -2,8 +2,11 @@ OSDOMOTIS
 
 www.osdomotics.com
 
-Plattform: osd-er-lp24
+Plattform: osd-merkur
 
 ./run.sh
+sudo ./flash.sh
+
+or:
 
 sudo avrdude -pm128rfa1 -c arduino -P/dev/ttyUSB0 -b57600 -e -U flash:w:border-router.osd-er-lp24.hex:a -U eeprom:w:border-router.osd-er-lp24.eep:a
