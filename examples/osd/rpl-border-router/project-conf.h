@@ -41,6 +41,9 @@
 #undef UIP_CONF_DS6_ROUTE_NBU
 #define UIP_CONF_DS6_ROUTE_NBU   50
 
+#undef UIP_CONF_TCP
+#define UIP_CONF_TCP              1
+
 #ifndef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM          4
 #endif
