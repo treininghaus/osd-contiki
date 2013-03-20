@@ -59,7 +59,6 @@
 #include "radio/rf230bb/rf230bb.h"
 #include "net/mac/frame802154.h"
 #include "net/mac/framer-802154.h"
-#include "net/sicslowpan.h"
 
 #include "contiki.h"
 #include "contiki-net.h"
@@ -281,6 +280,8 @@ uint8_t i;
 #endif  
   rimeaddr_set_node_addr(&addr); 
 
+  PRINTA("Panid:%u\n", params_get_panid());
+  framer_802154_set_panid(params_get_panid());
   rf230_set_pan_addr(params_get_panid(),params_get_panaddr(),(uint8_t *)&addr.u8);
   rf230_set_channel(params_get_channel());
   rf230_set_txpower(params_get_txpower());
