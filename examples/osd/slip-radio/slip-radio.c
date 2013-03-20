@@ -43,7 +43,7 @@
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 
-#define DEBUG DEBUG_FULL
+#define DEBUG DEBUG_NONE
 #include "net/uip-debug.h"
 #include "cmd.h"
 #include "slip-radio.h"
@@ -150,7 +150,7 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
       return 1;
     } else if( data[1] == 'P'){
 		panid = (data[2] << 8) + data[3];
-		PRINTF("slip-radio: received change panid command, new panid %u\n", len);
+		PRINTF("slip-radio: received change panid command, new panid %u\n", panid);
 		cli();
 		eeprom_write_word(&eemem_panid, panid);
 		sei();
