@@ -400,6 +400,36 @@ rpl_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_s
   }
 }
 
+
+RESOURCE(info, METHOD_GET, "info", "title=\"Info\";rt=\"text\"");
+
+/*
+* A handler function named [resource name]_handler must be implemented for each RESOURCE.
+* A buffer for the response payload is provided through the buffer pointer. Simple resources can ignore
+* preferred_size and offset, but must respect the REST_MAX_CHUNK_SIZE limit for the buffer.
+* If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
+*/
+void
+info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  char message[100];
+  int index = 0;
+  int length = 0; /* |<-------->| */
+
+  /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
+       // jSON Format
+     index += sprintf(message + index,"{\n \"version\" : \"V0.1\",\n");
+     index += sprintf(message + index," \"name\" : \"native coap router\"\n");
+     index += sprintf(message + index,"}\n");
+
+    length = strlen(message);
+    memcpy(buffer, message,length );
+
+  REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+  REST.set_response_payload(response, buffer, length);
+}
+
+
 RESOURCE(osd_net_conf, METHOD_GET | METHOD_POST, "osd-net-conf", "title=\"osd configs\"");
 void
 osd_net_conf_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
@@ -470,6 +500,7 @@ PROCESS_THREAD(rest_server, ev, data)
   /* Activate the application-specific resources. */
   rest_activate_resource(&resource_rpl);
   rest_activate_resource(&resource_osd_net_conf);
+  rest_activate_resource(&resource_info);
 
   while(1) {
     PROCESS_YIELD();
