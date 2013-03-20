@@ -99,6 +99,10 @@ typedef unsigned long off_t;
 /* Logging adds 200 bytes to program size. RS232 output slows down webserver. */
 //#define LOG_CONF_ENABLED         1
 
+/* Network Panid */
+#define IEEE802154_CONF_PANID   0xABCD
+#define PARAMS_PANID  IEEE802154_CONF_PANID
+
 /* RADIOSTATS is used in rf230bb, clock.c and the webserver cgi to report radio usage */
 /* It has less overhead than ENERGEST */
 #define RADIOSTATS                0

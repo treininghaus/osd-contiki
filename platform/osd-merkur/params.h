@@ -36,7 +36,6 @@ extern uint8_t eemem_mac_address[8];
 extern uint8_t eemem_server_name[16];
 extern uint8_t eemem_domain_name[30];
 #endif
-
 #ifdef SERVER_NAME
 #define PARAMS_SERVERNAME SERVER_NAME
 #else
@@ -57,11 +56,6 @@ extern uint8_t eemem_domain_name[30];
 #else
 #define PARAMS_CHANNEL 26
 #endif
-#ifdef IEEE802154_PANID
-#define PARAMS_PANID IEEE802154_PANID
-#else
-#define PARAMS_PANID 0xABCD
-#endif
 #ifdef IEEE802154_PANADDR
 #define PARAMS_PANADDR IEEE802154_PANADDR
 #else
@@ -79,7 +73,7 @@ extern uint8_t eemem_domain_name[30];
 #if UIP_CONF_LL_802154
 //#define PARAMS_EUI64ADDR {0x02, 0xNN, 0xNN, 0xNN, 0xNN, 0xNN, 0xNN, 0xNN}
 //#define PARAMS_EUI64ADDR {0x02, 0x00, 0x00, 0xff, 0xfe, 0x00, 0x00, 0x01}
-#define PARAMS_EUI64ADDR {0x02, 0x00, 0x00, 0xff, 0xfe, 0x00, 0x00, 0x03}
+#define PARAMS_EUI64ADDR {0x00, 0x21, 0x2e, 0xff, 0xff, 0x00, 0x26, 0x6c}
 //#define PARAMS_EUI64ADDR {0x00, 0x21, 0x2e, 0xff, 0xff, 0x00, 0x1E, 0xFB}
 #else
 //#define PARAMS_EUI64ADDR {0x02, 0xNN, 0xNN, 0xff, 0xfe, 0xNN, 0xNN, 0xNN}
