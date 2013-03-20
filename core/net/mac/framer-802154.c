@@ -65,13 +65,23 @@ static uint8_t initialized = 0;
  *   sending to.  If this value is 0xffff, the device is not
  *   associated.
  */
-static const uint16_t mac_dst_pan_id = IEEE802154_PANID;
+static uint16_t mac_dst_pan_id = IEEE802154_PANID;
 
 /**  \brief The 16-bit identifier of the PAN on which the device is
  *   operating.  If this value is 0xffff, the device is not
  *   associated.
  */
-static const uint16_t mac_src_pan_id = IEEE802154_PANID;
+static uint16_t mac_src_pan_id = IEEE802154_PANID;
+
+/*---------------------------------------------------------------------------*/
+void framer_802154_set_panid(uint16_t panid){
+        mac_dst_pan_id = panid;
+        mac_src_pan_id = panid;
+}
+/*---------------------------------------------------------------------------*/
+uint16_t framer_802154_get_panid(){
+        return mac_dst_pan_id;
+}
 
 /*---------------------------------------------------------------------------*/
 static int
@@ -175,7 +185,6 @@ create(void)
     PRINTF("15.4-OUT: %2X", params.fcf.frame_type);
     PRINTADDR(params.dest_addr);
     PRINTF("%d %u (%u)\n", len, packetbuf_datalen(), packetbuf_totlen());
-
     return len;
   } else {
     PRINTF("15.4-OUT: too large header: %u\n", len);

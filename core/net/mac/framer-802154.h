@@ -39,8 +39,12 @@
 #ifndef FRAMER_802154_H_
 #define FRAMER_802154_H_
 
+#include <stdint.h>
 #include "net/mac/framer.h"
 
 extern const struct framer framer_802154;
 
-#endif /* FRAMER_802154_H_ */
+void framer_802154_set_panid(uint16_t panid);
+uint16_t framer_802154_get_panid();
+
+#endif /* __FRAMER_802154_H__ */
