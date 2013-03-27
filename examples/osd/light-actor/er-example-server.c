@@ -179,9 +179,12 @@ led1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
        if (!strcmp(mode, "on")) {
          led1_on();
          led1 = 1;
+         optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
+
        } else if (!strcmp(mode, "off")) {
          led1_off();
          led1 = 0;
+         optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
        } else {
          success = 0;
        }
@@ -266,9 +269,9 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
     if (strncmp(type, "a", len)==0) {
       triac = OPTRIAC_SENSOR_A;
     } else if(strncmp(type,"b", len)==0) {
-      triac = OPTRIAC_SENSOR_A;
+      triac = OPTRIAC_SENSOR_B;
     } else {
-      success = 0;
+      triac = OPTRIAC_SENSOR_A;
     }
   } else {
     success = 0;
@@ -279,8 +282,12 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 
     if (strncmp(mode, "on", len)==0) {
       optriac_sensor.configure(triac,1);
+      led1_on();
+      led1 = 1;
     } else if (strncmp(mode, "off", len)==0) {
       optriac_sensor.configure(triac,1);
+      led1_off();
+      led1 = 0;
     } else {
       success = 0;
     }
