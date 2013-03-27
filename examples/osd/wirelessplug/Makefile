@@ -1,4 +1,4 @@
-all: er-example-server er-example-client
+all: er-example-server
 # Use this target explicitly if requried: er-plugtest-server
 
 CONTIKI=../../..
@@ -13,6 +13,7 @@ endif
 endif
 endif
 
+PROJECT_SOURCEFILES += relay.c
 # variable for root Makefile.include
 WITH_UIP6=1
 # for some platforms

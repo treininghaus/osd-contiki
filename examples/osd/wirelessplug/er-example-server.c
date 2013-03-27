@@ -93,6 +93,7 @@
 #include "dev/radio-sensor.h"
 #endif
 
+#include "relay.h"
 
 /* For CoAP-specific example: not required for normal RESTful Web service. */
 #if WITH_COAP == 3
@@ -164,7 +165,7 @@ void
 plug1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   char mode[10];
-  static uint8_t led2 = 0;
+  static uint8_t relay1 = 0;
   static char name[17]="plug1";
   int success = 1;
 
@@ -179,9 +180,9 @@ plug1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
    case METHOD_GET:
      // jSON Format
      index += sprintf(temp + index,"{\n \"name\" : \"%s\",\n",name);
-     if(led2 == 0)
+     if(relay1 == 0)
          index += sprintf(temp + index," \"mode\" : \"off\"\n");
-     if(led2 == 1)
+     if(relay1 == 1)
          index += sprintf(temp + index," \"mode\" : \"on\"\n");
      index += sprintf(temp + index,"}\n");
 
@@ -200,11 +201,11 @@ plug1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
        memcpy(mode, pmode,len);
        mode[len]=0;
        if (!strcmp(mode, "on")) {
-         led2_on();
-         led2 = 1;
+         relay1_on();
+         relay1 = 1;
        } else if (!strcmp(mode, "off")) {
-         led2_off();
-         led2 = 0;
+         relay1_off();
+         relay1 = 0;
        } else {
          success = 0;
        }
