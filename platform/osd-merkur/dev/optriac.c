@@ -47,22 +47,22 @@
 /*---------------------------------------------------------------------------*/
 
 /**
- * \brief Turns the TRIAC 1 on.
+ * \brief Turns the TRIAC 1 off.
 */
 void
-optriac1_on(void)
+optriac1_off(void)
 {
-    DDRE  |=  (1<<PIND6);
-    PORTE &= ~(1<<PIND6);
+    DDRD  |=  (1<<PIND6);
+    PORTD &= ~(1<<PIND6);
 }
 
 /*---------------------------------------------------------------------------*/
 
 /**
- *  \brief Turns the TRIAC 1 off.
+ *  \brief Turns the TRIAC 1 on.
 */
 void
-optriac1_off(void)
+optriac1_on(void)
 {
     DDRD  |= (1<<PIND6);
     PORTD |= (1<<PIND6);
@@ -73,7 +73,7 @@ optriac1_off(void)
  *  \brief Turns the Raven TRIAC 2 off.
 */
 void
-optriac2_on(void)
+optriac2_off(void)
 {
     DDRD  |=  (1<<PIND7);
     PORTD &= ~(1<<PIND7);
@@ -82,10 +82,10 @@ optriac2_on(void)
 /*---------------------------------------------------------------------------*/
 
 /**
- *  \brief Turns the Raven TRIAC 2 off.
+ *  \brief Turns the Raven TRIAC 2 on.
 */
 void
-optriac2_off(void)
+optriac2_on(void)
 {
     DDRD  |= (1<<PIND7);
     PORTD |= (1<<PIND7);
