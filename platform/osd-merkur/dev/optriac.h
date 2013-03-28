@@ -38,12 +38,12 @@
  *
  */
 
-#ifndef __LED_H__
-#define __LED_H__
+#ifndef __TRIAC_H__
+#define __TRIAC_H__
 
 #include <avr/io.h>
 
-/** @name LED Functions */
+/** @name TRIAC Functions */
 /** @{ */
 void optriac1_on(void);
 void optriac1_off(void);
@@ -51,4 +51,4 @@ void optriac2_on(void);
 void optriac2_off(void);
 /** @} */
 
-#endif /* __LED_H__ */
+#endif /* __TRIAC_H__ */

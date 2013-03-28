@@ -47,7 +47,7 @@
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
 #define REST_RES_OPTRIAC 1
-#define REST_RES_TEMPERATURE 0
+#define REST_RES_TEMPERATURE 1
 #define REST_RES_EVENT 0
 #define REST_RES_LEDS 0
 #define REST_RES_TOGGLE 0
@@ -77,6 +77,7 @@
 #include "dev/battery-sensor.h"
 #endif
 
+#include "dev/optriac.h"
 
 /* For CoAP-specific example: not required for normal RESTful Web service. */
 #if WITH_COAP == 3
@@ -179,12 +180,9 @@ led1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
        if (!strcmp(mode, "on")) {
          led1_on();
          led1 = 1;
-         optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
-
        } else if (!strcmp(mode, "off")) {
          led1_off();
          led1 = 0;
-         optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
        } else {
          success = 0;
        }
@@ -252,17 +250,48 @@ pir_event_handler(resource_t *r)
 /******************************************************************************/
 #if REST_RES_OPTRIAC
 /*A simple actuator example*/
-RESOURCE(optriac, METHOD_POST | METHOD_PUT , "actuators/optriac", "title=\"TRIAC: ?type=a|b, POST/PUT mode=on|off\";rt=\"Control\"");
+RESOURCE(optriac, METHOD_GET | METHOD_POST | METHOD_PUT , "actuators/optriac", "title=\"TRIAC: ?type=a|b, POST/PUT mode=on|off\";rt=\"Control\"");
 
 void
 optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  size_t len = 0;
   const char *type = NULL;
   const char *mode = NULL;
+  static char namea[17]="Triac-a";
+  static char nameb[17]="Triac-b";
+
+  char temp[100];
+  int index = 0;
+  size_t len = 0;
+
   uint8_t triac = 0;
   int success = 1;
+  switch(REST.get_method_type(request)){
+   case METHOD_GET:
+     // jSON Format
+     index += sprintf(temp + index,"{\n \"%s\" : ",namea);
+     if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 0)
+         index += sprintf(temp + index,"\"off\",\n");
+     if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 1)
+         index += sprintf(temp + index,"\"on\",\n");
+     index += sprintf(temp + index," \"%s\" : ",nameb);
+     if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 0)
+         index += sprintf(temp + index,"\"off\"\n");
+     if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 1)
+         index += sprintf(temp + index,"\"on\"\n");
+     index += sprintf(temp + index,"}\n");
 
+     len = strlen(temp);
+     memcpy(buffer, temp,len );
+
+     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+     REST.set_response_payload(response, buffer, len);
+     break;
+
+   case METHOD_POST:
+     success = 0;
+     break;
+   case METHOD_PUT:
   if ((len=REST.get_query_variable(request, "type", &type))) {
     PRINTF("type %.*s\n", len, type);
 
@@ -283,18 +312,19 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
     if (strncmp(mode, "on", len)==0) {
       optriac_sensor.configure(triac,1);
       led1_on();
-      led1 = 1;
     } else if (strncmp(mode, "off", len)==0) {
-      optriac_sensor.configure(triac,1);
+      optriac_sensor.configure(triac,0);
       led1_off();
-      led1 = 0;
     } else {
       success = 0;
     }
   } else {
     success = 0;
   }
-
+    break;
+  default:
+    success = 0;
+  }
   if (!success) {
     REST.set_response_status(response, REST.status.BAD_REQUEST);
   }
