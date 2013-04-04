@@ -20,6 +20,8 @@ CONTIKI_TARGET_SOURCEFILES += optriac.c optriac-sensor.c
 CONTIKIAVR=$(CONTIKI)/cpu/avr
 #Needed for SERVO
 CONTIKI_TARGET_SOURCEFILES += servo.c servo-sensor.c
+#Needed for Timer4 Servo
+CONTIKI_TARGET_SOURCEFILES += t4-servo.c t4-servo-sensor.c
 
 CONTIKIBOARD=.
 BOOTLOADER_START = 0x1F000

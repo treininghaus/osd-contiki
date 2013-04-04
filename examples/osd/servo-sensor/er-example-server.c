@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Matthias Kovatsch and other contributors.
+ * Copyright (C) 2011-2013, Matthias Kovatsch and other contributors.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,8 @@
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
-#define REST_RES_SERVO 1
+#define REST_RES_SERVO 0
+#define REST_RES_T4_SERVO 1
 #define REST_RES_TEMPERATURE 0
 #define REST_RES_EVENT 0
 #define REST_RES_LEDS 0
@@ -69,6 +70,9 @@
 #endif
 #if defined (PLATFORM_HAS_SERVO)
 #include "dev/servo-sensor.h"
+#endif
+#if defined (PLATFORM_HAS_T4_SERVO)
+#include "dev/t4-servo-sensor.h"
 #endif
 #if defined (PLATFORM_HAS_TEMPERATURE)
 #include "dev/temperature-sensor.h"
@@ -134,6 +138,7 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 }
 #endif
 
+#if defined (PLATFORM_HAS_SERVO)
 /*A simple actuator example. read the servo status*/
 RESOURCE(servo, METHOD_GET | METHOD_PUT , "actuators/servo",  "title=\"Servo\";rt=\"servo\"");
 void
@@ -186,7 +191,86 @@ servo_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
     REST.set_response_status(response, REST.status.BAD_REQUEST);
   }
 }
+#endif
 
+#if defined (PLATFORM_HAS_T4_SERVO)
+RESOURCE(t4_servo, METHOD_GET | METHOD_PUT , "actuators/t4_servo",  "title=\"Timer4Servo\";rt=\"t4_servo\"");
+void
+t4_servo_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  int success = 1;
+
+  char temp[100];
+  int index = 0;
+  int length = 0; /*           |<-------->| */
+  const char *value = NULL;
+  size_t len = 0;
+
+  int red   = t4_servo_sensor.value(0);
+  int green = t4_servo_sensor.value(1);
+  int blue  = t4_servo_sensor.value(2);
+  int white = t4_servo_sensor.value(3);
+
+  switch(REST.get_method_type(request)){
+   case METHOD_GET:
+     // jSON Format
+     index += sprintf(temp + index,"{\n \"red\" : \"%d\",",  red);
+     index += sprintf(temp + index, "\n \"green\" : \"%d\",", green);
+     index += sprintf(temp + index, "\n \"blue\" : \"%d\",",  blue);
+     index += sprintf(temp + index, "\n \"white\" : \"%d\"", white);
+     index += sprintf(temp + index,"}\n");
+
+     length = strlen(temp);
+     memcpy(buffer, temp, length);
+
+     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+     REST.set_response_payload(response, buffer, length);
+
+     break;
+
+   case METHOD_POST:
+     success = 0;
+     break;
+
+   case METHOD_PUT:
+     // Note that we have to set all at once:
+     // red=255&green=255&blue=255&white=255
+     // otherwise we get "bad request"
+     if (success &&  (len=REST.get_post_variable(request, "red", &value)))
+     {
+       t4_servo_sensor.configure(0,atoi(value));
+     } else {
+       success = 0;
+     }
+
+     if (success &&  (len=REST.get_post_variable(request, "green", &value))) {
+       t4_servo_sensor.configure(1,atoi(value));
+     } else {
+       success = 0;
+     }
+
+     if (success &&  (len=REST.get_post_variable(request, "blue", &value))) {
+       t4_servo_sensor.configure(2,atoi(value));
+     } else {
+       success = 0;
+     }
+
+     if (success &&  (len=REST.get_post_variable(request, "white", &value))) {
+       t4_servo_sensor.configure(3,atoi(value));
+     } else {
+       success = 0;
+     }
+     break;
+
+  default:
+    success = 0;
+  }
+
+  if (!success) {
+    REST.set_response_status(response, REST.status.BAD_REQUEST);
+  }
+}
+#endif
 
 /*A simple actuator example, post variable mode, relay is activated or deactivated*/
 RESOURCE(led1, METHOD_GET | METHOD_PUT , "aktors/led1",  "title=\"Led1\";rt=\"led\"");
@@ -454,6 +538,10 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #if defined (PLATFORM_HAS_SERVO) && REST_RES_SERVO
   SENSORS_ACTIVATE(servo_sensor);
   rest_activate_resource(&resource_servo);
+#endif
+#if defined (PLATFORM_HAS_T4_SERVO) && REST_RES_T4_SERVO
+  SENSORS_ACTIVATE(t4_servo_sensor);
+  rest_activate_resource(&resource_t4_servo);
 #endif
 
   /* Define application-specific events here. */
