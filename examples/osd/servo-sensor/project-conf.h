@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Swedish Institute of Computer Science.
+ * Copyright (C) 2010-2013, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,11 +34,16 @@
 
 //#define PLATFORM_HAS_LEDS    1
 //#define PLATFORM_HAS_BUTTON  1
-#define PLATFORM_HAS_SERVO  1
+//#define PLATFORM_HAS_SERVO  1
+#define PLATFORM_HAS_T4_SERVO  1
 //#define PLATFORM_HAS_TEMPERATURE   1
 #define PLATFORM_HAS_BATTERY 1
 
 #define SICSLOWPAN_CONF_FRAG	1
+
+/* Dont allow MCU sleeping between channel checks */
+#undef RDC_CONF_MCU_SLEEP
+#define RDC_CONF_MCU_SLEEP       0
 
 /* Disabling RDC for demo purposes. Core updates often require more memory. */
 /* For projects, optimize memory and enable RDC again. */
