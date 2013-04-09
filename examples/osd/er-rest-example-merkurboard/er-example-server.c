@@ -51,12 +51,12 @@
 #define REST_RES_CHUNKS 0
 #define REST_RES_SEPARATE 0
 #define REST_RES_PUSHING 0
-#define REST_RES_EVENT 0
+#define REST_RES_EVENT 1
 #define REST_RES_SUB 0
 #define REST_RES_LEDS 0
 #define REST_RES_TOGGLE 0
 #define REST_RES_LIGHT 0
-#define REST_RES_BATTERY 0
+#define REST_RES_BATTERY 1
 #define REST_RES_RADIO 0
 
 
