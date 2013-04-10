@@ -12,6 +12,8 @@ PROJECT_SOURCEFILES += static-routing.c
 endif
 endif
 endif
+# pcintkey
+PROJECT_SOURCEFILES += pcintkey.c
 
 # variable for root Makefile.include
 WITH_UIP6=1
