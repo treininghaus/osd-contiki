@@ -337,7 +337,7 @@ PROCESS_THREAD(border_router_process, ev, data)
 * Resources are defined by the RESOURCE macro.
 * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
 */
-RESOURCE(rpl, METHOD_GET, "rpl", "title=\"rpl routing\";rt=\"Text\"");
+RESOURCE(rpl, METHOD_GET, "rpl", "title=\"rpl routing table\";rt=\"application/json\"");
 
 /*
 * A handler function named [resource name]_handler must be implemented for each RESOURCE.
@@ -401,7 +401,7 @@ rpl_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_s
 }
 
 
-RESOURCE(info, METHOD_GET, "info", "title=\"Info\";rt=\"text\"");
+RESOURCE(info, METHOD_GET, "info", "title=\"Info\";rt=\"application/json\"");
 
 /*
 * A handler function named [resource name]_handler must be implemented for each RESOURCE.
@@ -417,9 +417,8 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
   int length = 0; /* |<-------->| */
 
   /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
-       // jSON Format
-     index += sprintf(message + index,"{\n \"version\" : \"V0.1\",\n");
-     index += sprintf(message + index," \"name\" : \"native coap router\"\n");
+     index += sprintf(message + index,"{\n \"version\" : \"V0.2\",\n");
+     index += sprintf(message + index," \"name\" : \"native coap border router\"\n");
      index += sprintf(message + index,"}\n");
 
     length = strlen(message);
@@ -430,9 +429,9 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 }
 
 
-RESOURCE(osd_net_conf, METHOD_GET | METHOD_POST, "osd-net-conf", "title=\"osd configs\"");
+RESOURCE(network, METHOD_GET | METHOD_PUT, "network", "title=\"osd configs\"; rt=\"application/json\"");
 void
-osd_net_conf_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+network_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   char message[100];
   uint8_t buf[10];
@@ -499,7 +498,7 @@ PROCESS_THREAD(rest_server, ev, data)
 
   /* Activate the application-specific resources. */
   rest_activate_resource(&resource_rpl);
-  rest_activate_resource(&resource_osd_net_conf);
+  rest_activate_resource(&resource_network);
   rest_activate_resource(&resource_info);
 
   while(1) {
