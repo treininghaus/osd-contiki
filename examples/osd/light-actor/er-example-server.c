@@ -59,6 +59,7 @@
 #endif
 
 #include "erbium.h"
+#include "pcintkey.h"
 
 #include "dev/led.h"
 #if defined (PLATFORM_HAS_BUTTON)
@@ -135,7 +136,61 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 }
 #endif
 
+// pcintkey_ext
+/*A simple actuator example. read the key button status*/
+RESOURCE(extbutton, METHOD_GET | METHOD_PUT , "sensors/extbutton",  "title=\"ext.Button\";rt=\"Text\"");
+void
+extbutton_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  static char bname1[17]="button1";
+  static char bname2[17]="button2";
+  int success = 1;
 
+  char temp[100];
+  int index = 0;
+  int length = 0; /*           |<-------->| */
+  const char *name = NULL;
+  size_t len = 0;
+
+  switch(REST.get_method_type(request)){
+   case METHOD_GET:
+     // jSON Format
+     index += sprintf(temp + index,"{\n \"%s\" : ",bname1);
+     if(is_button_ext1())
+         index += sprintf(temp + index,"\"on\",\n");
+     else
+         index += sprintf(temp + index,"\"off\",\n");
+     index += sprintf(temp + index," \"%s\" : ",bname2);
+     if(is_button_ext2())
+         index += sprintf(temp + index,"\"on\"\n");
+     else
+         index += sprintf(temp + index,"\"off\"\n");
+     index += sprintf(temp + index,"}\n");
+
+     length = strlen(temp);
+     memcpy(buffer, temp,length );
+
+     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+     REST.set_response_payload(response, buffer, length);
+
+     break;
+   case METHOD_PUT:
+
+     if (success &&  (len=REST.get_post_variable(request, "name", &name))) {
+       PRINTF("name %s\n", name);
+       memcpy(bname1, name,len);
+       bname1[len]=0;
+     } else {
+       success = 0;
+     }
+     break;
+  default:
+    success = 0;
+  }
+  if (!success) {
+    REST.set_response_status(response, REST.status.BAD_REQUEST);
+  }
+}
 /*A simple actuator example, post variable mode, relay is activated or deactivated*/
 RESOURCE(led1, METHOD_GET | METHOD_PUT , "actuators/led1",  "title=\"Led1\";rt=\"led\"");
 void
@@ -510,6 +565,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 
   /* Activate the application-specific resources. */
   rest_activate_resource(&resource_led1);
+  rest_activate_resource(&resource_extbutton);
 #if REST_RES_INFO
   rest_activate_resource(&resource_info);
 #endif
