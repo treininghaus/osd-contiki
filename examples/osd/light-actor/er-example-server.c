@@ -531,12 +531,21 @@ hw_init()
   led1_off();
 }
 
+#define MESURE_INTERVAL		(CLOCK_SECOND)
+
 PROCESS(rest_server_example, "Erbium Example Server");
 
 AUTOSTART_PROCESSES(&rest_server_example, &sensors_process);
 
 PROCESS_THREAD(rest_server_example, ev, data)
 {
+  static struct etimer ds_periodic_timer;
+  static int ext1;
+  static int ext2;
+  ext1 = is_button_ext1();
+  ext2 = is_button_ext2();
+  
+	  
   PROCESS_BEGIN();
   PRINTF("Starting Erbium Example Server\n");
 
@@ -596,6 +605,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
   rest_activate_resource(&resource_battery);
 #endif
 
+  etimer_set(&ds_periodic_timer, MESURE_INTERVAL);
   /* Define application-specific events here. */
   while(1) {
     PROCESS_WAIT_EVENT();
@@ -612,6 +622,10 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #endif /* PLATFORM_HAS_PIR */
     }
 #endif /* REST_RES_EVENT */
+    if(etimer_expired(&ds_periodic_timer)) {
+        PRINTF("Periodic\n");
+        etimer_reset(&ds_periodic_timer);
+    }
   } /* while (1) */
 
   PROCESS_END();
