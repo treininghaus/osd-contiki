@@ -38,22 +38,41 @@
  *
  */
 
-#include "key.h"
+#include <avr/interrupt.h>
+#include "dev/led.h"
+#include "pcintkey.h"
 
 /*---------------------------------------------------------------------------*/
 
+ISR(PCINT0_vect)
+{
+//  if(BUTTON_CHECK_IRQ()) {
+//    if(timer_expired(&debouncetimer)) {
+    led1_on();
+//      timer_set(&debouncetimer, CLOCK_SECOND / 4);
+//      sensors_changed(&button_sensor);
+    led1_off();
+//    }
+//  }
+}
 /**
  *   \brief This will intialize the KEY for button readings.
 */
 void
 key_init(void)
 {
+    // Pairing Button
+    DDRB |= (0<<DDB4); // Set pin as input
+    PORTB |= (1<<PORTB4); // Set port PORTE bint 5 with pullup resistor
     // ext1
     DDRB |= (0<<DDB5); // Set pin as input
     PORTB |= (1<<PORTB5); // Set port PORTE bint 5 with pullup resistor
     // ext2
     DDRB |= (0<<DDB6); // Set pin as input
     PORTB |= (1<<PORTB6); // Set port PORTE bint 5 with pullup resistor
+    // Interrupt
+    PCICR |= _BV(PCIE0);
+    PCMSK0 |= _BV(PCINT4) | _BV(PCINT5) | _BV(PCINT6);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -65,7 +84,18 @@ key_init(void)
  *   \retval False if button is not pressed
 */
 uint8_t
-is_button_ext1(void)
+is_button_ext4(void)
+{
+    /* Return true if button has been pressed. */
+    if ( PINB & (1<<PINB4) ) {
+        return 0;
+    }
+    else{
+        return 1;
+    }
+}
+uint8_t
+is_button_ext5(void)
 {
     /* Return true if button has been pressed. */
     if ( PINB & (1<<PINB5) ) {
@@ -76,7 +106,7 @@ is_button_ext1(void)
     }
 }
 uint8_t
-is_button_ext2(void)
+is_button_ext6(void)
 {
     /* Return true if button has been pressed. */
     if ( PINB & (1<<PINB6) ) {
