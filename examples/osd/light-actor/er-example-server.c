@@ -144,6 +144,7 @@ extbutton_handler(void* request, void* response, uint8_t *buffer, uint16_t prefe
 {
   static char bname1[17]="button1";
   static char bname2[17]="button2";
+  static char bname3[17]="button3";
   int success = 1;
 
   char temp[100];
@@ -156,12 +157,17 @@ extbutton_handler(void* request, void* response, uint8_t *buffer, uint16_t prefe
    case METHOD_GET:
      // jSON Format
      index += sprintf(temp + index,"{\n \"%s\" : ",bname1);
-     if(is_button_ext1())
+     if(is_button_ext4())
          index += sprintf(temp + index,"\"on\",\n");
      else
          index += sprintf(temp + index,"\"off\",\n");
-     index += sprintf(temp + index," \"%s\" : ",bname2);
-     if(is_button_ext2())
+     index += sprintf(temp + index,"{\n \"%s\" : ",bname2);
+     if(is_button_ext5())
+         index += sprintf(temp + index,"\"on\",\n");
+     else
+         index += sprintf(temp + index,"\"off\",\n");
+     index += sprintf(temp + index," \"%s\" : ",bname3);
+     if(is_button_ext6())
          index += sprintf(temp + index,"\"on\"\n");
      else
          index += sprintf(temp + index,"\"off\"\n");
@@ -540,10 +546,12 @@ AUTOSTART_PROCESSES(&rest_server_example, &sensors_process);
 PROCESS_THREAD(rest_server_example, ev, data)
 {
   static struct etimer ds_periodic_timer;
-  static int ext1;
-  static int ext2;
-  ext1 = is_button_ext1();
-  ext2 = is_button_ext2();
+  static int ext4;
+  static int ext5;
+  static int ext6;
+  ext4 = is_button_ext4();
+  ext5 = is_button_ext5();
+  ext6 = is_button_ext6();
   
 	  
   PROCESS_BEGIN();

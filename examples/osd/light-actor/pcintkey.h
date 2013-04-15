@@ -45,7 +45,8 @@
 #include <avr/io.h>
 
 void	key_init(void);
-uint8_t	is_button_ext1(void);
-uint8_t	is_button_ext2(void);
+uint8_t	is_button_ext4(void);
+uint8_t	is_button_ext5(void);
+uint8_t	is_button_ext6(void);
 
 #endif /* __KEY_H__ */
