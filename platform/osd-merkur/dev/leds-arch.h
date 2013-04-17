@@ -5,7 +5,7 @@
 
 #define BIT_GREEN _BV(PE2)
 #define BIT_YELLOW _BV(PE3)
-#define BIT_RED _BV(PE4)
+#define BIT_RED _BV(PE5)
 #define BIT_BLUE BIT_YELLOW
 
 #define LED_GREEN_ON() LED_OUT &= ~BIT_GREEN

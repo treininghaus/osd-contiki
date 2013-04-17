@@ -83,16 +83,16 @@ uint8_t DHT_Read_Data(uint8_t select){
             //Shift data[] value 1 position left
             //Example. 01010100 if we shift it left one time it will be
             //10101000
-    led1_on();
+ //   led1_on();
 
             data[j/8]<<=1;
             if (counter >= 15) {    //If it was high for more than 40uS
-    led1_off();
+ //   led1_off();
                 data[j/8]|=1;       //it means it is bit '1' so make a logic
-    led1_on();
+ //   led1_on();
             }                       //OR with the value (save it)
             j++;                    //making an OR by 1 to this value 10101000
-    led1_off();
+ //   led1_off();
 
         }                           //we will have the resault 10101001
                                     //1 in 8-bit binary is 00000001

@@ -26,10 +26,10 @@ ISR(INT6_vect)
   
   if(PIR_CHECK_IRQ()) {
     if(timer_expired(&debouncetimer)) {
-    led1_on();
+ //   led1_on();
       timer_set(&debouncetimer, CLOCK_SECOND / 4);
       sensors_changed(&pir_sensor);
-    led1_off();
+ //   led1_off();
     }
   }
 
@@ -50,7 +50,7 @@ configure(int type, int c)
 	case SENSORS_ACTIVE:
 		if (c) {
 			if(!status(SENSORS_ACTIVE)) {
-    led1_on();
+  //  led1_on();
 				timer_set(&debouncetimer, 0);
 				DDRE |= (0<<DDE6); // Set pin as input
 				PORTE |= (1<<PORTE6); // Set port PORTE bint 6 with pullup resistor
@@ -58,7 +58,7 @@ configure(int type, int c)
 				EIMSK |= (1<<INT6); // Set int
 				enabled = 1;
 				sei();
-    led1_off();
+  //  led1_off();
 			}
 		} else {
 				enabled = 0;
