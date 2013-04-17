@@ -50,7 +50,7 @@
 void
 leds_arch_init(void)
 {
-DDRE|=(1<<DDE2) | (1<<DDE3) | (1<<DDE4);	// Set pins as output since leds are mounted on the VDD bus
+DDRE|=(1<<DDE2) | (1<<DDE3) | (1<<DDE5);	// Set pins as output since leds are mounted on the VDD bus
 LEDS_OFF();
 }
 /*---------------------------------------------------------------------------*/
