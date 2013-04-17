@@ -1,4 +1,4 @@
-all: er-example-server
+all: er-example-server  er-example-client
 # Use this target explicitly if requried: er-plugtest-server
 
 CONTIKI=../../..
