@@ -172,6 +172,12 @@ rng_get_uint8(void) {
   return j;
 }
 
+void
+clock_delay(unsigned int howlong)
+{
+  if(howlong<2) return;
+  clock_delay_usec((45*howlong)>>4);
+}
 /*-------------------------Low level initialization------------------------*/
 /*------Done in a subroutine to keep main routine stack usage small--------*/
 void initialize(void)

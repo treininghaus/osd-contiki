@@ -53,12 +53,11 @@
 #define REST_RES_PUSHING 0
 #define REST_RES_EVENT 1
 #define REST_RES_SUB 0
-#define REST_RES_LEDS 0
-#define REST_RES_TOGGLE 0
+#define REST_RES_LEDS 1
+#define REST_RES_TOGGLE 1
 #define REST_RES_LIGHT 0
 #define REST_RES_BATTERY 1
 #define REST_RES_RADIO 0
-
 
 
 #if !UIP_CONF_IPV6_RPL && !defined (CONTIKI_TARGET_MINIMAL_NET) && !defined (CONTIKI_TARGET_NATIVE)
@@ -68,9 +67,7 @@
 
 #include "erbium.h"
 
-// todo OSD-Testboard move to platform/dev
-#include "dev/key.h"
-#include "dev/led.h"
+
 #if REST_RES_DS1820
 #include "dev/ds1820.h"
 #endif
@@ -115,10 +112,6 @@
 #define PRINTLLADDR(addr)
 #endif
 
-
-#include "dev/key.c"	// todo: move platform /dev 
-#include "dev/led.c"
-
 /******************************************************************************/
 
 #if REST_RES_INFO
@@ -143,7 +136,7 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 
   /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
        // jSON Format
-     index += sprintf(message + index,"{\n \"version\" : \"V0.3\",\n");
+     index += sprintf(message + index,"{\n \"version\" : \"V0.4\",\n");
      index += sprintf(message + index," \"name\" : \"Button,LED\"\n");
      index += sprintf(message + index,"}\n");
 
@@ -155,57 +148,8 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 }
 #endif
 
-// mybutton
-/*A simple actuator example. read the key button status*/
-RESOURCE(button, METHOD_GET | METHOD_PUT , "button",  "title=\"Button\";rt=\"Text\"");
-void
-button_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  static char bname[17]="button1";
-  int success = 1;
-
-  char temp[100];
-  int index = 0;
-  int length = 0; /*           |<-------->| */
-  const char *name = NULL;
-  size_t len = 0;
-
-  switch(REST.get_method_type(request)){
-   case METHOD_GET:
-     // jSON Format
-     index += sprintf(temp + index,"{\n \"name\" : \"%s\",\n",bname);
-     if(is_button())
-         index += sprintf(temp + index," \"state\" : \"on\"\n");
-     else
-         index += sprintf(temp + index," \"state\" : \"off\"\n");
-     index += sprintf(temp + index,"}\n");
-
-     length = strlen(temp);
-     memcpy(buffer, temp,length );
-
-     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-     REST.set_response_payload(response, buffer, length);
-
-     break;
-   case METHOD_PUT:
-
-     if (success &&  (len=REST.get_post_variable(request, "name", &name))) {
-       PRINTF("name %s\n", name);
-       memcpy(bname, name,len);
-       bname[len]=0;
-     } else {
-       success = 0;
-     }
-     break;
-  default:
-    success = 0;
-  }
-  if (!success) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
-  }
-}
-
 /*A simple actuator example, post variable mode, relay is activated or deactivated*/
+/*
 RESOURCE(led1, METHOD_GET | METHOD_PUT , "led1",  "title=\"Led1\";rt=\"Text\"");
 void
 led1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
@@ -271,6 +215,7 @@ led1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
     REST.set_response_status(response, REST.status.BAD_REQUEST);
   }
 }
+*/
 
 #if REST_RES_DS1820
 /*A simple getter example. Returns the reading from ds1820 sensor*/
@@ -983,8 +928,6 @@ radio_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
 void 
 hw_init()
 {
-  key_init();
-  led1_off();
 #if REST_RES_DS1820
   ds1820_temp();
 #endif
@@ -1003,8 +946,6 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #endif
 
   PROCESS_BEGIN();
-
-
 
   PRINTF("Starting Erbium Example Server\n");
 
@@ -1032,9 +973,6 @@ PROCESS_THREAD(rest_server_example, ev, data)
   /* Initialize the REST engine. */
   rest_init_engine();
 
-  /* Activate the application-specific resources. */
-  rest_activate_resource(&resource_button);
-  rest_activate_resource(&resource_led1);
   /* Activate the application-specific resources. */
 #if REST_RES_DS1820
   rest_activate_resource(&resource_ds1820);
