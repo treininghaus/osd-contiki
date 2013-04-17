@@ -928,6 +928,9 @@ radio_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
 void 
 hw_init()
 {
+#if defined (PLATFORM_HAS_LEDS)
+ leds_off(LEDS_RED);
+#endif
 #if REST_RES_DS1820
   ds1820_temp();
 #endif
