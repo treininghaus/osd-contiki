@@ -150,11 +150,11 @@ slip_radio_cmd_handler(const uint8_t *data, int len)
       return 1;
     } else if( data[1] == 'P'){
 		panid = (data[2] << 8) + data[3];
-		PRINTF("slip-radio: received change panid command, new panid %u\n", panid);
+		printf("slip-radio: received change panid command, new panid %u\n", panid);
 		cli();
 		eeprom_write_word(&eemem_panid, panid);
 		sei();
-		watchdog_reboot();
+		//watchdog_reboot();
 	}
   }
   return 0;
