@@ -74,7 +74,7 @@
 #endif
 
 /* TODO: This server address is hard-coded for Cooja. */
-#define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0xfe80, 0, 0, 0, 0x0221, 0x2eff, 0xff00, 0x1efb) /* cooja2 */
+#define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0xfe80, 0, 0, 0, 0x0221, 0x2eff, 0xff00, 0x26D0) /* cooja2 */
 
 #define LOCAL_PORT      UIP_HTONS(COAP_DEFAULT_PORT+1)
 #define REMOTE_PORT     UIP_HTONS(COAP_DEFAULT_PORT)
@@ -115,7 +115,7 @@ PROCESS_THREAD(coap_client_example, ev, data)
 
 #if PLATFORM_HAS_BUTTON
   SENSORS_ACTIVATE(button_sensor);
-  printf("Press a button to request %s\n", service_urls[1]);
+  PRINTF("Press a button to request %s\n", service_urls[1]);
 #endif
 
   while(1) {
@@ -126,8 +126,8 @@ PROCESS_THREAD(coap_client_example, ev, data)
 
       /* send a request to notify the end of the process */
 
-      printf("--Toggle --\n");
-      leds_toggle(LEDS_RED);
+      PRINTF("--Toggle --\n");
+      //leds_toggle(LEDS_RED);
       /* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
 
       coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0 );
@@ -142,7 +142,7 @@ PROCESS_THREAD(coap_client_example, ev, data)
 
       COAP_BLOCKING_REQUEST(&server_ipaddr, REMOTE_PORT, request, client_chunk_handler);
 
-      printf("\n--Done--\n");
+      PRINTF("\n--Done--\n");
     }
 #endif
   }
