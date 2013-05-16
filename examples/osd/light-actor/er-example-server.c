@@ -89,7 +89,7 @@
 #warning "Erbium example without CoAP-specifc functionality"
 #endif /* CoAP-specific example */
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
@@ -265,48 +265,6 @@ led1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 }
 
 /******************************************************************************/
-#if REST_RES_EVENT && defined (PLATFORM_HAS_PIR)
-/*
- * Example for an event resource.
- * Additionally takes a period parameter that defines the interval to call [name]_periodic_handler().
- * A default post_handler takes care of subscriptions and manages a list of subscribers to notify.
- */
-EVENT_RESOURCE(pir, METHOD_GET, "sensors/pir", "title=\"Event demo\";obs");
-
-void
-pir_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-  /* Usually, a CoAP server would response with the current resource representation. */
-  const char *msg = "It's eventful!";
-  REST.set_response_payload(response, (uint8_t *)msg, strlen(msg));
-
-  /* A post_handler that handles subscriptions/observing will be called for periodic resources by the framework. */
-}
-
-/* Additionally, a handler function named [resource name]_event_handler must be implemented for each PERIODIC_RESOURCE defined.
- * It will be called by the REST manager process with the defined period. */
-void
-pir_event_handler(resource_t *r)
-{
-  static uint16_t event_counter = 0;
-  static char content[12];
-
-  ++event_counter;
-
-  PRINTF("PIR TICK %u for /%s\n", event_counter, r->url);
-
-  /* Build notification. */
-  coap_packet_t notification[1]; /* This way the packet can be treated as pointer as usual. */
-  coap_init_message(notification, COAP_TYPE_CON, CONTENT_2_05, 0 );
-  coap_set_payload(notification, content, snprintf(content, sizeof(content), "EVENT %u", event_counter));
-
-  /* Notify the registered observers with the given message type, observe option, and payload. */
-  REST.notify_subscribers(r, event_counter, notification);
-}
-#endif /* PLATFORM_HAS_PIR */
-
-/******************************************************************************/
 #if defined (PLATFORM_HAS_OPTRIAC)
 /******************************************************************************/
 #if REST_RES_OPTRIAC
@@ -371,11 +329,11 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
     PRINTF("mode %s\n", mode);
 
     if (strncmp(mode, "on", len)==0) {
+      led1_on();  // Debug
       optriac_sensor.configure(triac,1);
-      led1_on();
     } else if (strncmp(mode, "off", len)==0) {
       optriac_sensor.configure(triac,0);
-      led1_off();
+      led1_off();  // Debug
     } else {
       success = 0;
     }
@@ -531,13 +489,15 @@ battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 #endif /* PLATFORM_HAS_BATTERY */
 /******************************************************************************/
 
+
+
 void 
 hw_init()
 {
   led1_off();
 }
 
-#define MESURE_INTERVAL		(CLOCK_SECOND)
+#define MESURE_INTERVAL		(CLOCK_SECOND/2)
 
 PROCESS(rest_server_example, "Erbium Example Server");
 
@@ -546,12 +506,12 @@ AUTOSTART_PROCESSES(&rest_server_example, &sensors_process);
 PROCESS_THREAD(rest_server_example, ev, data)
 {
   static struct etimer ds_periodic_timer;
-  static int ext4;
-  static int ext5;
-  static int ext6;
-  ext4 = is_button_ext4();
-  ext5 = is_button_ext5();
-  ext6 = is_button_ext6();
+  static int ext4=0;
+  static int ext5=0;
+  static int ext6=0;
+//  ext4 = is_button_ext4();
+//  ext5 = is_button_ext5();
+//  ext6 = is_button_ext6();
   
 	  
   PROCESS_BEGIN();
@@ -630,9 +590,34 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #endif /* PLATFORM_HAS_PIR */
     }
 #endif /* REST_RES_EVENT */
+    /* Button Tric Logic */
     if(etimer_expired(&ds_periodic_timer)) {
-        PRINTF("Periodic\n");
-        etimer_reset(&ds_periodic_timer);
+        PRINTF("Periodic %d %d\n",ext5,ext6);
+	if(ext5 != is_button_ext5()) {
+	  ext5 = is_button_ext5();
+          PRINTF("Toggle Triac A\n");
+          // Toggle Triac A
+          if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 0){
+            optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
+            led1_on();
+          }else{
+            optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
+            led1_off();
+          }
+	}
+	if(ext6 != is_button_ext6()) {
+	  ext6 = is_button_ext6();
+          PRINTF("Toggle Triac B\n");
+          // Toggle Triac B
+          if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 0){
+            optriac_sensor.configure(OPTRIAC_SENSOR_B,1);
+            led2_on();
+          }else{
+            optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
+            led2_off();
+          }
+	}
+      etimer_reset(&ds_periodic_timer);
     }
   } /* while (1) */
 
