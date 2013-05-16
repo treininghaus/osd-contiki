@@ -48,10 +48,10 @@ ISR(PCINT0_vect)
 {
 //  if(BUTTON_CHECK_IRQ()) {
 //    if(timer_expired(&debouncetimer)) {
-    led1_on();
+//    led1_on();
 //      timer_set(&debouncetimer, CLOCK_SECOND / 4);
 //      sensors_changed(&button_sensor);
-    led1_off();
+//    led1_off();
 //    }
 //  }
 }
@@ -62,17 +62,17 @@ void
 key_init(void)
 {
     // Pairing Button
-    DDRB |= (0<<DDB4); // Set pin as input
-    PORTB |= (1<<PORTB4); // Set port PORTE bint 5 with pullup resistor
+    PORTB |= (1<<PORTB4); // Set port PORTE bint 4 with pullup resistor
+    DDRB |= (1<<DDB4); // Set pin as input
     // ext1
-    DDRB |= (0<<DDB5); // Set pin as input
     PORTB |= (1<<PORTB5); // Set port PORTE bint 5 with pullup resistor
+    DDRB |= (1<<DDB5); // Set pin as input
     // ext2
-    DDRB |= (0<<DDB6); // Set pin as input
-    PORTB |= (1<<PORTB6); // Set port PORTE bint 5 with pullup resistor
+    PORTB |= (1<<PORTB6); // Set port PORTE bint 6 with pullup resistor
+    DDRB |= (1<<DDB6); // Set pin as input
     // Interrupt
-    PCICR |= _BV(PCIE0);
-    PCMSK0 |= _BV(PCINT4) | _BV(PCINT5) | _BV(PCINT6);
+    //PCICR |= _BV(PCIE0);
+    //PCMSK0 |= _BV(PCINT4) | _BV(PCINT5) | _BV(PCINT6);
 }
 
 /*---------------------------------------------------------------------------*/

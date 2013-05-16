@@ -40,6 +40,10 @@
 
 #define SICSLOWPAN_CONF_FRAG	1
 
+/* For Debug: Dont allow MCU sleeping between channel checks */
+#undef RDC_CONF_MCU_SLEEP
+#define RDC_CONF_MCU_SLEEP       0
+
 /* Disabling RDC for demo purposes. Core updates often require more memory. */
 /* For projects, optimize memory and enable RDC again. */
 //#undef NETSTACK_CONF_RDC
