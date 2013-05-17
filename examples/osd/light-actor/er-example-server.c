@@ -495,6 +495,7 @@ void
 hw_init()
 {
   led1_off();
+  key_init();
 }
 
 #define MESURE_INTERVAL		(CLOCK_SECOND/2)
