@@ -291,16 +291,15 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 
   char message[100];
   int length = 0; /*           |<-------->| */
-  int ret=0;
   int grad=0;
   int kgrad=0;
-//  ret=ds1820_temp();
+
   if(ds1820_ok[0] & 0x01){
 	kgrad=5;
   }
   grad = (int)((ds1820_ok[1] << 8) | (ds1820_ok[0])) >> 1;
 
-  uint16_t *accept = NULL;
+  const uint16_t *accept = NULL;
   int num = REST.get_header_accept(request, &accept);
 
   if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
@@ -339,11 +338,8 @@ dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
 {
   char message[100];
   int length = 0; /*           |<-------->| */
-  int ret=0;
-//  dht11_temp=DHT_Read_Data(DHT_Temp);
-//  dht11_hum=DHT_Read_Data(DHT_RH);
 
-  uint16_t *accept = NULL;
+  const uint16_t *accept = NULL;
   int num = REST.get_header_accept(request, &accept);
 
   if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
