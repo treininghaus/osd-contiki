@@ -101,7 +101,7 @@ uint8_t debugflowsize,debugflow[DEBUGFLOWSIZE];
 /* Get periodic prints from idle loop, from clock seconds or rtimer interrupts */
 /* Use of rtimer will conflict with other rtimer interrupts such as contikimac radio cycling */
 /* STAMPS will print ENERGEST outputs if that is enabled. */
-#define PERIODICPRINTS 1
+#define PERIODICPRINTS 0
 #if PERIODICPRINTS
 //#define PINGS 64
 #define ROUTES 600
@@ -116,7 +116,7 @@ void rtimercycle(void) {rtimerflag=1;}
 #endif
 #endif
 
-uint16_t ledtimer;
+//uint16_t ledtimer;
 
 /*-------------------------------------------------------------------------*/
 /*----------------------Configuration of the .elf file---------------------*/
@@ -147,7 +147,7 @@ FUSES ={.low = 0xC2, .high = 0x99, .extended = 0xfe,};
 #include "dev/button-sensor.h"
 #include "dev/battery-sensor.h"
 #include "dev/pir-sensor.h"
-SENSORS(&button_sensor, &battery_sensor, &pir_sensor);
+SENSORS(&button_sensor, &pir_sensor);
 
 uint8_t
 rng_get_uint8(void) {
@@ -199,7 +199,7 @@ void initialize(void)
 #endif
 
   /* Second rs232 port for debugging or slip alternative */
-  rs232_init(RS232_PORT_1, USART_BAUD_57600,USART_PARITY_NONE | USART_STOP_BITS_1 | USART_DATA_BITS_8);
+//  rs232_init(RS232_PORT_1, USART_BAUD_57600,USART_PARITY_NONE | USART_STOP_BITS_1 | USART_DATA_BITS_8);
   /* Redirect stdout */
 #if RF230BB_CONF_LEDONPORTE1 || defined(RAVEN_LCD_INTERFACE)
   rs232_redirect_stdout(RS232_PORT_1);
@@ -441,6 +441,7 @@ main(void)
     process_run();
     watchdog_periodic();
 
+#if 0
     /* Turn off LED after a while */
     if (ledtimer) {
       if (--ledtimer==0) {
@@ -448,12 +449,13 @@ main(void)
         PORTE&=~(1<<PE1);
 #endif
 #if defined(RAVEN_LCD_INTERFACE)&&0
-       /* ledtimer can be set by received ping; ping the other way for testing */
+       // ledtimer can be set by received ping; ping the other way for testing
        extern void raven_ping6(void);         
        raven_ping6();
 #endif
       }
     }
+#endif
 
 #if 0
 /* Various entry points for debugging in the AVR Studio simulator.
@@ -588,7 +590,6 @@ if ((clocktime%STACKMONITOR)==3) {
   } while (p<RAMEND-10);
 }
 #endif
-
     }
 #endif /* PERIODICPRINTS */
 
