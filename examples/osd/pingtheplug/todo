@@ -1,0 +1,9 @@
+*) pcintkey-sensor 
+Die PinChange Interrupts der Pins laufen alle über PCINT0_vect.
+ 
+Somit sollte der folgende Code für die Aktivierung reichen:
+PCICR |= BV(PCIE0);
+PCMSK0 |= BV(PCINT4) | BV(PCINT5) | BV(PCINT6);
+
+*) led-sensor
+*) EmbedVM integration
