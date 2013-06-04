@@ -43,6 +43,12 @@ AVRDUDE_PORT=usb:00B000000D79
 # Verify off
 AVRDUDE_OPTIONS=-V
 
+#debug
+# CFLAGS  += -save-temps
+# Bootloader bonsai
+# LDFLAGS  += -save-temps
+LDFLAGS  += -Wl,--defsym,bootloader_get_mac=0x0001f3a0
+
 
 include $(CONTIKIAVR)/Makefile.avr
 include $(CONTIKIAVR)/radio/Makefile.radio
