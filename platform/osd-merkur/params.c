@@ -84,6 +84,9 @@ const uint8_t default_domain_name[] PROGMEM = PARAMS_DOMAINNAME;
 
 #if PARAMETER_STORAGE==0
 /* 0 Hard coded, minmal program and eeprom usage. */
+
+extern uint8_t bootloader_get_mac(uint8_t);
+
 uint8_t
 params_get_eui64(uint8_t *eui64) {
 #if CONTIKI_CONF_RANDOM_MAC
@@ -92,7 +95,13 @@ params_get_eui64(uint8_t *eui64) {
     return 1;
 #else
     uint8_t i;
+#if BOOTLOADER_GET_MAC
+    for (i=0;i<sizeof(default_mac_address);i++){
+      eui64[i] =  bootloader_get_mac(i);
+    }
+#else
     for (i=0;i<sizeof(default_mac_address);i++) eui64[i] = pgm_read_byte_near(default_mac_address+i);
+#endif
     return 0;
 #endif
 }

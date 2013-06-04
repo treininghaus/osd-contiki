@@ -14,12 +14,14 @@
  */
 #define CONTIKI_CONF_RANDOM_MAC 0        //adds 78 bytes
 #define CONTIKI_CONF_SETTINGS_MANAGER 0  //adds 1696 bytes
+#define BOOTLOADER_GET_MAC 0             // get mac form boolaoder, need bootlaoder bonsai, PARAMETER_STORAGE 0
 
 #if CONTIKI_CONF_SETTINGS_MANAGER
 //#define PARAMETER_STORAGE 2
 #define PARAMETER_STORAGE 2
 #else
-#define PARAMETER_STORAGE 1
+//#define PARAMETER_STORAGE 1
+#define PARAMETER_STORAGE 0
 #endif
 
 /* Include settings.h, then dummy out the write routines */
@@ -73,7 +75,7 @@ extern uint8_t eemem_domain_name[30];
 #if UIP_CONF_LL_802154
 //#define PARAMS_EUI64ADDR {0x02, 0xNN, 0xNN, 0xNN, 0xNN, 0xNN, 0xNN, 0xNN}
 //#define PARAMS_EUI64ADDR {0x02, 0x00, 0x00, 0xff, 0xfe, 0x00, 0x00, 0x01}
-#define PARAMS_EUI64ADDR {0x00, 0x21, 0x2e, 0xff, 0xff, 0x00, 0x26, 0x6c}
+#define PARAMS_EUI64ADDR {0x00, 0x21, 0x2e, 0xff, 0xff, 0x00, 0x26, 0xd0}
 //#define PARAMS_EUI64ADDR {0x00, 0x21, 0x2e, 0xff, 0xff, 0x00, 0x1E, 0xFB}
 #else
 //#define PARAMS_EUI64ADDR {0x02, 0xNN, 0xNN, 0xff, 0xfe, 0xNN, 0xNN, 0xNN}
