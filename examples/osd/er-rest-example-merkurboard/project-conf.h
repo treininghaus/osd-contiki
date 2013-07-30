@@ -32,13 +32,18 @@
 #ifndef __PROJECT_ERBIUM_CONF_H__
 #define __PROJECT_ERBIUM_CONF_H__
 
+#define PLATFORM_HAS_LEDS    1
+#define PLATFORM_HAS_BUTTON  1
+#define PLATFORM_HAS_TEMPERATURE   1
+#define PLATFORM_HAS_BATTERY 1
+
 /* Some platforms have weird includes. */
 #undef IEEE802154_CONF_PANID
 
 /* Disabling RDC for demo purposes. Core updates often require more memory. */
 /* For projects, optimize memory and enable RDC again. */
-#undef NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     nullrdc_driver
+// #undef NETSTACK_CONF_RDC
+//#define NETSTACK_CONF_RDC     nullrdc_driver
 
 /* Increase rpl-border-router IP-buffer when using more than 64. */
 #undef REST_MAX_CHUNK_SIZE
