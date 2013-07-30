@@ -42,6 +42,7 @@ AVRDUDE_PORT=usb:00B000000D79
 # Additional avrdude options
 # Verify off
 AVRDUDE_OPTIONS=-V
+AVRDUDE_MCU=m128rfa1
 
 #debug
 # CFLAGS  += -save-temps

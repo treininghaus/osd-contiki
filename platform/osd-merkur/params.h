@@ -14,14 +14,14 @@
  */
 #define CONTIKI_CONF_RANDOM_MAC 0        //adds 78 bytes
 #define CONTIKI_CONF_SETTINGS_MANAGER 0  //adds 1696 bytes
-#define BOOTLOADER_GET_MAC 0             // get mac form boolaoder, need bootlaoder bonsai, PARAMETER_STORAGE 0
+#define BOOTLOADER_GET_MAC 1             // get mac form boolaoder, need bootlaoder bonsai, PARAMETER_STORAGE 0
 
 #if CONTIKI_CONF_SETTINGS_MANAGER
 //#define PARAMETER_STORAGE 2
 #define PARAMETER_STORAGE 2
 #else
-#define PARAMETER_STORAGE 1
-//#define PARAMETER_STORAGE 0           // get mac form boolaoder, need bootlaoder bonsai, PARAMETER_STORAGE 0
+//#define PARAMETER_STORAGE 1
+#define PARAMETER_STORAGE 0           // get mac form boolaoder, need bootlaoder bonsai, PARAMETER_STORAGE 0
 #endif
 
 /* Include settings.h, then dummy out the write routines */
@@ -38,6 +38,7 @@ extern uint8_t eemem_mac_address[8];
 extern uint8_t eemem_server_name[16];
 extern uint8_t eemem_domain_name[30];
 #endif
+
 #ifdef SERVER_NAME
 #define PARAMS_SERVERNAME SERVER_NAME
 #else
@@ -57,6 +58,11 @@ extern uint8_t eemem_domain_name[30];
 #define PARAMS_CHANNEL CHANNEL_802_15_4
 #else
 #define PARAMS_CHANNEL 26
+#endif
+#ifdef IEEE802154_PANID
+#define PARAMS_PANID IEEE802154_PANID
+#else
+#define PARAMS_PANID 0xABCD
 #endif
 #ifdef IEEE802154_PANADDR
 #define PARAMS_PANADDR IEEE802154_PANADDR

@@ -59,6 +59,7 @@
 #include "radio/rf230bb/rf230bb.h"
 #include "net/mac/frame802154.h"
 #include "net/mac/framer-802154.h"
+#include "net/sicslowpan.h"
 
 #include "contiki.h"
 #include "contiki-net.h"
@@ -327,7 +328,7 @@ uint8_t i;
 #ifdef RAVEN_LCD_INTERFACE
   process_start(&raven_lcd_process, NULL);
 #endif
-  
+
   process_start(&sensors_process, NULL);
 
   /* Autostart other processes */
@@ -449,7 +450,7 @@ main(void)
         PORTE&=~(1<<PE1);
 #endif
 #if defined(RAVEN_LCD_INTERFACE)&&0
-       // ledtimer can be set by received ping; ping the other way for testing
+       /* ledtimer can be set by received ping; ping the other way for testing */
        extern void raven_ping6(void);         
        raven_ping6();
 #endif
@@ -590,6 +591,7 @@ if ((clocktime%STACKMONITOR)==3) {
   } while (p<RAMEND-10);
 }
 #endif
+
     }
 #endif /* PERIODICPRINTS */
 
