@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Matthias Kovatsch and other contributors.
+ * Copyright (c) 2013, Matthias Kovatsch
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,11 +43,6 @@
 #include "contiki.h"
 #include "contiki-net.h"
 
-#if !UIP_CONF_IPV6_RPL && !defined (CONTIKI_TARGET_MINIMAL_NET) && !defined (CONTIKI_TARGET_NATIVE)
-#warning "Compiling with static routing!"
-#include "static-routing.h"
-#endif
-
 #include "dev/button-sensor.h"
 #include "dev/leds.h"
 
@@ -57,6 +52,10 @@
 #include "er-coap-06-engine.h"
 #elif WITH_COAP == 7
 #include "er-coap-07-engine.h"
+#elif WITH_COAP == 12
+#include "er-coap-12-engine.h"
+#elif WITH_COAP == 13
+#include "er-coap-13-engine.h"
 #else
 #error "CoAP version defined by WITH_COAP not implemented"
 #endif
@@ -94,7 +93,7 @@ char* service_urls[NUMBER_OF_URLS] = {".well-known/core", "/actuators/toggle", "
 void
 client_chunk_handler(void *response)
 {
-  uint8_t *chunk;
+  const uint8_t *chunk;
 
   int len = coap_get_payload(response, &chunk);
   printf("|%.*s", len, (char *)chunk);
@@ -129,7 +128,6 @@ PROCESS_THREAD(coap_client_example, ev, data)
       PRINTF("--Toggle --\n");
       leds_toggle(LEDS_RED);
       /* prepare request, TID is set by COAP_BLOCKING_REQUEST() */
-
       coap_init_message(request, COAP_TYPE_CON, COAP_POST, 0 );
       coap_set_header_uri_path(request, service_urls[1]);
 
