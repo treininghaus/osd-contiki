@@ -784,7 +784,16 @@ radio_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
 }
 #endif
 
-
+void 
+hw_init()
+{
+#if defined (PLATFORM_HAS_LEDS)
+ leds_off(LEDS_RED);
+#endif
+#if REST_RES_DS1820
+  ds1820_temp();
+#endif
+}
 
 PROCESS(rest_server_example, "Erbium Example Server");
 AUTOSTART_PROCESSES(&rest_server_example);
@@ -807,6 +816,8 @@ PROCESS_THREAD(rest_server_example, ev, data)
   PRINTF("IP+UDP header: %u\n", UIP_IPUDPH_LEN);
   PRINTF("REST max chunk: %u\n", REST_MAX_CHUNK_SIZE);
 
+  /* Initialize the OSD Hardware. */
+  hw_init();
   /* Initialize the REST engine. */
   rest_init_engine();
 
