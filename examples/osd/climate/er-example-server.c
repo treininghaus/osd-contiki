@@ -97,6 +97,10 @@ uint8_t dht11_temp=0, dht11_hum=0;
 #include "er-coap-03.h"
 #elif WITH_COAP == 7
 #include "er-coap-07.h"
+#elif WITH_COAP == 12
+#include "er-coap-12.h"
+#elif WITH_COAP == 13
+#include "er-coap-13.h"
 #else
 #warning "Erbium example without CoAP-specifc functionality"
 #endif /* CoAP-specific example */
@@ -259,7 +263,7 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
   }
   else
   {
-    REST.set_response_status(response, REST.status.UNSUPPORTED_MADIA_TYPE);
+    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
     REST.set_response_payload(response, (uint8_t *)"Supporting content-types text/plain and application/json", 56);
   }
 }
@@ -299,7 +303,7 @@ dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
   }
   else
   {
-    REST.set_response_status(response, REST.status.UNSUPPORTED_MADIA_TYPE);
+    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
     REST.set_response_payload(response, (uint8_t *)"Supporting content-types text/plain and application/json", 56);
   }
 }
@@ -637,7 +641,7 @@ temperature_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
   }
   else
   {
-    REST.set_response_status(response, REST.status.UNSUPPORTED_MADIA_TYPE);
+    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
     const char *msg = "Supporting content-types text/plain and application/json";
     REST.set_response_payload(response, msg, strlen(msg));
   }
@@ -672,7 +676,7 @@ battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
   }
   else
   {
-    REST.set_response_status(response, REST.status.UNSUPPORTED_MADIA_TYPE);
+    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
     const char *msg = "Supporting content-types text/plain and application/json";
     REST.set_response_payload(response, msg, strlen(msg));
   }
