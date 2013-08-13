@@ -56,10 +56,10 @@
 */
 
 /* The IP buffer size must fit all other hops, in particular the border router. */
-/*
+
 #undef UIP_CONF_BUFFER_SIZE
 #define UIP_CONF_BUFFER_SIZE    1280
-*/
+
 
 /* Multiplies with chunk size, be aware of memory constraints. */
 #undef COAP_MAX_OPEN_TRANSACTIONS
@@ -78,16 +78,21 @@
 */
 
 /* Save some memory for the sky platform. */
+/*
 #undef UIP_CONF_DS6_NBR_NBU
 #define UIP_CONF_DS6_NBR_NBU     10
 #undef UIP_CONF_MAX_ROUTES
 #define UIP_CONF_MAX_ROUTES   10
+*/
 
 /* Reduce 802.15.4 frame queue to save RAM. */
+/*
 #undef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM       4
+*/
 
+/*
 #undef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG	1
-
+*/
 #endif /* __PROJECT_ERBIUM_CONF_H__ */
