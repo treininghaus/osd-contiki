@@ -101,14 +101,14 @@ typedef unsigned long off_t;
 
 /* RADIOSTATS is used in rf230bb, clock.c and the webserver cgi to report radio usage */
 /* It has less overhead than ENERGEST */
-#define RADIOSTATS                0
+#define RADIOSTATS                1
 
 /* More extensive stats, via main loop printfs or webserver status pages */
-#define ENERGEST_CONF_ON          0
+#define ENERGEST_CONF_ON          1
 
 /* Packet statistics */
 typedef unsigned short uip_stats_t;
-#define UIP_STATISTICS            0
+//#define UIP_STATISTICS            1
 
 /* Available watchdog timeouts depend on mcu. Default is WDTO_2S. -1 Disables the watchdog. */
 /* AVR Studio simulator tends to reboot due to clocking the WD 8 times too fast */
@@ -157,7 +157,7 @@ typedef unsigned short uip_stats_t;
 
 #define UIP_CONF_LL_802154        1
 #define UIP_CONF_LLH_LEN          0
-#define UIP_CONF_BUFFER_SIZE      240
+//#define UIP_CONF_BUFFER_SIZE      1280  // old 240
 
 /* 10 bytes per stateful address context - see sicslowpan.c */
 /* Default is 1 context with prefix aaaa::/64 */
@@ -238,7 +238,7 @@ typedef unsigned short uip_stats_t;
 #define NETSTACK_CONF_MAC         csma_driver
 #define NETSTACK_CONF_RDC         contikimac_driver
 /* Default is two CCA separated by 500 usec */
-#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE   8
+#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE   16
 /* Wireshark won't decode with the header, but padded packets will fail ipv6 checksum */
 #define CONTIKIMAC_CONF_WITH_CONTIKIMAC_HEADER 0
 /* So without the header this needed for RPL mesh to form */

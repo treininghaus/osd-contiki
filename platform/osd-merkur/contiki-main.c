@@ -102,7 +102,7 @@ uint8_t debugflowsize,debugflow[DEBUGFLOWSIZE];
 /* Get periodic prints from idle loop, from clock seconds or rtimer interrupts */
 /* Use of rtimer will conflict with other rtimer interrupts such as contikimac radio cycling */
 /* STAMPS will print ENERGEST outputs if that is enabled. */
-#define PERIODICPRINTS 0
+#define PERIODICPRINTS 1
 #if PERIODICPRINTS
 //#define PINGS 64
 #define ROUTES 600
@@ -287,7 +287,7 @@ uint8_t i;
 #endif  
   rimeaddr_set_node_addr(&addr); 
 
-  PRINTA("Panid:%u\n", params_get_panid());
+  PRINTA("Panid:%x\n", params_get_panid());
   framer_802154_set_panid(params_get_panid());
   rf230_set_pan_addr(params_get_panid(),params_get_panaddr(),(uint8_t *)&addr.u8);
   rf230_set_channel(params_get_channel());
