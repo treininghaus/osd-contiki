@@ -1,0 +1,43 @@
+// $uf10(); // LED OFF
+// $uf11(); // LED ON
+// $uf12(); // LED Toggle
+
+global points;
+global num;
+global dbg;
+
+function main()
+{
+	points = 0;
+	// get next random number
+	num = $uf0();
+}
+
+function play(guess)
+{
+	if (guess != num) {
+		if (guess < num) {
+			// hint to user: try larger numbers
+			$uf1(+1);
+			points = points - 1;
+                        $uf11(); // LED ON
+		}
+		if (guess > num) {
+			// hint to user: try smaller numbers
+			$uf1(-1);
+			points = points - 1;
+                        $uf10(); // LED OFF
+		}
+	} else {
+		// level up!
+                // LED ON
+                $uf11(); 
+		points = points + 10;
+		$uf2();
+		num = $uf0();
+                $uf10(); // LED OFF
+	}
+	// report points
+	$uf3();
+}
+

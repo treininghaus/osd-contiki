@@ -1,0 +1,31 @@
+A Quick Introduction to the embedd-vm virtual machine
+=====================================================
+Compile the Example
+-------------------
+./run.sh
+
+OSD-Merkur Board
+----------------------
+write the images to the OSD-Merkur Board:
+
+./flash.sh
+
+EXAMPLE FILES
+-------------
+
+PRELIMINARIES
+-------------
+
+COOJA HOWTO
+-----------
+Server only:
+
+DETAILS
+-------
+
+REST IMPLEMENTATIONS
+--------------------
+
+TODOs
+-----
+
