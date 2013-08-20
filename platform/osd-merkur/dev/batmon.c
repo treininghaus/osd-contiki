@@ -17,10 +17,10 @@ int8_t batmon_get_voltage(uint16_t* voltage)
 	uint16_t offset = 2550;
 	int8_t ctr = 0;
 	
-	BATMON = 0 | BV(BATMON_HR);
+	BATMON = 0 | _BV(BATMON_HR);
 	_delay_us(2);
 	
-	if(BATMON & BV(BATMON_OK))
+	if(BATMON & _BV(BATMON_OK))
 	{
 		// voltage above 2.550 V
 		resolution = 75;
@@ -29,7 +29,7 @@ int8_t batmon_get_voltage(uint16_t* voltage)
 		{
 			BATMON = (BATMON & 0xF0) | (ctr);
 			_delay_us(2);
-			if(BATMON & BV(BATMON_OK)) break;
+			if(BATMON & _BV(BATMON_OK)) break;
 		}
 	}
 	else
@@ -38,13 +38,13 @@ int8_t batmon_get_voltage(uint16_t* voltage)
 		resolution = 50;
 		offset = 1700;
 		
-		BATMON &= ~BV(BATMON_HR);
+		BATMON &= ~_BV(BATMON_HR);
 		
 		for(ctr=15; ctr>=0; ctr--)
 		{
 			BATMON = (BATMON & 0xF0) | (ctr);
 			_delay_us(2);
-			if(BATMON & BV(BATMON_OK)) break;
+			if(BATMON & _BV(BATMON_OK)) break;
 		}
 	}
 	

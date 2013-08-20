@@ -12,7 +12,7 @@ CONTIKI_TARGET_SOURCEFILES += dht11.c
 #Needed for DS18S20 temperature sensor
 CONTIKI_TARGET_SOURCEFILES += ds1820.c
 #Needed for Battery test
-CONTIKI_TARGET_SOURCEFILES += battery-sensor.c
+CONTIKI_TARGET_SOURCEFILES += battery-sensor.c batmon.c
 #Needed for PIR
 CONTIKI_TARGET_SOURCEFILES += pir-sensor.c
 #Needed for OPTRIAC
