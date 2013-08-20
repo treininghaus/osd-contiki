@@ -42,6 +42,7 @@
 */
 
 #include "dev/battery-sensor.h"
+#include "dev/batmon.h"
 
 const struct sensors_sensor battery_sensor;
 /*---------------------------------------------------------------------------*/
@@ -52,20 +53,22 @@ const struct sensors_sensor battery_sensor;
 static int
 value(int type)
 {
+
   uint16_t h;
+/*
   uint8_t p1;
   BATMON = 16; //give BATMON time to stabilize at highest range and lowest voltage
 
-/* Bandgap can't be measured against supply voltage in this chip. */
-/* Use BATMON register instead */
+// Bandgap can't be measured against supply voltage in this chip.
+// Use BATMON register instead
   for ( p1=16; p1<31; p1++) {
     BATMON = p1;
     clock_delay_usec(100); // delay needed !!
     if ((BATMON&(1<<BATMON_OK))==0) break;
   }
   h=2550-75*16-75+75*p1; //-75 to take the floor of the 75 mv transition window
-
-
+*/
+  batmon_get_voltage(&h);
   return h;
 }
 /*---------------------------------------------------------------------------*/
@@ -73,6 +76,7 @@ static int
 configure(int type, int c)
 {
   // No configuration needed. readADC() handles all the config needed.
+  batmon_init();
   return type == SENSORS_ACTIVE;
 }
 /*---------------------------------------------------------------------------*/
