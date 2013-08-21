@@ -29,8 +29,8 @@
  *
  */
 
-#ifndef __PROJECT_RPL_WEB_CONF_H__
-#define __PROJECT_RPL_WEB_CONF_H__
+#ifndef __PROJECT_ERBIUM_CONF_H__
+#define __PROJECT_ERBIUM_CONF_H__
 
 //#define PLATFORM_HAS_LEDS    1
 //#define PLATFORM_HAS_BUTTON  1
@@ -89,7 +89,7 @@
 /* Reduce 802.15.4 frame queue to save RAM. */
 
 #undef QUEUEBUF_CONF_NUM
-#define QUEUEBUF_CONF_NUM       8
+#define QUEUEBUF_CONF_NUM       4
 
 
 /*
