@@ -100,6 +100,10 @@
 #include "er-coap-03.h"
 #elif WITH_COAP == 7
 #include "er-coap-07.h"
+#elif WITH_COAP == 12
+#include "er-coap-12.h"
+#elif WITH_COAP == 13
+#include "er-coap-13.h"
 #else
 #warning "Erbium example without CoAP-specifc functionality"
 #endif /* CoAP-specific example */
@@ -121,6 +125,9 @@
 #if REST_RES_DS1820
 #include "dev/ds1820.c"
 #endif
+
+#include "relay.h"
+#include "relay.c"
 
 /******************************************************************************/
 
