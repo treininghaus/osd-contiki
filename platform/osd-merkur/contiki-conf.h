@@ -75,7 +75,7 @@ void clock_adjust_ticks(clock_time_t howmany);
 /* Michael Hartman's atmega128rfa1 board has an external 32768Hz crystal connected to TOSC1 and 2 pins similar to the Raven 1284p */
 /* and theoretically can use TIMER2 with it to keep time. Else TIMER0 is used. */
 /* The sleep timer requires the crystal and adds a TIMER2 interrupt routine if not already define by clock.c */
-#define AVR_CONF_USE32KCRYSTAL 1
+#define AVR_CONF_USE32KCRYSTAL 0
 
 /* Michael Hartman's protobyte board has LED on PORTE1, used for radio on indication */
 /* However this results in disabling UART0. */
