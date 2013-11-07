@@ -29,7 +29,10 @@
 #define udelay(u) clock_delay_usec(u)
 #define mdelay(u) clock_delay_msec(u)
 
-uint8_t DHT_Read_Data(uint8_t select){
+// define for DHT11 else for DHT22, RHT03 
+#define DHT11	1
+
+uint8_t DHT_Read_Data(uint16_t *temperature, uint16_t *humidity){
 
     //data[5] is 8byte table where data come from DHT are stored
     //laststate holds laststate value
@@ -48,13 +51,17 @@ uint8_t DHT_Read_Data(uint8_t select){
     //Set pin Output
     //Pin High
     DHT_DRIVE();
-    mdelay(250);                     //Wait for 250mS
+//    mdelay(250);                     //Wait for 250mS
+    mdelay(100);                     //Wait for 100mS
     
     //Send Request Signal
     //Pin Low
-    OUTP_0();
-    mdelay(20);                      //20ms Low 
-    
+    OUTP_0();                      //20ms Low 
+#if DHT11
+	mdelay(20);
+#else
+	udelay(500);
+#endif
     //Pin High
     OUTP_1();
     udelay(40);                      //40us High
@@ -106,12 +113,17 @@ uint8_t DHT_Read_Data(uint8_t select){
     
     //Check if data received are correct by checking the CheckSum
     if (data[0] + data[1] + data[2] + data[3] == data[4]) {
-        if (select==DHT_Temp) {     //Return the value has been choosen
-            return(data[2]);
-        }else if(select==DHT_RH){
-            return(data[0]);
-        }
+#ifdef DHT11
+        *humidity = data[0];
+        *temperature = data[2];
+#else
+        *humidity = (uint16_t)data[0]<<8 | data[1];
+        *temperature = (uint16_t)data[2]<<8 | data[3];
+#endif
+        return 0;
     }else{
+        *humidity = 2;
+        *temperature = 2;
 //        uart_puts("\r\nCheck Sum Error");
     }
  
