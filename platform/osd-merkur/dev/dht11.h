@@ -63,10 +63,5 @@
 //and 2 transitions which indicates End Of Frame. In total 84
 #define MAXTIMINGS  84
 
-//Select between Temp and Humidity Read
-#define DHT_Temp    0
-#define DHT_RH      1
-
 //This is the main function which requests and reads the packet
-uint8_t DHT_Read_Data(uint8_t select);
-
+uint8_t DHT_Read_Data(uint16_t *temperature, uint16_t *humidity);
