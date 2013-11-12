@@ -141,7 +141,7 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 
   /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
        // jSON Format
-     index += sprintf(message + index,"{\n \"version\" : \"V0.4\",\n");
+     index += sprintf(message + index,"{\n \"version\" : \"V0.4.1\",\n");
      index += sprintf(message + index," \"name\" : \"6lowpan-climate\"\n");
      index += sprintf(message + index,"}\n");
 
@@ -691,7 +691,9 @@ hw_init()
   ds1820_temp();
 #endif
 #if REST_RES_DHT11
+  //DHT_INIT();
   DHT_Read_Data(&dht11_temp, &dht11_hum);
+//  DHT_Read_Data(&dht11_temp, &dht11_hum);
 #endif
 }
 #define MESURE_INTERVAL		(20 * CLOCK_SECOND)
@@ -801,6 +803,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
         PRINTF("Periodic\n");
         etimer_reset(&ds_periodic_timer);
 #if REST_RES_DHT11
+    //    DHT_Read_Data(&dht11_temp, &dht11_hum);
         DHT_Read_Data(&dht11_temp, &dht11_hum);
 #endif
 #if REST_RES_DS1820
