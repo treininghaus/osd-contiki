@@ -67,8 +67,8 @@ uint8_t DHT_Read_Data(uint16_t *temperature, uint16_t *humidity){
     //Repeat for each Transistions
     for (i=0; i<MAXTIMINGS; i++) {
         //While state is the same count microseconds
-//   led1_on();
-//   led1_off();
+   //led1_on();
+   //led1_off();
  
        while (laststate==DHT_INP()) {
             udelay(1);
@@ -89,9 +89,9 @@ uint8_t DHT_Read_Data(uint16_t *temperature, uint16_t *humidity){
  
             data[j/8]<<=1;
             if (counter >= 15) {    //If it was high for more than 40uS
-//   led1_on();
+   //led1_on();
                 data[j/8]|=1;       //it means it is bit '1' so make a logic
-//   led1_off();
+   //led1_off();
             }                       //OR with the value (save it)
             j++;                    //making an OR by 1 to this value 10101000
         }                           //we will have the resault 10101001
@@ -103,9 +103,9 @@ uint8_t DHT_Read_Data(uint16_t *temperature, uint16_t *humidity){
         
     }
     SREG = sreg;    /* Enable interrupts. */
-    
+    //printf("HUM %d %d %d %d %d %d",data[0],data[1],data[2],data[3],data[4],(uint8_t)(data[0] + data[1] + data[2] + data[3]) );
     //Check if data received are correct by checking the CheckSum
-    if (data[0] + data[1] + data[2] + data[3] == data[4]) {
+    if ((uint8_t)(data[0] + data[1] + data[2] + data[3]) == data[4]) {
 #ifdef DHT11
         *humidity = data[0];
         *temperature = data[2];
