@@ -700,10 +700,12 @@ ISR(TRX24_TX_END_vect)
   rf230_txendwait=0;
 }
 
+extern volatile uint8_t rf230_pending;
 /* Frame address has matched ours */
 ISR(TRX24_XAH_AMI_vect)
 {
 //	DEBUGFLOW('8');
+        rf230_pending=1;
 }
 
 /* CCAED measurement has completed */

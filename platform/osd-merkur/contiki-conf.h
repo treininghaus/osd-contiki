@@ -238,7 +238,7 @@ typedef unsigned short uip_stats_t;
 #define NETSTACK_CONF_MAC         csma_driver
 #define NETSTACK_CONF_RDC         contikimac_driver
 /* Default is two CCA separated by 500 usec */
-#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE   16
+#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE   8
 /* Wireshark won't decode with the header, but padded packets will fail ipv6 checksum */
 #define CONTIKIMAC_CONF_WITH_CONTIKIMAC_HEADER 0
 /* So without the header this needed for RPL mesh to form */
