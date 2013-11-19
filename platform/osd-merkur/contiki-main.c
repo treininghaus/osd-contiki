@@ -557,7 +557,6 @@ extern uip_ds6_netif_t uip_ds6_if;
   PRINTF("\nRoutes [%u max]\n",UIP_DS6_ROUTE_NB);
   {
     uip_ds6_route_t *r;
-    PRINTF("\nRoutes [%u max]\n",UIP_DS6_ROUTE_NB);
     j = 1;
     for(r = uip_ds6_route_list_head();
         r != NULL;
