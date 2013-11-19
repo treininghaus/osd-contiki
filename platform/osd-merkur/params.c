@@ -119,8 +119,8 @@ uint8_t eemem_domain_name[] EEMEM = PARAMS_DOMAINNAME;
 #endif /*AVR_WEBSERVER */
 
 uint16_t eemem_nodeid EEMEM = PARAMS_NODEID;
-uint8_t eemem_channel[2] EEMEM = {PARAMS_CHANNEL, ~PARAMS_CHANNEL};
-uint16_t eemem_panid EEMEM = PARAMS_PANID;
+uint8_t eemem_channel[2] EEMEM = {CHANNEL_802_15_4, ~CHANNEL_802_15_4};
+uint16_t eemem_panid EEMEM = IEEE802154_PANID;
 uint16_t eemem_panaddr EEMEM = PARAMS_PANADDR;
 uint8_t eemem_txpower EEMEM = PARAMS_TXPOWER;
 
@@ -153,11 +153,11 @@ params_get_channel(void) {
     eeprom_write_block(&buffer,  &eemem_server_name, sizeof(eemem_server_name));
     for (i=0;i<sizeof(default_domain_name);i++) buffer[i] = pgm_read_byte_near(default_domain_name+i);
     eeprom_write_block(&buffer,  &eemem_domain_name, sizeof(eemem_domain_name));
-    eeprom_write_word(&eemem_panid  , PARAMS_PANID);
+    eeprom_write_word(&eemem_panid  , IEEE802154_PANID);
     eeprom_write_word(&eemem_panaddr, PARAMS_PANADDR);
     eeprom_write_byte(&eemem_txpower, PARAMS_TXPOWER);
     eeprom_write_word(&eemem_nodeid, PARAMS_NODEID);
-    x[0] = PARAMS_CHANNEL;
+    x[0] = CHANNEL_802_15_4;
     x[1]= ~x[0];
     eeprom_write_word((uint16_t *)&eemem_channel, *(uint16_t *)x);
     sei();
@@ -199,7 +199,7 @@ params_get_channel() {
   if (settings_get(SETTINGS_KEY_CHANNEL, 0,(unsigned char*)&x, &size) == SETTINGS_STATUS_OK) {
     PRINTD("<-Get RF channel %u\n",x);
   } else {
-    x = PARAMS_CHANNEL;
+    x = CHANNEL_802_15_4;
     if (settings_add_uint8(SETTINGS_KEY_CHANNEL,x ) == SETTINGS_STATUS_OK) {
       PRINTD("->Set EEPROM RF channel to %d\n",x);
     }
@@ -235,7 +235,7 @@ params_get_panid(void) {
   if (settings_get(SETTINGS_KEY_PAN_ID, 0,(unsigned char*)&x, &size) == SETTINGS_STATUS_OK) {
     PRINTD("<-Get PAN ID of %04x\n",x);
   } else {
-    x=PARAMS_PANID;
+    x=IEEE802154_PANID;
     if (settings_add_uint16(SETTINGS_KEY_PAN_ID,x)==SETTINGS_STATUS_OK) {
       PRINTD("->Set EEPROM PAN ID to %04x\n",x);
     }

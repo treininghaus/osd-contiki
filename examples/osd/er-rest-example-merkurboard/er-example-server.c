@@ -48,7 +48,7 @@
 #define REST_RES_DS1820 0
 #define REST_RES_HELLO 0
 #define REST_RES_MIRROR 0 /* causes largest code size */
-#define REST_RES_CHUNKS 0
+#define REST_RES_CHUNKS 1
 #define REST_RES_SEPARATE 0
 #define REST_RES_PUSHING 0
 #define REST_RES_EVENT 1

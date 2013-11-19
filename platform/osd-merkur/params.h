@@ -12,6 +12,11 @@
  *
  * Note the parameters in this file can be changed without forcing a complete rebuild.
  */
+// default settings
+#define CHANNEL_802_15_4          26     // default frequency (11-26)
+#define IEEE802154_PANID          0xABCD // default panid
+// end default settings
+
 #define CONTIKI_CONF_RANDOM_MAC 0        //adds 78 bytes
 #define CONTIKI_CONF_SETTINGS_MANAGER 0  //adds 1696 bytes
 #define BOOTLOADER_GET_MAC 1             // get mac form boolaoder, need bootlaoder bonsai, PARAMETER_STORAGE 0
@@ -38,7 +43,6 @@ extern uint8_t eemem_mac_address[8];
 extern uint8_t eemem_server_name[16];
 extern uint8_t eemem_domain_name[30];
 #endif
-
 #ifdef SERVER_NAME
 #define PARAMS_SERVERNAME SERVER_NAME
 #else
@@ -53,16 +57,6 @@ extern uint8_t eemem_domain_name[30];
 #define PARAMS_NODEID NODE_ID
 #else
 #define PARAMS_NODEID 0
-#endif
-#ifdef CHANNEL_802_15_4
-#define PARAMS_CHANNEL CHANNEL_802_15_4
-#else
-#define PARAMS_CHANNEL 26
-#endif
-#ifdef IEEE802154_PANID
-#define PARAMS_PANID IEEE802154_PANID
-#else
-#define PARAMS_PANID 0xABCD
 #endif
 #ifdef IEEE802154_PANADDR
 #define PARAMS_PANADDR IEEE802154_PANADDR
@@ -95,9 +89,9 @@ uint8_t params_get_eui64(uint8_t *eui64);
 #if PARAMETER_STORAGE==0
 /* Hard coded program flash parameters */
 #define params_get_servername(...) 
-#define params_get_nodeid(...) PARAMS_NODEID
-#define params_get_channel(...) PARAMS_CHANNEL
-#define params_get_panid(...) PARAMS_PANID
+#define params_get_nodeid(...)  PARAMS_NODEID
+#define params_get_channel(...) CHANNEL_802_15_4
+#define params_get_panid(...)   IEEE802154_PANID
 #define params_get_panaddr(...) PARAMS_PANADDR
 #define params_get_txpower(...) PARAMS_TXPOWER
 #else

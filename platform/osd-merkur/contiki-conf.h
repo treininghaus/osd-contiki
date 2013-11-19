@@ -101,10 +101,10 @@ typedef unsigned long off_t;
 
 /* RADIOSTATS is used in rf230bb, clock.c and the webserver cgi to report radio usage */
 /* It has less overhead than ENERGEST */
-#define RADIOSTATS                1
+//#define RADIOSTATS                1
 
 /* More extensive stats, via main loop printfs or webserver status pages */
-#define ENERGEST_CONF_ON          1
+//#define ENERGEST_CONF_ON          1
 
 /* Packet statistics */
 typedef unsigned short uip_stats_t;
@@ -190,7 +190,6 @@ typedef unsigned short uip_stats_t;
 #define NETSTACK_CONF_RDC         sicslowmac_driver
 #define NETSTACK_CONF_FRAMER      framer_802154
 #define NETSTACK_CONF_RADIO       rf230_driver
-#define CHANNEL_802_15_4          26
 /* AUTOACK receive mode gives better rssi measurements, even if ACK is never requested */
 #define RF230_CONF_AUTOACK        1
 /* Request 802.15.4 ACK on all packets sent (else autoretry). This is primarily for testing. */
@@ -249,7 +248,6 @@ typedef unsigned short uip_stats_t;
 #define RIMESTATS_CONF_ENABLED                 1
 #define NETSTACK_CONF_FRAMER      framer_802154
 #define NETSTACK_CONF_RADIO       rf230_driver
-#define CHANNEL_802_15_4          26
 /* The radio needs to interrupt during an rtimer interrupt */
 #define RTIMER_CONF_NESTED_INTERRUPTS 1
 #define RF230_CONF_AUTOACK        1
@@ -290,7 +288,6 @@ typedef unsigned short uip_stats_t;
 #define NETSTACK_CONF_RDC         cxmac_driver
 #define NETSTACK_CONF_FRAMER      framer_802154
 #define NETSTACK_CONF_RADIO       rf230_driver
-#define CHANNEL_802_15_4          26
 #define RF230_CONF_AUTOACK        1
 #define SICSLOWPAN_CONF_FRAG      1
 #define SICSLOWPAN_CONF_MAXAGE    3
