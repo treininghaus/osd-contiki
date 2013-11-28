@@ -45,7 +45,6 @@
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
-#define REST_RES_DS1820 0
 #define REST_RES_HELLO 0
 #define REST_RES_MIRROR 0 /* causes largest code size */
 #define REST_RES_CHUNKS 1
@@ -789,9 +788,6 @@ hw_init()
 {
 #if defined (PLATFORM_HAS_LEDS)
  leds_off(LEDS_RED);
-#endif
-#if REST_RES_DS1820
-  ds1820_temp();
 #endif
 }
 
