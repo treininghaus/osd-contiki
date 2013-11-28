@@ -28,21 +28,12 @@
  *
  */
 
-#ifndef __PROJECT_ROUTER_CONF_H__
-#define __PROJECT_ROUTER_CONF_H__
+#ifndef PROJECT_ROUTER_CONF_H_
+#define PROJECT_ROUTER_CONF_H_
 
 #ifndef UIP_FALLBACK_INTERFACE
 #define UIP_FALLBACK_INTERFACE rpl_interface
 #endif
-
-/* Save some memory for the sky platform. */
-#undef UIP_CONF_DS6_NBR_NBU
-#define UIP_CONF_DS6_NBR_NBU     15
-#undef UIP_CONF_DS6_ROUTE_NBU
-#define UIP_CONF_DS6_ROUTE_NBU   50
-
-#undef UIP_CONF_TCP
-#define UIP_CONF_TCP              1
 
 #ifndef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM          4
@@ -60,4 +51,4 @@
 #define WEBSERVER_CONF_CFS_CONNS 2
 #endif
 
-#endif /* __PROJECT_ROUTER_CONF_H__ */
+#endif /* PROJECT_ROUTER_CONF_H_ */
