@@ -29,8 +29,8 @@
  *
  */
 
-#ifndef __PROJECT_RPL_WEB_CONF_H__
-#define __PROJECT_RPL_WEB_CONF_H__
+#ifndef PROJECT_RPL_WEB_CONF_H_
+#define PROJECT_RPL_WEB_CONF_H_
 
 #define SICSLOWPAN_CONF_FRAG	1
 
@@ -44,19 +44,23 @@
 //#define NETSTACK_CONF_RDC     nullrdc_driver
 
 /* Debugmode Dont allow MCU sleeping between channel checks */
+/*
 #undef RDC_CONF_MCU_SLEEP
 #define RDC_CONF_MCU_SLEEP       0
+*/
 
 /* The IP buffer size must fit all other hops, in particular the border router. */
 
 #undef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE    1280
+#define UIP_CONF_BUFFER_SIZE    256
 
 /* Save some memory for the sky platform. */
-#undef UIP_CONF_DS6_NBR_NBU
-#define UIP_CONF_DS6_NBR_NBU     10
-#undef UIP_CONF_DS6_ROUTE_NBU
-#define UIP_CONF_DS6_ROUTE_NBU   10
+/*
+#undef NBR_TABLE_CONF_MAX_NEIGHBORS
+#define NBR_TABLE_CONF_MAX_NEIGHBORS     10
+#undef UIP_CONF_MAX_ROUTES
+#define UIP_CONF_MAX_ROUTES   10
+*/
 
 /* Increase rpl-border-router IP-buffer when using 128. */
 #ifndef REST_MAX_CHUNK_SIZE
@@ -69,12 +73,16 @@
 #endif
 
 /* Must be <= open transaction number. */
+/*
 #ifndef COAP_MAX_OBSERVERS
 #define COAP_MAX_OBSERVERS      COAP_MAX_OPEN_TRANSACTIONS-1
 #endif
+*/
 
 /* Reduce 802.15.4 frame queue to save RAM. */
+/*
 #undef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM               4
+*/
 
-#endif /* __PROJECT_RPL_WEB_CONF_H__ */
+#endif /* _PROJECT_RPL_WEB_CONF_H_ */

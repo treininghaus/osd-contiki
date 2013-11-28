@@ -46,15 +46,9 @@
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
 #define REST_RES_EVM 1
-#define REST_RES_CHUNKS 0
 #define REST_RES_BATTERY 1
 #define REST_RES_LEDS 1
 #define REST_RES_TOGGLE 1
-
-#if !UIP_CONF_IPV6_RPL && !defined (CONTIKI_TARGET_MINIMAL_NET) && !defined (CONTIKI_TARGET_NATIVE)
-#warning "Compiling with static routing!"
-#include "static-routing.h"
-#endif
 
 #include "erbium.h"
 
@@ -120,7 +114,7 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 
   /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
        // jSON Format
-     index += sprintf(message + index,"{\n \"version\" : \"V0.1\",\n");
+     index += sprintf(message + index,"{\n \"version\" : \"V0.2\",\n");
      index += sprintf(message + index," \"name\" : \"embedd-vm demo\"\n");
      index += sprintf(message + index,"}\n");
 
@@ -129,66 +123,6 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 
   REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
   REST.set_response_payload(response, buffer, length);
-}
-#endif
-
-/******************************************************************************/
-#if REST_RES_CHUNKS
-/*
- * For data larger than REST_MAX_CHUNK_SIZE (e.g., stored in flash) resources must be aware of the buffer limitation
- * and split their responses by themselves. To transfer the complete resource through a TCP stream or CoAP's blockwise transfer,
- * the byte offset where to continue is provided to the handler as int32_t pointer.
- * These chunk-wise resources must set the offset value to its new position or -1 of the end is reached.
- * (The offset for CoAP's blockwise transfer can go up to 2'147'481'600 = ~2047 M for block size 2048 (reduced to 1024 in observe-03.)
- */
-RESOURCE(chunks, METHOD_GET, "test/chunks", "title=\"Blockwise demo\";rt=\"Data\"");
-
-#define CHUNKS_TOTAL    2050
-
-void
-chunks_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  int32_t strpos = 0;
-
-  /* Check the offset for boundaries of the resource data. */
-  if (*offset>=CHUNKS_TOTAL)
-  {
-    REST.set_response_status(response, REST.status.BAD_OPTION);
-    /* A block error message should not exceed the minimum block size (16). */
-
-    const char *error_msg = "BlockOutOfScope";
-    REST.set_response_payload(response, error_msg, strlen(error_msg));
-    return;
-  }
-
-  /* Generate data until reaching CHUNKS_TOTAL. */
-  while (strpos<preferred_size)
-  {
-    strpos += snprintf((char *)buffer+strpos, preferred_size-strpos+1, "|%ld|", *offset);
-  }
-
-  /* snprintf() does not adjust return value if truncated by size. */
-  if (strpos > preferred_size)
-  {
-    strpos = preferred_size;
-  }
-
-  /* Truncate if above CHUNKS_TOTAL bytes. */
-  if (*offset+(int32_t)strpos > CHUNKS_TOTAL)
-  {
-    strpos = CHUNKS_TOTAL - *offset;
-  }
-
-  REST.set_response_payload(response, buffer, strpos);
-
-  /* IMPORTANT for chunk-wise resources: Signal chunk awareness to REST engine. */
-  *offset += strpos;
-
-  /* Signal end of resource representation. */
-  if (*offset>=CHUNKS_TOTAL)
-  {
-    *offset = -1;
-  }
 }
 #endif
 
@@ -501,9 +435,6 @@ PROCESS_THREAD(rest_server_example, ev, data)
   /* Activate the application-specific resources. */
 #if REST_RES_INFO
   rest_activate_resource(&resource_info);
-#endif
-#if REST_RES_CHUNKS
-  rest_activate_resource(&resource_chunks);
 #endif
 #if defined (PLATFORM_HAS_LEDS)
 #if REST_RES_LEDS
