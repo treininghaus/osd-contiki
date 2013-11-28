@@ -35,6 +35,12 @@
 #define UIP_FALLBACK_INTERFACE rpl_interface
 #endif
 
+/* Save some memory for the sky platform. */
+#undef NBR_TABLE_CONF_MAX_NEIGHBORS
+#define NBR_TABLE_CONF_MAX_NEIGHBORS     20
+#undef UIP_CONF_MAX_ROUTES
+#define UIP_CONF_MAX_ROUTES      20
+
 #ifndef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM          4
 #endif
