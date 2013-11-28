@@ -29,8 +29,8 @@
  *
  */
 
-#ifndef __PROJECT_ERBIUM_CONF_H__
-#define __PROJECT_ERBIUM_CONF_H__
+#ifndef PROJECT_ERBIUM_CONF_H_
+#define PROJECT_ERBIUM_CONF_H_
 
 #define PLATFORM_HAS_LEDS    1
 #define PLATFORM_HAS_BUTTON  1
@@ -58,7 +58,7 @@
 /* The IP buffer size must fit all other hops, in particular the border router. */
 
 #undef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE    1280
+#define UIP_CONF_BUFFER_SIZE    256
 
 
 /* Multiplies with chunk size, be aware of memory constraints. */
@@ -79,8 +79,8 @@
 
 /* Save some memory for the sky platform. */
 /*
-#undef UIP_CONF_DS6_NBR_NBU
-#define UIP_CONF_DS6_NBR_NBU     10
+#undef NBR_TABLE_CONF_MAX_NEIGHBORS
+#define NBR_TABLE_CONF_MAX_NEIGHBORS     10
 #undef UIP_CONF_MAX_ROUTES
 #define UIP_CONF_MAX_ROUTES   10
 */
@@ -95,4 +95,4 @@
 #undef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG	1
 */
-#endif /* __PROJECT_ERBIUM_CONF_H__ */
+#endif /* PROJECT_ERBIUM_CONF_H_ */

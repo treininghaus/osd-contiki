@@ -73,7 +73,7 @@
 #endif
 
 /* TODO: This server address is hard-coded for Cooja. */
-#define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0xfe80, 0, 0, 0, 0x0221, 0x2eff, 0xff00, 0x270d) /* cooja2 */
+#define SERVER_NODE(ipaddr)   uip_ip6addr(ipaddr, 0xfe80, 0, 0, 0, 0x0221, 0x2eff, 0xff00, 0x26e6) /* cooja2 */
 
 #define LOCAL_PORT      UIP_HTONS(COAP_DEFAULT_PORT+1)
 #define REMOTE_PORT     UIP_HTONS(COAP_DEFAULT_PORT)
