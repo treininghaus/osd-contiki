@@ -53,11 +53,6 @@
 #define REST_RES_TOGGLE 0
 #define REST_RES_BATTERY 1
 
-#if !UIP_CONF_IPV6_RPL && !defined (CONTIKI_TARGET_MINIMAL_NET) && !defined (CONTIKI_TARGET_NATIVE)
-#warning "Compiling with static routing!"
-#include "static-routing.h"
-#endif
-
 #include "erbium.h"
 #include "pcintkey.h"
 
