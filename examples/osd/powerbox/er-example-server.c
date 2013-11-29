@@ -373,8 +373,6 @@ hw_init()
 #endif
 }
 
-#define MESURE_INTERVAL		(CLOCK_SECOND/2)
-
 PROCESS(rest_server_example, "Erbium Example Server");
 
 AUTOSTART_PROCESSES(&rest_server_example, &sensors_process);
@@ -426,11 +424,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
   /* Define application-specific events here. */
   while(1) {
     PROCESS_WAIT_EVENT();
-#if defined (REST_RES_EVENT)
-    if (ev == sensors_event ) {
-      PRINTF("EVENT\n");
-    }
-#endif /* REST_RES_EVENT */
+
   } /* while (1) */
   PROCESS_END();
 }
