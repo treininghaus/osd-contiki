@@ -46,22 +46,13 @@
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
-#define REST_RES_SERVO 0
 #define REST_RES_T4_SERVO 1
-#define REST_RES_TEMPERATURE 0
-#define REST_RES_EVENT 0
 #define REST_RES_LEDS 0
 #define REST_RES_TOGGLE 0
 #define REST_RES_BATTERY 1
 
-#if !UIP_CONF_IPV6_RPL && !defined (CONTIKI_TARGET_MINIMAL_NET) && !defined (CONTIKI_TARGET_NATIVE)
-#warning "Compiling with static routing!"
-#include "static-routing.h"
-#endif
-
 #include "erbium.h"
 
-#include "dev/led.h"
 #if defined (PLATFORM_HAS_BUTTON)
 #include "dev/button-sensor.h"
 #endif
@@ -87,6 +78,10 @@
 #include "er-coap-03.h"
 #elif WITH_COAP == 7
 #include "er-coap-07.h"
+#elif WITH_COAP == 12
+#include "er-coap-12.h"
+#elif WITH_COAP == 13
+#include "er-coap-13.h"
 #else
 #warning "Erbium example without CoAP-specifc functionality"
 #endif /* CoAP-specific example */
@@ -272,72 +267,6 @@ t4_servo_handler(void* request, void* response, uint8_t *buffer, uint16_t prefer
 }
 #endif
 
-/*A simple actuator example, post variable mode, relay is activated or deactivated*/
-RESOURCE(led1, METHOD_GET | METHOD_PUT , "aktors/led1",  "title=\"Led1\";rt=\"led\"");
-void
-led1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  char mode[10];
-  static uint8_t led1 = 0;
-  static char name[17]="led1";
-  int success = 1;
-
-  char temp[100];
-  int index = 0;
-  size_t len = 0;
-
-  const char *pmode = NULL;
-  const char *pname = NULL;
-
-  switch(REST.get_method_type(request)){
-   case METHOD_GET:
-     // jSON Format
-     index += sprintf(temp + index,"{\n \"name\" : \"%s\",\n",name);
-     if(led1 == 0)
-         index += sprintf(temp + index," \"mode\" : \"off\"\n");
-     if(led1 == 1)
-         index += sprintf(temp + index," \"mode\" : \"on\"\n");
-     index += sprintf(temp + index,"}\n");
-
-     len = strlen(temp);
-     memcpy(buffer, temp,len );
-
-     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-     REST.set_response_payload(response, buffer, len);
-     break;
-   case METHOD_POST:
-     success = 0;
-     break;
-   case METHOD_PUT:
-     if (success &&  (len=REST.get_post_variable(request, "mode", &pmode))) {
-       PRINTF("name %s\n", mode);
-       memcpy(mode, pmode,len);
-       mode[len]=0;
-       if (!strcmp(mode, "on")) {
-         led1_on();
-         led1 = 1;
-       } else if (!strcmp(mode, "off")) {
-         led1_off();
-         led1 = 0;
-       } else {
-         success = 0;
-       }
-    } else if (success &&  (len=REST.get_post_variable(request, "name", &pname))) {
-       PRINTF("name %s\n", name);
-       memcpy(name, pname,len);
-       name[len]=0;
-    } else {
-      success = 0;
-    }
-    break;
-  default:
-    success = 0;
-  }
-
-  if (!success) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
-  }
-}
 
 /******************************************************************************/
 #if defined (PLATFORM_HAS_LEDS)
@@ -468,7 +397,7 @@ battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
   }
   else
   {
-    REST.set_response_status(response, REST.status.UNSUPPORTED_MADIA_TYPE);
+    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
     const char *msg = "Supporting content-types text/plain and application/json";
     REST.set_response_payload(response, msg, strlen(msg));
   }
@@ -479,7 +408,9 @@ battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 void 
 hw_init()
 {
-  led1_off();
+#if defined (PLATFORM_HAS_LEDS)
+ leds_off(LEDS_RED);
+#endif
 }
 
 PROCESS(rest_server_example, "Erbium Example Server");
@@ -515,7 +446,6 @@ PROCESS_THREAD(rest_server_example, ev, data)
   rest_init_engine();
 
   /* Activate the application-specific resources. */
-  rest_activate_resource(&resource_led1);
 #if REST_RES_INFO
   rest_activate_resource(&resource_info);
 #endif
@@ -534,10 +464,6 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #if defined (PLATFORM_HAS_BATTERY) && REST_RES_BATTERY
   SENSORS_ACTIVATE(battery_sensor);
   rest_activate_resource(&resource_battery);
-#endif
-#if defined (PLATFORM_HAS_SERVO) && REST_RES_SERVO
-  SENSORS_ACTIVATE(servo_sensor);
-  rest_activate_resource(&resource_servo);
 #endif
 #if defined (PLATFORM_HAS_T4_SERVO) && REST_RES_T4_SERVO
   SENSORS_ACTIVATE(t4_servo_sensor);
