@@ -274,45 +274,6 @@ typedef unsigned short uip_stats_t;
 #define UIP_CONF_DS6_MADDR_NBU    0
 #define UIP_CONF_DS6_AADDR_NBU    0
 
-
-#elif 1  /* cx-mac radio cycling */
-/* RF230 does clear-channel assessment in extended mode (autoretries>0) */
-/* These values are guesses */
-#define RF230_CONF_FRAME_RETRIES  10
-#define RF230_CONF_CSMA_RETRIES   2
-#if RF230_CONF_CSMA_RETRIES
-#define NETSTACK_CONF_MAC         nullmac_driver
-#else
-#define NETSTACK_CONF_MAC         csma_driver
-#endif
-#define NETSTACK_CONF_RDC         cxmac_driver
-#define NETSTACK_CONF_FRAMER      framer_802154
-#define NETSTACK_CONF_RADIO       rf230_driver
-#define RF230_CONF_AUTOACK        1
-#define SICSLOWPAN_CONF_FRAG      1
-#define SICSLOWPAN_CONF_MAXAGE    3
-#define CXMAC_CONF_ANNOUNCEMENTS  0
-#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE 8
-/* 211 bytes per queue buffer. Burst mode will need 15 for a 1280 byte MTU */
-#define QUEUEBUF_CONF_NUM         15
-/* 54 bytes per queue ref buffer */
-#define QUEUEBUF_CONF_REF_NUM     2
-/* Allocate remaining RAM. Not much left due to queuebuf increase  */
-#define UIP_CONF_MAX_CONNECTIONS  2
-#define UIP_CONF_MAX_LISTENPORTS  4
-#define UIP_CONF_UDP_CONNS        5
-#define NBR_TABLE_CONF_MAX_NEIGHBORS      4
-#define UIP_CONF_DS6_DEFRT_NBU    2
-#define UIP_CONF_DS6_PREFIX_NBU   3
-#define UIP_CONF_MAX_ROUTES    4
-#define UIP_CONF_DS6_ADDR_NBU     3
-#define UIP_CONF_DS6_MADDR_NBU    0
-#define UIP_CONF_DS6_AADDR_NBU    0
-//Below gives 10% duty cycle, undef for default 5%
-//#define CXMAC_CONF_ON_TIME (RTIMER_ARCH_SECOND / 80)
-//Below gives 50% duty cycle
-//#define CXMAC_CONF_ON_TIME (RTIMER_ARCH_SECOND / 16)
-
 #else
 #error Network configuration not specified!
 #endif   /* Network setup */
