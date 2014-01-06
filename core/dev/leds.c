@@ -90,6 +90,12 @@ leds_get(void) {
 }
 /*---------------------------------------------------------------------------*/
 void
+leds_set(unsigned char ledv)
+{
+  show_leds(ledv);
+}
+/*---------------------------------------------------------------------------*/
+void
 leds_on(unsigned char ledv)
 {
   unsigned char changed;
