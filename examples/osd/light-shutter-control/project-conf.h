@@ -32,6 +32,11 @@
 #ifndef PROJECT_RPL_WEB_CONF_H_
 #define PROJECT_RPL_WEB_CONF_H_
 
+#define OSDPLUG
+//#define OSDLIGHT
+//#define OSDSHUTTER
+
+
 //#define PLATFORM_HAS_LEDS    1
 //#define PLATFORM_HAS_BUTTON  1
 #define PLATFORM_HAS_OPTRIAC  1

@@ -48,12 +48,14 @@
 
 /**
  * \brief Turns the TRIAC 1 off.
+ * old D6 D7
+ * new E3 E4
 */
 void
 optriac1_off(void)
 {
-    DDRD  |=  (1<<PIND6);
-    PORTD &= ~(1<<PIND6);
+    DDRE  |=  (1<<PINE3);
+    PORTE &= ~(1<<PINE3);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -64,8 +66,8 @@ optriac1_off(void)
 void
 optriac1_on(void)
 {
-    DDRD  |= (1<<PIND6);
-    PORTD |= (1<<PIND6);
+    DDRE  |= (1<<PINE3);
+    PORTE |= (1<<PINE3);
 }
 /*---------------------------------------------------------------------------*/
 
@@ -75,8 +77,8 @@ optriac1_on(void)
 void
 optriac2_off(void)
 {
-    DDRD  |=  (1<<PIND7);
-    PORTD &= ~(1<<PIND7);
+    DDRE  |=  (1<<PINE4);
+    PORTE &= ~(1<<PINE4);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -87,7 +89,7 @@ optriac2_off(void)
 void
 optriac2_on(void)
 {
-    DDRD  |= (1<<PIND7);
-    PORTD |= (1<<PIND7);
+    DDRE  |= (1<<PINE4);
+    PORTE |= (1<<PINE4);
 }
 /*---------------------------------------------------------------------------*/

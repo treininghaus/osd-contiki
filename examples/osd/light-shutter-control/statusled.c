@@ -51,7 +51,13 @@
 void
 statusledinit(void)
 {
- /* todo disable jtag interface */
+  uint8_t temp;
+
+  /* Get MCUCR */
+  temp = MCUCR;
+  /* disable jtag */
+  MCUCR = temp|(1<<JTD);
+  MCUCR = temp|(1<<JTD);
 }
 
 /*---------------------------------------------------------------------------*/
