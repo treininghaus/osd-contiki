@@ -123,10 +123,17 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 
   /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
        // jSON Format
-     index += sprintf(message + index,"{\n \"Version\" : \"V1.0pre2\",\n");
+     index += sprintf(message + index,"{\n \"Version\" : \"V1.0pre3\",\n");
+#ifdef OSDPLUG 
+     index += sprintf(message + index," \"name\" : \"PLUG\"\n");
+#endif
+#ifdef OSDLIGHT
      index += sprintf(message + index," \"name\" : \"light-actor\"\n");
+#endif
+#ifdef OSDSHUTTER
+     index += sprintf(message + index," \"name\" : \"shutter-actor\"\n");
+#endif
      index += sprintf(message + index,"}\n");
-
     length = strlen(message);
     memcpy(buffer, message,length );
 
@@ -262,9 +269,83 @@ led1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
     REST.set_response_status(response, REST.status.BAD_REQUEST);
   }
 }
+/******************************************************************************/
+#if (defined (PLATFORM_HAS_OPTRIAC) && defined (OSDPLUG))
+/******************************************************************************/
+#if REST_RES_OPTRIAC
+/*A simple actuator example*/
+RESOURCE(optriac, METHOD_GET | METHOD_POST | METHOD_PUT , "actuators/optriac", "title=\"TRIAC, POST/PUT mode=on|off\";rt=\"Control\"");
+
+void
+optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  const char *mode = NULL;
+  static char namea[17]="Triac-a";
+  static char nameb[17]="Triac-b";
+
+  char temp[100];
+  int index = 0;
+  size_t len = 0;
+  int success = 1;
+
+  switch(REST.get_method_type(request)){
+   case METHOD_GET:
+     // jSON Format
+     index += sprintf(temp + index,"{\n \"%s\" : ",namea);
+     if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 0)
+         index += sprintf(temp + index,"\"off\",\n");
+     if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 1)
+         index += sprintf(temp + index,"\"on\",\n");
+     index += sprintf(temp + index," \"%s\" : ",nameb);
+     if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 0)
+         index += sprintf(temp + index,"\"off\"\n");
+     if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 1)
+         index += sprintf(temp + index,"\"on\"\n");
+     index += sprintf(temp + index,"}\n");
+
+     len = strlen(temp);
+     memcpy(buffer, temp,len );
+
+     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+     REST.set_response_payload(response, buffer, len);
+     break;
+
+   case METHOD_POST:
+     success = 0;
+     break;
+   case METHOD_PUT:
+     if (success && (len=REST.get_post_variable(request, "mode", &mode))) {
+     PRINTF("mode %s\n", mode);
+       if (strncmp(mode, "on", len)==0) {
+         optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
+         optriac_sensor.configure(OPTRIAC_SENSOR_B,1);
+         statusled_on();
+//         led1_on();  // Debug
+       } else if (strncmp(mode, "off", len)==0) {
+         optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
+         optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
+		 statusled_off();
+//         led1_off();  // Debug
+       } else {
+         success = 0;
+       }
+    } else {
+      success = 0;
+    }
+    break;
+  default:
+    success = 0;
+  }
+  if (!success) {
+    REST.set_response_status(response, REST.status.BAD_REQUEST);
+  }
+}
+#endif
+/******************************************************************************/
+#endif /* PLATFORM_HAS_OPTRIAC */
 
 /******************************************************************************/
-#if defined (PLATFORM_HAS_OPTRIAC)
+#if (defined (PLATFORM_HAS_OPTRIAC) && defined (OSDLIGHT))
 /******************************************************************************/
 #if REST_RES_OPTRIAC
 /*A simple actuator example*/
@@ -494,6 +575,7 @@ void
 hw_init()
 {
   led1_off();
+  statusledinit();
   key_init();
 }
 
