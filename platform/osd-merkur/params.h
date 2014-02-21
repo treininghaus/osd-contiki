@@ -14,7 +14,8 @@
  */
 // default settings
 #define CHANNEL_802_15_4          26     // default frequency (11-26)
-#define IEEE802154_PANID          0xABCD // default panid
+#define IEEE802154_CONF_PANID     0xABCD // default panid
+
 // end default settings
 
 #define CONTIKI_CONF_RANDOM_MAC 0        //adds 78 bytes
