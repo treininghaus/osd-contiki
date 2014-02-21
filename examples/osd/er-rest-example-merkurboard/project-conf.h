@@ -38,7 +38,8 @@
 #define PLATFORM_HAS_BATTERY 1
 
 /* Some platforms have weird includes. */
-#undef IEEE802154_CONF_PANID
+// #undef IEEE802154_CONF_PANID
+// #define IEEE802154_CONF_PANID 0xAAAA
 
 /* Disabling RDC for demo purposes. Core updates often require more memory. */
 /* For projects, optimize memory and enable RDC again. */
