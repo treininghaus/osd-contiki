@@ -45,8 +45,9 @@
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
-#define REST_RES_DS1820 1
+#define REST_RES_DS1820 0
 #define REST_RES_DHT11 1
+#define REST_RES_DHT11TEMP 1
 #define REST_RES_LEDS 1
 #define REST_RES_TOGGLE 0
 #define REST_RES_BATTERY 1
@@ -127,7 +128,7 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 
   /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
        // jSON Format
-     index += sprintf(message + index,"{\n \"version\" : \"V0.4.2\",\n");
+     index += sprintf(message + index,"{\n \"version\" : \"V0.4.3\",\n");
      index += sprintf(message + index," \"name\" : \"6lowpan-climate\"\n");
      index += sprintf(message + index,"}\n");
 
@@ -187,9 +188,49 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 }
 #endif //REST_RES_DS1820
 
+#if REST_RES_DHT11TEMP
+/*A simple getter example. Returns the reading from dhtxx sensor*/
+RESOURCE(dht11temp, METHOD_GET, "sensors/temp", "title=\"Temperatur DHTxx\";rt=\"temperature-c\"");
+void
+dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  char message[100];
+  int length = 0; /*           |<-------->| */
+
+  const uint16_t *accept = NULL;
+  int num = REST.get_header_accept(request, &accept);
+
+  if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
+  {
+    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "%2d",dht11_temp);
+
+    length = strlen(message);
+    memcpy(buffer, message,length );
+
+    REST.set_response_payload(response, buffer, length);
+  }
+  else if (num && (accept[0]==REST.type.APPLICATION_JSON))
+  {
+    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d\"}",dht11_temp);
+
+    length = strlen(message);
+    memcpy(buffer, message,length );
+
+    REST.set_response_payload(response, buffer, length);
+  }
+  else
+  {
+    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
+    REST.set_response_payload(response, (uint8_t *)"Supporting content-types text/plain and application/json", 56);
+  }	
+}
+#endif //REST_RES_DHT11TEMP
+
 #if REST_RES_DHT11
-/*A simple getter example. Returns the reading from ds1820 sensor*/
-RESOURCE(dht11, METHOD_GET, "sensors/hum", "title=\"Humidity DHT11\";rt=\"humidity-%\"");
+/*A simple getter example. Returns the reading from dhtxx sensor*/
+RESOURCE(dht11, METHOD_GET, "sensors/hum", "title=\"Humidity DHTxx\";rt=\"humidity-%\"");
 void
 dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -202,7 +243,7 @@ dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
   if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
   {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "%2d %2d",dht11_temp,dht11_hum);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "%2d",dht11_hum);
 
     length = strlen(message);
     memcpy(buffer, message,length );
@@ -212,7 +253,7 @@ dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
   else if (num && (accept[0]==REST.type.APPLICATION_JSON))
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d\",\"hum\":\"%d\"}",dht11_temp,dht11_hum);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"hum\":\"%d\"}",dht11_hum);
 
     length = strlen(message);
     memcpy(buffer, message,length );
@@ -387,6 +428,9 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #endif
 #if REST_RES_DHT11
   rest_activate_resource(&resource_dht11);
+#endif
+#if REST_RES_DHT11TEMP
+  rest_activate_resource(&resource_dht11temp);
 #endif
 #if REST_RES_INFO
   rest_activate_resource(&resource_info);
