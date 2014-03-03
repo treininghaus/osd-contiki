@@ -30,7 +30,7 @@
 #define mdelay(u) clock_delay_msec(u)
 
 // define for DHT11 else for DHT22, RHT03 
-#define DHT11	1
+   #define DHT11	1
 
 uint8_t DHT_Read_Data(uint16_t *temperature, uint16_t *humidity){
 
@@ -107,11 +107,11 @@ uint8_t DHT_Read_Data(uint16_t *temperature, uint16_t *humidity){
     //Check if data received are correct by checking the CheckSum
     if ((uint8_t)(data[0] + data[1] + data[2] + data[3]) == data[4]) {
 #ifdef DHT11
-        *humidity = data[0];
-        *temperature = data[2];
+        *humidity = data[0]*100;
+        *temperature = data[2]*100;
 #else
-        *humidity = (uint16_t)data[0]<<8 | data[1];
-        *temperature = (uint16_t)data[2]<<8 | data[3];
+        *humidity = ((uint16_t)data[0]<<8 | data[1])*10;
+        *temperature = ((uint16_t)data[2]<<8 | data[3])*10;
 #endif
         return 0;
     }else{
