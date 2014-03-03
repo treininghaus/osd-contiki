@@ -45,9 +45,9 @@
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
-#define REST_RES_DS1820 0
+#define REST_RES_DS1820 1
 #define REST_RES_DHT11 1
-#define REST_RES_DHT11TEMP 1
+#define REST_RES_DHT11TEMP 0
 #define REST_RES_LEDS 1
 #define REST_RES_TOGGLE 0
 #define REST_RES_BATTERY 1
@@ -163,7 +163,8 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
   if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
   {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "%2d.%d C",grad,kgrad);
+//    snprintf(message, REST_MAX_CHUNK_SIZE, "%2d.%d C",grad,kgrad);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "%4d",grad*100+kgrad*10);
 
     length = strlen(message);
     memcpy(buffer, message,length );
@@ -173,7 +174,8 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
   else if (num && (accept[0]==REST.type.APPLICATION_JSON))
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d.%d\"}",grad,kgrad);
+//    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d.%d\"}",grad,kgrad);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%4d\"}",grad*100+kgrad*10);
 
     length = strlen(message);
     memcpy(buffer, message,length );
@@ -203,7 +205,7 @@ dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16_t prefe
   if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
   {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "%2d",dht11_temp);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "%4d",dht11_temp);
 
     length = strlen(message);
     memcpy(buffer, message,length );
@@ -213,7 +215,7 @@ dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16_t prefe
   else if (num && (accept[0]==REST.type.APPLICATION_JSON))
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d\"}",dht11_temp);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%4d\"}",dht11_temp);
 
     length = strlen(message);
     memcpy(buffer, message,length );
