@@ -39,6 +39,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include "contiki.h"
 #include "contiki-net.h"
 
@@ -141,7 +142,11 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 #endif
 
 #if REST_RES_DS1820
-/*A simple getter example. Returns the reading from ds1820 sensor*/
+/* A simple getter example. Returns the reading from ds1820 sensor */
+#define DS1820_TEMP_LSB                0
+#define DS1820_TEMP_MSB                1
+#define DS1820_COUNT_REMAIN    6
+#define DS1820_COUNT_PER_C     7
 RESOURCE(ds1820, METHOD_GET, "sensors/temp", "title=\"Temperatur DS1820\";rt=\"temperature-c\"");
 void
 ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
@@ -149,22 +154,30 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 
   char message[100];
   int length = 0; /*           |<-------->| */
-  int grad=0;
-  int kgrad=0;
-
-  if(ds1820_ok[0] & 0x01){
-	kgrad=5;
-  }
-  grad = (int)((ds1820_ok[1] << 8) | (ds1820_ok[0])) >> 1;
+  union temp_raw {
+         int16_t  s_int16;
+         uint16_t u_int16;
+  } temp_raw;
+  double temp_c;
+  int temp_integral;
+  int temp_centi;
 
   const uint16_t *accept = NULL;
   int num = REST.get_header_accept(request, &accept);
 
+  // temp = temp_read - 0.25°C + (count_per_c - count_remain) / count_per_c;
+  temp_raw.u_int16 = ds1820_ok[DS1820_TEMP_MSB] << 8 | ds1820_ok[DS1820_TEMP_LSB];
+  temp_c = temp_raw.s_int16 / 2.0
+          - 0.25
+          + ((double) ds1820_ok[DS1820_COUNT_PER_C] - (double) ds1820_ok[DS1820_COUNT_REMAIN])
+            / (double) ds1820_ok[DS1820_COUNT_PER_C];
+  temp_integral = (int) temp_c;
+  temp_centi = (int) (fabs (temp_c - (int) temp_c) * 100.0);
+
   if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
   {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-//    snprintf(message, REST_MAX_CHUNK_SIZE, "%2d.%d C",grad,kgrad);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "%4d",grad*100+kgrad*10);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "%d.%02d C", temp_integral, temp_centi);
 
     length = strlen(message);
     memcpy(buffer, message,length );
@@ -174,8 +187,7 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
   else if (num && (accept[0]==REST.type.APPLICATION_JSON))
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-//    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d.%d\"}",grad,kgrad);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%4d\"}",grad*100+kgrad*10);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d.%02d\"}", temp_integral, temp_centi);
 
     length = strlen(message);
     memcpy(buffer, message,length );
