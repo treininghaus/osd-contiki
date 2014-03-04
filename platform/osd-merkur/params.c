@@ -120,7 +120,7 @@ uint8_t eemem_domain_name[] EEMEM = PARAMS_DOMAINNAME;
 
 uint16_t eemem_nodeid EEMEM = PARAMS_NODEID;
 uint8_t eemem_channel[2] EEMEM = {CHANNEL_802_15_4, ~CHANNEL_802_15_4};
-uint16_t eemem_panid EEMEM = IEEE802154_PANID;
+uint16_t eemem_panid EEMEM = IEEE802154_CONF_PANID;
 uint16_t eemem_panaddr EEMEM = PARAMS_PANADDR;
 uint8_t eemem_txpower EEMEM = PARAMS_TXPOWER;
 
@@ -153,7 +153,7 @@ params_get_channel(void) {
     eeprom_write_block(&buffer,  &eemem_server_name, sizeof(eemem_server_name));
     for (i=0;i<sizeof(default_domain_name);i++) buffer[i] = pgm_read_byte_near(default_domain_name+i);
     eeprom_write_block(&buffer,  &eemem_domain_name, sizeof(eemem_domain_name));
-    eeprom_write_word(&eemem_panid  , IEEE802154_PANID);
+    eeprom_write_word(&eemem_panid  , IEEE802154_CONF_PANID);
     eeprom_write_word(&eemem_panaddr, PARAMS_PANADDR);
     eeprom_write_byte(&eemem_txpower, PARAMS_TXPOWER);
     eeprom_write_word(&eemem_nodeid, PARAMS_NODEID);
