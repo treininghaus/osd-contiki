@@ -51,6 +51,8 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "dev/leds.h"
+
 #define DEBUG DEBUG_NONE
 #include "net/uip-debug.h"
 
@@ -79,7 +81,7 @@ AUTOSTART_PROCESSES(&border_router_process,&webserver_nogui_process);
  */
 #define WEBSERVER_CONF_LOADTIME 0
 #define WEBSERVER_CONF_FILESTATS 0
-#define WEBSERVER_CONF_NEIGHBOR_STATUS 1
+#define WEBSERVER_CONF_NEIGHBOR_STATUS 0
 /* Adding links requires a larger RAM buffer. To avoid static allocation
  * the stack can be used for formatting; however tcp retransmissions
  * and multiple connections can result in garbled segments.
@@ -334,7 +336,7 @@ PROCESS_THREAD(border_router_process, ev, data)
   rpl_dag_t *dag;
 
   PROCESS_BEGIN();
-
+  leds_off(LEDS_RED);
 /* While waiting for the prefix to be sent through the SLIP connection, the future
  * border router can join an existing DAG as a parent or child, or acquire a default 
  * router that will later take precedence over the SLIP fallback interface.
