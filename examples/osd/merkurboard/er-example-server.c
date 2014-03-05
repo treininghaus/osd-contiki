@@ -96,7 +96,7 @@ Appendix A.  Profile example
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
 #define REST_RES_EVENT 1
-#define REST_RES_LEDS 1
+#define REST_RES_LED 1
 #define REST_RES_TOGGLE 1
 #define REST_RES_BATTERY 1
 
@@ -105,7 +105,7 @@ Appendix A.  Profile example
 #if defined (PLATFORM_HAS_BUTTON)
 #include "dev/button-sensor.h"
 #endif
-#if defined (PLATFORM_HAS_LEDS)
+#if defined (PLATFORM_HAS_LED)
 #include "dev/leds.h"
 #endif
 #if defined (PLATFORM_HAS_BATTERY)
@@ -144,7 +144,7 @@ Appendix A.  Profile example
  * Resources are defined by the RESOURCE macro.
  * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
  */
-RESOURCE(info, METHOD_GET, "info", "title=\"Info\";rt=\"simple.dev.n"");
+RESOURCE(info, METHOD_GET, "info", "title=\"Info\";rt=\"simple.dev.n\"");
 
 /*
  * A handler function named [resource name]_handler must be implemented for each RESOURCE.
@@ -217,36 +217,21 @@ event_event_handler(resource_t *r)
 
 
 /******************************************************************************/
-#if defined (PLATFORM_HAS_LEDS)
+#if defined (PLATFORM_HAS_LED)
 /******************************************************************************/
-#if REST_RES_LEDS
+#if REST_RES_LED
 /*A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated*/
-RESOURCE(leds, METHOD_POST | METHOD_PUT , "a/leds", "title=\"LEDs: ?color=r|g|b, POST/PUT mode=on|off\";rt=\"Control\"");
+RESOURCE(led, METHOD_POST | METHOD_PUT , "a/led", "title=\"LED: POST/PUT mode=on|off\";rt=\"simple.act.led\"");
 
 void
-leds_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+led_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   size_t len = 0;
-  const char *color = NULL;
   const char *mode = NULL;
   uint8_t led = 0;
   int success = 1;
 
-  if ((len=REST.get_query_variable(request, "color", &color))) {
-    PRINTF("color %.*s\n", len, color);
-
-    if (strncmp(color, "r", len)==0) {
-      led = LEDS_RED;
-    } else if(strncmp(color,"g", len)==0) {
-      led = LEDS_GREEN;
-    } else if (strncmp(color,"b", len)==0) {
-      led = LEDS_BLUE;
-    } else {
-      success = 0;
-    }
-  } else {
-    success = 0;
-  }
+  led = LEDS_RED;
 
   if (success && (len=REST.get_post_variable(request, "mode", &mode))) {
     PRINTF("mode %s\n", mode);
@@ -278,7 +263,7 @@ toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
   leds_toggle(LEDS_RED);
 }
 #endif
-#endif /* PLATFORM_HAS_LEDS */
+#endif /* PLATFORM_HAS_LED */
 
 /******************************************************************************/
 #if REST_RES_BATTERY && defined (PLATFORM_HAS_BATTERY)
@@ -318,7 +303,7 @@ battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 void 
 hw_init()
 {
-#if defined (PLATFORM_HAS_LEDS)
+#if defined (PLATFORM_HAS_LED)
  leds_off(LEDS_RED);
 #endif
 }
@@ -357,14 +342,14 @@ PROCESS_THREAD(rest_server_example, ev, data)
   rest_activate_event_resource(&resource_event);
   SENSORS_ACTIVATE(button_sensor);
 #endif
-#if defined (PLATFORM_HAS_LEDS)
-#if REST_RES_LEDS
-  rest_activate_resource(&resource_leds);
+#if defined (PLATFORM_HAS_LED)
+#if REST_RES_LED
+  rest_activate_resource(&resource_led);
 #endif
 #if REST_RES_TOGGLE
   rest_activate_resource(&resource_toggle);
 #endif
-#endif /* PLATFORM_HAS_LEDS */
+#endif /* PLATFORM_HAS_LED */
 #if defined (PLATFORM_HAS_BATTERY) && REST_RES_BATTERY
   SENSORS_ACTIVATE(battery_sensor);
   rest_activate_resource(&resource_battery);
