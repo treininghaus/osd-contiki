@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2013 Marcus Priesch, All rights reserved
+** Copyright (C) 2013-2014 Marcus Priesch, All rights reserved
 ** In Prandnern 31, A--2122 Riedenthal, Austria. office@priesch.co.at
 **
 ** Redistribution and use in source and binary forms, with or without
@@ -36,47 +36,19 @@
 **
 ** Revision Dates
 **    31-Mar-2013 (MPR) Creation
-**    ��revision-date�����
+**    12-Mar-2014 (MPR) Factored to support configurable amount of pwm's
+      ««revision-date»»···
 **--
 */
 
 #ifndef __T4_SERVO_H__
 #define __T4_SERVO_H__
 
-// timing: (X:pwm, _:zero)
-//
-//  X_______________XXXXXXXXXXXXX_______________XXXXXXXXXXXXX
-//
-//  |<------------->|<--------->|<------------->|<--------->| ...
-//    SERVO_OFFSET    SERVO_MAX   SERVO_OFFSET    SERVO_MAX
-//
-//  within SERVO_MAX you get the PWM set with servo_set (id, pwm)
-//  if you set SERVO_OFFSET to zero, you get a pwm from 0 to 100% duty cycle
-//
-//  the period of the smallest tick is derived from the timer4 prescaler
-//  plus the ISR overhead. however, the latter one should be constant
-//  regardless of the pwm signal generated
-
-
-#define SERVO_OFFSET 256
-#define SERVO_MIN 16
-#define SERVO_MAX 32
-
-// Counter value for timer 4 without any prescaler for a single tick
-#define PWMFREQ 500
-#define T4_VALUE F_CPU/SERVO_MAX/PWMFREQ
-
-#define SERVO_COUNT 4
-
-#define DEFAULT_PORT 0x0E
-#define DEFAULT_PIN  1
-#define DEFAULT_DDR  0x0D
-
 typedef struct struct_servo_channel
 {
   unsigned char port;
-  unsigned char pin;
   unsigned char ddr;
+  unsigned char pin;
   unsigned char duty;
 } servo_channel_type;
 
@@ -84,13 +56,6 @@ void t4_servo_init(void);
 void t4_servo_off(void);
 
 int t4_servo_get(unsigned int channel);
-int t4_servo_set(unsigned int channel, unsigned int duty);
-
-int t4_servo_set_io
-    ( unsigned char channel
-    , unsigned char port
-    , unsigned char ddr
-    , unsigned char pin
-    );
+int t4_servo_set(unsigned int channel, unsigned char duty);
 
 #endif /* __T4_SERVO_H__ */

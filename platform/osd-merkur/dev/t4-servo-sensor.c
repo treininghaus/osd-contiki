@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2013 Marcus Priesch, All rights reserved
+** Copyright (C) 2013-2014 Marcus Priesch, All rights reserved
 ** In Prandnern 31, A--2122 Riedenthal, Austria. office@priesch.co.at
 **
 ** Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 **
 ** Revision Dates
 **    31-Mar-2013 (MPR) Creation
+**    12-Mar-2014 (MPR) Factored to support configurable amount of pwm's
 **    ««revision-date»»···
 **--
 */
@@ -45,6 +46,7 @@
 #include "dev/t4-servo-sensor.h"
 
 const struct sensors_sensor t4_servo_sensor;
+
 static int status(int type);
 static int enabled = 0;
 
@@ -71,30 +73,16 @@ static int configure (int type, int c) // type, c: SENSORS_ACTIVE, 1 -> act.
           else if (c == 1)
             {
               t4_servo_init ();
-              t4_servo_set_io (0, T4_SENSOR_1_PORT, T4_SENSOR_1_DDR, T4_SENSOR_1_PIN);
-              t4_servo_set_io (1, T4_SENSOR_2_PORT, T4_SENSOR_2_DDR, T4_SENSOR_2_PIN);
-              t4_servo_set_io (2, T4_SENSOR_3_PORT, T4_SENSOR_3_DDR, T4_SENSOR_3_PIN);
-              t4_servo_set_io (3, T4_SENSOR_4_PORT, T4_SENSOR_4_DDR, T4_SENSOR_4_PIN);
             }
           break;
 
-        case 0 :
-          t4_servo_set (0, c);
+        default :
+          if (type >= SERVO_COUNT)
+            return -1;
+          else
+            t4_servo_set (type, c);
           break;
 
-        case 1 :
-          t4_servo_set (1, c);
-          break;
-
-        case 2 :
-          t4_servo_set (2, c);
-          break;
-
-        case 3 :
-          t4_servo_set (3, c);
-
-        default:
-          break;
       }
     return 0;
   }

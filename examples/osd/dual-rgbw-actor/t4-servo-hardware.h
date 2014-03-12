@@ -35,14 +35,14 @@
 
 static servo_channel_type servo_channels [] =
 { /* PORTx, DDRx, PINxn, PWM */
-  {0x05, 0x04, PINB7, 0} // r
-, {0x0E, 0x0D, PINE2, 0} // g
-, {0x05, 0x04, PINB6, 0} // b
-, {0x05, 0x04, PINB5, 0} // w
-, {0x05, 0x04, PINB1, 0} // r
-, {0x05, 0x04, PINB0, 0} // g
-, {0x05, 0x04, PINB2, 0} // b
-, {0x05, 0x04, PINB3, 0} // w
+  {0x05, 0x04, 1 << PINB7, 0} // r1
+, {0x0E, 0x0D, 1 << PINE2, 0} // g1
+, {0x05, 0x04, 1 << PINB6, 0} // b1
+, {0x05, 0x04, 1 << PINB5, 0} // w1
+, {0x05, 0x04, 1 << PINB1, 0} // r2
+, {0x05, 0x04, 1 << PINB0, 0} // g2
+, {0x05, 0x04, 1 << PINB2, 0} // b2
+, {0x05, 0x04, 1 << PINB3, 0} // w2
 };
 
 #endif

@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2013 Marcus Priesch, All rights reserved
+** Copyright (C) 2013-2014 Marcus Priesch, All rights reserved
 ** In Prandnern 31, A--2122 Riedenthal, Austria. office@priesch.co.at
 **
 ** Redistribution and use in source and binary forms, with or without
@@ -36,16 +36,18 @@
 **
 ** Revision Dates
 **    31-Mar-2013 (MPR) Creation
-**    ��revision-date�����
+**    12-Mar-2014 (MPR) Factored to support configurable amount of pwm's
+**    ««revision-date»»···
 **--
 */
 
 #include "t4-servo.h"
+#include "t4-servo-config.h"
+#include "t4-servo-hardware.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
-#include "led.h"
 
-static servo_channel_type servo_channels [SERVO_COUNT];
+// static servo_channel_type servo_channels [SERVO_COUNT];
 
 // timer 4: CTC OCR4A
 #define WGM4 0x4
@@ -56,8 +58,8 @@ void t4_servo_init (void)
 
   for (channel = 0; channel < SERVO_COUNT;  channel ++)
     {
-      servo_channels [channel].duty = SERVO_MAX/2;
-      t4_servo_set_io (channel, DEFAULT_PORT, DEFAULT_DDR, DEFAULT_PIN);
+      _SFR_IO8 (servo_channels [channel].ddr ) |=   servo_channels [channel].pin;
+      _SFR_IO8 (servo_channels [channel].port) &= ~(servo_channels [channel].pin);
     }
 
   cli ();
@@ -66,45 +68,30 @@ void t4_servo_init (void)
   TCCR4B_struct.wgm4   = (WGM4 & 0xc) >> 2;
   TCCR4B_struct.cs4    = 0x1; // No prescaler
   TCCR4C               = 0x00;
-  OCR4A                = T4_VALUE;
+  OCR4A                = (T4_VALUE);
   TIMSK4_struct.ocie4a = 1;
+  TIMSK4_struct.toie4  = 1;
   sei();
 }
 
 void t4_servo_off (void)
   {
+    TIMSK4_struct.toie4  = 0;
     TIMSK4_struct.ocie4a = 0;
-  }
-
-int t4_servo_set_io
-  ( unsigned char channel
-  , unsigned char port
-  , unsigned char ddr
-  , unsigned char pin
-  )
-  {
-    if (channel >= SERVO_COUNT)
-      return -1;
-
-    servo_channels [channel].port = port;
-    servo_channels [channel].ddr  = ddr;
-    servo_channels [channel].pin  = 1 << pin;
-
-    _SFR_IO8 (ddr) |= pin;
-
-    return 0;
   }
 
 int t4_servo_get (unsigned int channel)
   {
     if (channel >= SERVO_COUNT)
       return -1;
-
+    //printf ("t4_servo_get: %d, %d\n", channel, servo_channels [channel].duty);
     return servo_channels [channel].duty;
   }
 
-int t4_servo_set (unsigned int channel, unsigned int duty)
+int t4_servo_set (unsigned int channel, unsigned char duty)
   {
+    //printf ("t4_servo_set: %d, %d\n", channel, duty);
+
     if (channel >= SERVO_COUNT)
       return -1;
 
@@ -129,14 +116,14 @@ ISR (TIMER4_COMPA_vect, ISR_NOBLOCK)
         if (tick_count < servo_channels [channel].duty)
           {
             // turn on
-            _SFR_IO8 (servo_channels [channel].ddr ) |= servo_channels [channel].pin;
+//            _SFR_IO8 (servo_channels [channel].ddr ) |= servo_channels [channel].pin;
             _SFR_IO8 (servo_channels [channel].port) |= servo_channels [channel].pin;
           }
         else
           {
             // turn off
             _SFR_IO8 (servo_channels [channel].port) &= ~(servo_channels [channel].pin);
-            _SFR_IO8 (servo_channels [channel].ddr ) |=   servo_channels [channel].pin;
+//            _SFR_IO8 (servo_channels [channel].ddr ) |=   servo_channels [channel].pin;
           }
       }
 
@@ -147,4 +134,6 @@ ISR (TIMER4_COMPA_vect, ISR_NOBLOCK)
         tick_count = 0;
       }
   sei();
+
   }
+

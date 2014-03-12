@@ -3,7 +3,7 @@ all: er-example-server
 
 # variable for this Makefile
 # configure CoAP implementation (3|7|12|13) (er-coap-07 also supports CoAP draft 08)
-WITH_COAP=13
+WITH_COAP=7
 
 # for some platforms
 UIP_CONF_IPV6=1
