@@ -1,5 +1,5 @@
 /*
-** Copyright (C) 2013 Marcus Priesch, All rights reserved
+** Copyright (C) 2013-2014 Marcus Priesch, All rights reserved
 ** In Prandnern 31, A--2122 Riedenthal, Austria. office@priesch.co.at
 **
 ** Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,8 @@
 **
 ** Revision Dates
 **    31-Mar-2013 (MPR) Creation
-**    ««revision-date»»···
+**    12-Mar-2014 (MPR) Factored to support configurable amount of pwm's
+      ««revision-date»»···
 **--
 */
 
@@ -44,28 +45,8 @@
 #define __T4_SERVO_SENSOR_H__
 
 #include "lib/sensors.h"
+#include "t4-servo-config.h"
 
 extern const struct sensors_sensor t4_servo_sensor;
 
-#define T4_SENSOR_NAME "T4-Sensor"
-
-#define T4_SENSOR_1_PORT 0x0E
-#define T4_SENSOR_1_DDR  0x0D
-#define T4_SENSOR_1_PIN  PINE4
-
-#define T4_SENSOR_2_PORT 0x0E
-#define T4_SENSOR_2_DDR  0x0D
-#define T4_SENSOR_2_PIN  PINE3
-
-#define T4_SENSOR_3_PORT 0x0E
-#define T4_SENSOR_3_DDR  0x0D
-#define T4_SENSOR_3_PIN  PINE5
-
-#define T4_SENSOR_4_PORT 0x0E
-#define T4_SENSOR_4_DDR  0x0D
-#define T4_SENSOR_4_PIN  PINE6
-
 #endif /* __T4_SERVO_SENSOR_H__ */
-
-
-
