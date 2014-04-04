@@ -21,7 +21,7 @@ CONTIKIAVR=$(CONTIKI)/cpu/avr
 #Needed for SERVO
 CONTIKI_TARGET_SOURCEFILES += servo.c servo-sensor.c
 #Needed for Timer4 Servo
-CONTIKI_TARGET_SOURCEFILES += t4-servo.c t4-servo-sensor.c
+#CONTIKI_TARGET_SOURCEFILES += t4-servo.c t4-servo-sensor.c
 #Needed for Relay 1 to 4
 CONTIKI_TARGET_SOURCEFILES += relay.c relay-sensor.c
 
