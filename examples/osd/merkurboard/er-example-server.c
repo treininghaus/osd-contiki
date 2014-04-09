@@ -91,10 +91,11 @@ Appendix A.  Profile example
 #include <string.h>
 #include "contiki.h"
 #include "contiki-net.h"
-
+#include <avr/eeprom.h>
 
 /* Define which resources to include to meet memory constraints. */
-#define REST_RES_INFO 1
+#define REST_RES_MODEL 1
+#define REST_RES_NAME 1
 #define REST_RES_EVENT 1
 #define REST_RES_LED 1
 #define REST_RES_TOGGLE 1
@@ -139,12 +140,12 @@ Appendix A.  Profile example
 
 
 /******************************************************************************/
-#if REST_RES_INFO
+#if REST_RES_MODEL
 /*
  * Resources are defined by the RESOURCE macro.
  * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
  */
-RESOURCE(info, METHOD_GET, "info", "title=\"Info\";rt=\"simple.dev.n\"");
+RESOURCE(model, METHOD_GET, "p/model", "title=\"model\";rt=\"simple.dev.mdl\"");
 
 /*
  * A handler function named [resource name]_handler must be implemented for each RESOURCE.
@@ -153,7 +154,7 @@ RESOURCE(info, METHOD_GET, "info", "title=\"Info\";rt=\"simple.dev.n\"");
  * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
  */
 void
-info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+model_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   char message[100];
   int index = 0;
@@ -161,8 +162,7 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 
   /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
        // jSON Format
-     index += sprintf(message + index,"{\n \"Version\" : \"V1.0pre0\",\n");
-     index += sprintf(message + index," \"name\" : \"Merkurboard\"\n");
+     index += sprintf(message + index,"{\n \"model\" : \"Merkurboard\"\n");
      index += sprintf(message + index,"}\n");
 
     length = strlen(message);
@@ -170,6 +170,76 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 
   REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
   REST.set_response_payload(response, buffer, length);
+}
+#endif
+
+/******************************************************************************/
+#if REST_RES_NAME
+/*
+ * Resources are defined by the RESOURCE macro.
+ * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
+ */
+RESOURCE(name,  METHOD_POST | METHOD_GET, "p/name", "title=\"name\";rt=\"simple.dev.n\"");
+/* eeprom space */ 
+#define P_NAME "Testboard"
+#define P_NAME_MAX 17
+uint8_t eemem_p_name[P_NAME_MAX] EEMEM = P_NAME;
+
+/*
+ * A handler function named [resource name]_handler must be implemented for each RESOURCE.
+ * A buffer for the response payload is provided through the buffer pointer. Simple resources can ignore
+ * preferred_size and offset, but must respect the REST_MAX_CHUNK_SIZE limit for the buffer.
+ * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
+ */
+void
+name_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  uint8_t eebuffer[32];
+  char message[100];
+  int index = 0;
+  int length = 0; /*           |<-------->| */
+  const char *name = NULL;
+  int success = 1;
+
+  switch(REST.get_method_type(request)){
+   case METHOD_GET:
+     cli();
+     eeprom_read_block (eebuffer, &eemem_p_name, sizeof(eemem_p_name));
+     sei();
+     /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
+     // jSON Format
+     index += sprintf(message + index,"{\n \"name\" : \"%s\"\n",eebuffer);
+     index += sprintf(message + index,"}\n");
+
+     length = strlen(message);
+     memcpy(buffer, message,length );
+
+     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+     REST.set_response_payload(response, buffer, length);
+     break;
+     
+   case METHOD_POST:     
+     if (success &&  (length=REST.get_post_variable(request, "name", &name))) {
+       PRINTF("name %s\n", name);
+       if (length < P_NAME_MAX) {
+         memcpy(&eebuffer, name,length);
+         eebuffer[length]=0;
+         cli();
+         eeprom_write_block(&eebuffer,  &eemem_p_name, sizeof(eemem_p_name));
+         sei();
+       } else {
+         success = 0;
+       }		   
+     } else {
+       success = 0;
+     }
+     break;
+  default:
+    success = 0;
+  }
+  if (!success) {
+    REST.set_response_status(response, REST.status.BAD_REQUEST);
+  }
 }
 #endif
 
@@ -335,8 +405,11 @@ PROCESS_THREAD(rest_server_example, ev, data)
   rest_init_engine();
 
   /* Activate the application-specific resources. */
-#if REST_RES_INFO
-  rest_activate_resource(&resource_info);
+#if REST_RES_MODEL
+  rest_activate_resource(&resource_model);
+#endif
+#if REST_RES_NAME
+  rest_activate_resource(&resource_name);
 #endif
 #if defined (PLATFORM_HAS_BUTTON) && REST_RES_EVENT
   rest_activate_event_resource(&resource_event);
