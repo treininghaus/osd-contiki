@@ -46,6 +46,9 @@
 // #undef NETSTACK_CONF_RDC
 //#define NETSTACK_CONF_RDC     nullrdc_driver
 
+// enabel LEAF-NODE mode
+//#define RPL_CONF_LEAF_ONLY	1
+
 /* Increase rpl-border-router IP-buffer when using more than 64. */
 #undef REST_MAX_CHUNK_SIZE
 #define REST_MAX_CHUNK_SIZE    64
