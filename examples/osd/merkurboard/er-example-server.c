@@ -96,10 +96,12 @@ Appendix A.  Profile example
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_MODEL 1
 #define REST_RES_NAME 1
+#define REST_RES_SW   1
 #define REST_RES_EVENT 1
 #define REST_RES_LED 1
 #define REST_RES_TOGGLE 1
 #define REST_RES_BATTERY 1
+#define REST_RES_TEMPERATURE 1
 
 #include "erbium.h"
 
@@ -112,7 +114,9 @@ Appendix A.  Profile example
 #if defined (PLATFORM_HAS_BATTERY)
 #include "dev/battery-sensor.h"
 #endif
-
+#if defined (PLATFORM_HAS_TEMPERATURE)
+#include "dev/temperature-sensor.h"
+#endif
 
 /* For CoAP-specific example: not required for normal RESTful Web service. */
 #if WITH_COAP == 3
@@ -163,6 +167,40 @@ model_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
   /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
        // jSON Format
      index += sprintf(message + index,"{\n \"model\" : \"Merkurboard\"\n");
+     index += sprintf(message + index,"}\n");
+
+    length = strlen(message);
+    memcpy(buffer, message,length );
+
+  REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+  REST.set_response_payload(response, buffer, length);
+}
+#endif
+
+/******************************************************************************/
+#if REST_RES_SW
+/*
+ * Resources are defined by the RESOURCE macro.
+ * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
+ */
+RESOURCE(sw, METHOD_GET, "p/sw", "title=\"Software Version\";rt=\"simple.dev.sv\"");
+
+/*
+ * A handler function named [resource name]_handler must be implemented for each RESOURCE.
+ * A buffer for the response payload is provided through the buffer pointer. Simple resources can ignore
+ * preferred_size and offset, but must respect the REST_MAX_CHUNK_SIZE limit for the buffer.
+ * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
+ */
+void
+sw_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  char message[100];
+  int index = 0;
+  int length = 0; /*           |<-------->| */
+
+  /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
+       // jSON Format
+     index += sprintf(message + index,"{\n \"sw\" : \"V0.8\"\n");
      index += sprintf(message + index,"}\n");
 
     length = strlen(message);
@@ -370,6 +408,41 @@ battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 }
 #endif /* PLATFORM_HAS_BATTERY */
 
+/******************************************************************************/
+#if REST_RES_TEMPERATURE && defined (PLATFORM_HAS_TEMPERATURE)
+/* A simple getter example. Returns the reading from light sensor with a simple etag */
+RESOURCE(temperature, METHOD_GET, "s/cputemp", "title=\"CPU Temperature\";rt=\"simple.sen.tmp\"");
+void
+temperature_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  int temperature = temperature_sensor.value(0);
+
+  const uint16_t *accept = NULL;
+  int num = REST.get_header_accept(request, &accept);
+
+  if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
+  {
+    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d.%02d", temperature/100, temperature % 100);
+
+    REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
+  }
+  else if (num && (accept[0]==REST.type.APPLICATION_JSON))
+  {
+    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'temperature':%d.%02d}", temperature/100, temperature % 100);
+
+    REST.set_response_payload(response, buffer, strlen((char *)buffer));
+  }
+  else
+  {
+    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
+    const char *msg = "Supporting content-types text/plain and application/json";
+    REST.set_response_payload(response, msg, strlen(msg));
+  }
+}
+#endif /* PLATFORM_HAS_TEMPERATURE */
+
 void 
 hw_init()
 {
@@ -408,6 +481,9 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #if REST_RES_MODEL
   rest_activate_resource(&resource_model);
 #endif
+#if REST_RES_SW
+  rest_activate_resource(&resource_sw);
+#endif
 #if REST_RES_NAME
   rest_activate_resource(&resource_name);
 #endif
@@ -426,6 +502,10 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #if defined (PLATFORM_HAS_BATTERY) && REST_RES_BATTERY
   SENSORS_ACTIVATE(battery_sensor);
   rest_activate_resource(&resource_battery);
+#endif
+#if defined (PLATFORM_HAS_TEMPERATURE) && REST_RES_TEMPERATURE
+  SENSORS_ACTIVATE(temperature_sensor);
+  rest_activate_resource(&resource_temperature);
 #endif
 
   /* Define application-specific events here. */
