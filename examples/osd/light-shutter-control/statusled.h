@@ -45,6 +45,7 @@
 
 /** @name LED Functions */
 /** @{ */
+void statusledinit(void);
 void statusled_on(void);
 void statusled_off(void);
 /** @} */
