@@ -45,7 +45,7 @@
 
 
 #ifdef OSDPLUG
-//#define PLATFORM_HAS_LEDS    1
+#define PLATFORM_HAS_LED  1
 //#define PLATFORM_HAS_BUTTON  1
 #define PLATFORM_HAS_OPTRIAC  1
 #define PLATFORM_HAS_TEMPERATURE   1
@@ -53,7 +53,7 @@
 #endif
 
 #if (defined (OSDLIGHT) || defined (OSDSHUTTER))
-#define PLATFORM_HAS_LEDS    1
+#define PLATFORM_HAS_LED  1
 #define PLATFORM_HAS_BUTTON  1
 #define PLATFORM_HAS_OPTRIAC  1
 #define PLATFORM_HAS_TEMPERATURE   1
@@ -65,7 +65,7 @@
 #define REST_RES_OPTRIAC 1
 #define REST_RES_TEMPERATURE 1
 #define REST_RES_EVENT 0
-#define REST_RES_LEDS 0
+#define REST_RES_LED 1
 #define REST_RES_TOGGLE 0
 #define REST_RES_BATTERY 1
 
@@ -73,11 +73,10 @@
 #include "pcintkey.h"
 #include "statusled.h"
 
-#include "dev/led.h"
 #if defined (PLATFORM_HAS_BUTTON)
 #include "dev/button-sensor.h"
 #endif
-#if defined (PLATFORM_HAS_LEDS)
+#if defined (PLATFORM_HAS_LED)
 #include "dev/leds.h"
 #endif
 #if defined (PLATFORM_HAS_OPTRIAC)
@@ -220,65 +219,33 @@ extbutton_handler(void* request, void* response, uint8_t *buffer, uint16_t prefe
     REST.set_response_status(response, REST.status.BAD_REQUEST);
   }
 }
-/*A simple actuator example, post variable mode, relay is activated or deactivated*/
-RESOURCE(led1, METHOD_GET | METHOD_PUT , "actuators/led1",  "title=\"Led1\";rt=\"led\"");
+
+/******************************************************************************/
+#if REST_RES_LED
+/*A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated*/
+RESOURCE(led, METHOD_POST | METHOD_PUT , "a/led", "title=\"LED: POST/PUT mode=on|off\";rt=\"simple.act.led\"");
+
 void
-led1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+led_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  char mode[10];
-  static uint8_t led1 = 0;
-  static char name[17]="led1";
+  size_t len = 0;
+  const char *mode = NULL;
+  uint8_t led = 0;
   int success = 1;
 
-  char temp[100];
-  int index = 0;
-  size_t len = 0;
+  led = LEDS_RED;
 
-  const char *pmode = NULL;
-  const char *pname = NULL;
+  if (success && (len=REST.get_post_variable(request, "mode", &mode))) {
+    PRINTF("mode %s\n", mode);
 
-  switch(REST.get_method_type(request)){
-   case METHOD_GET:
-     // jSON Format
-     index += sprintf(temp + index,"{\n \"name\" : \"%s\",\n",name);
-     if(led1 == 0)
-         index += sprintf(temp + index," \"mode\" : \"off\"\n");
-     if(led1 == 1)
-         index += sprintf(temp + index," \"mode\" : \"on\"\n");
-     index += sprintf(temp + index,"}\n");
-
-     len = strlen(temp);
-     memcpy(buffer, temp,len );
-
-     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-     REST.set_response_payload(response, buffer, len);
-     break;
-   case METHOD_POST:
-     success = 0;
-     break;
-   case METHOD_PUT:
-     if (success &&  (len=REST.get_post_variable(request, "mode", &pmode))) {
-       PRINTF("name %s\n", mode);
-       memcpy(mode, pmode,len);
-       mode[len]=0;
-       if (!strcmp(mode, "on")) {
-         led1_on();
-         led1 = 1;
-       } else if (!strcmp(mode, "off")) {
-         led1_off();
-         led1 = 0;
-       } else {
-         success = 0;
-       }
-    } else if (success &&  (len=REST.get_post_variable(request, "name", &pname))) {
-       PRINTF("name %s\n", name);
-       memcpy(name, pname,len);
-       name[len]=0;
+    if (strncmp(mode, "on", len)==0) {
+      leds_on(led);
+    } else if (strncmp(mode, "off", len)==0) {
+      leds_off(led);
     } else {
       success = 0;
     }
-    break;
-  default:
+  } else {
     success = 0;
   }
 
@@ -286,6 +253,8 @@ led1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
     REST.set_response_status(response, REST.status.BAD_REQUEST);
   }
 }
+#endif
+
 /******************************************************************************/
 #if (defined (PLATFORM_HAS_OPTRIAC) && defined (OSDPLUG))
 /******************************************************************************/
@@ -337,12 +306,10 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
          optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
          optriac_sensor.configure(OPTRIAC_SENSOR_B,1);
          statusled_on();
-//         led1_on();  // Debug
        } else if (strncmp(mode, "off", len)==0) {
          optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
          optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
 		 statusled_off();
-//         led1_off();  // Debug
        } else {
          success = 0;
        }
@@ -591,7 +558,7 @@ battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 void 
 hw_init()
 {
-  led1_off();
+  leds_off(LEDS_RED);
   statusledinit();
   key_init();
 }
@@ -640,7 +607,6 @@ PROCESS_THREAD(rest_server_example, ev, data)
   rest_init_engine();
 
   /* Activate the application-specific resources. */
-  rest_activate_resource(&resource_led1);
   rest_activate_resource(&resource_extbutton);
 #if REST_RES_INFO
   rest_activate_resource(&resource_info);
@@ -698,10 +664,10 @@ PROCESS_THREAD(rest_server_example, ev, data)
           // Toggle Triac A
           if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 0){
             optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
-            led1_on();
+            leds_on(LEDS_RED);
           }else{
             optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
-            led1_off();
+            leds_off(LEDS_RED);
           }
 	}
 	if(ext6 != is_button_ext6()) {
@@ -710,10 +676,10 @@ PROCESS_THREAD(rest_server_example, ev, data)
           // Toggle Triac B
           if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 0){
             optriac_sensor.configure(OPTRIAC_SENSOR_B,1);
-            led2_on();
+            statusled_on();
           }else{
             optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
-            led2_off();
+            statusled_off();
           }
 	}
       etimer_reset(&ds_periodic_timer);
