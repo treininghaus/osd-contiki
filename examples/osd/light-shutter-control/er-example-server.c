@@ -55,6 +55,7 @@
 
 #include "erbium.h"
 #include "pcintkey.h"
+#include "statusled.h"
 
 #include "dev/led.h"
 #if defined (PLATFORM_HAS_BUTTON)
