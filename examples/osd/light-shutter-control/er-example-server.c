@@ -44,6 +44,22 @@
 #include "contiki-net.h"
 
 
+#ifdef OSDPLUG
+//#define PLATFORM_HAS_LEDS    1
+//#define PLATFORM_HAS_BUTTON  1
+#define PLATFORM_HAS_OPTRIAC  1
+#define PLATFORM_HAS_TEMPERATURE   1
+#define PLATFORM_HAS_BATTERY 1
+#endif
+
+#if (defined (OSDLIGHT) || defined (OSDSHUTTER))
+#define PLATFORM_HAS_LEDS    1
+#define PLATFORM_HAS_BUTTON  1
+#define PLATFORM_HAS_OPTRIAC  1
+#define PLATFORM_HAS_TEMPERATURE   1
+#define PLATFORM_HAS_BATTERY 1
+#endif
+
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
 #define REST_RES_OPTRIAC 1
