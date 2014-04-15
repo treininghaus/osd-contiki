@@ -32,9 +32,9 @@
 #ifndef PROJECT_RPL_WEB_CONF_H_
 #define PROJECT_RPL_WEB_CONF_H_
 
-#define OSDPLUG
+//#define OSDPLUG
 //#define OSDLIGHT
-//#define OSDSHUTTER
+#define OSDSHUTTER
 
 
 #define SICSLOWPAN_CONF_FRAG	1

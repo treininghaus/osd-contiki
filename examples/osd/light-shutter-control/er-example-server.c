@@ -42,7 +42,7 @@
 #include <string.h>
 #include "contiki.h"
 #include "contiki-net.h"
-
+#include <avr/eeprom.h>
 
 #ifdef OSDPLUG
 #define PLATFORM_HAS_LED  1
@@ -61,12 +61,15 @@
 #endif
 
 /* Define which resources to include to meet memory constraints. */
-#define REST_RES_INFO 1
+#define REST_RES_MODEL 1
+#define REST_RES_NAME 1
+#define REST_RES_SW   1
+#define REST_RES_RESET   1
+#define REST_RES_TIMER   1
 #define REST_RES_OPTRIAC 1
 #define REST_RES_TEMPERATURE 1
 #define REST_RES_EVENT 0
 #define REST_RES_LED 1
-#define REST_RES_TOGGLE 0
 #define REST_RES_BATTERY 1
 
 #include "erbium.h"
@@ -116,13 +119,12 @@
 #endif
 
 /******************************************************************************/
-
-#if REST_RES_INFO
+#if REST_RES_MODEL
 /*
  * Resources are defined by the RESOURCE macro.
  * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
  */
-RESOURCE(info, METHOD_GET, "info", "title=\"Info\";rt=\"text\"");
+RESOURCE(model, METHOD_GET, "p/model", "title=\"model\";rt=\"simple.dev.mdl\"");
 
 /*
  * A handler function named [resource name]_handler must be implemented for each RESOURCE.
@@ -131,7 +133,7 @@ RESOURCE(info, METHOD_GET, "info", "title=\"Info\";rt=\"text\"");
  * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
  */
 void
-info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+model_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   char message[100];
   int index = 0;
@@ -139,17 +141,17 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 
   /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
        // jSON Format
-     index += sprintf(message + index,"{\n \"Version\" : \"V1.0pre3\",\n");
-#ifdef OSDPLUG 
-     index += sprintf(message + index," \"name\" : \"PLUG\"\n");
+#ifdef OSDPLUG
+     index += sprintf(message + index,"{\n \"model\" : \"PingThePlug\"\n");
 #endif
 #ifdef OSDLIGHT
-     index += sprintf(message + index," \"name\" : \"light-actor\"\n");
+     index += sprintf(message + index,"{\n \"model\" : \"Light-Actor\"\n");
 #endif
 #ifdef OSDSHUTTER
-     index += sprintf(message + index," \"name\" : \"shutter-actor\"\n");
+     index += sprintf(message + index,"{\n \"model\" : \"Shutter-Control\n");
 #endif
      index += sprintf(message + index,"}\n");
+
     length = strlen(message);
     memcpy(buffer, message,length );
 
@@ -158,9 +160,254 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 }
 #endif
 
+/******************************************************************************/
+#if REST_RES_SW
+/*
+ * Resources are defined by the RESOURCE macro.
+ * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
+ */
+RESOURCE(sw, METHOD_GET, "p/sw", "title=\"Software Version\";rt=\"simple.dev.sv\"");
+
+/*
+ * A handler function named [resource name]_handler must be implemented for each RESOURCE.
+ * A buffer for the response payload is provided through the buffer pointer. Simple resources can ignore
+ * preferred_size and offset, but must respect the REST_MAX_CHUNK_SIZE limit for the buffer.
+ * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
+ */
+void
+sw_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  char message[100];
+  int index = 0;
+  int length = 0; /*           |<-------->| */
+
+  /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
+       // jSON Format
+     index += sprintf(message + index,"{\n \"sw\" : \"V0.8\"\n");
+     index += sprintf(message + index,"}\n");
+
+    length = strlen(message);
+    memcpy(buffer, message,length );
+
+  REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+  REST.set_response_payload(response, buffer, length);
+}
+#endif
+
+/******************************************************************************/
+#if REST_RES_NAME
+/*
+ * Resources are defined by the RESOURCE macro.
+ * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
+ */
+RESOURCE(name,  METHOD_POST | METHOD_GET, "p/name", "title=\"name\";rt=\"simple.dev.n\"");
+/* eeprom space */ 
+#define P_NAME "Testboard"
+#define P_NAME_MAX 17
+uint8_t eemem_p_name[P_NAME_MAX] EEMEM = P_NAME;
+
+/*
+ * A handler function named [resource name]_handler must be implemented for each RESOURCE.
+ * A buffer for the response payload is provided through the buffer pointer. Simple resources can ignore
+ * preferred_size and offset, but must respect the REST_MAX_CHUNK_SIZE limit for the buffer.
+ * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
+ */
+void
+name_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  uint8_t eebuffer[32];
+  char message[100];
+  int index = 0;
+  int length = 0; /*           |<-------->| */
+  const char *name = NULL;
+  int success = 1;
+
+  switch(REST.get_method_type(request)){
+   case METHOD_GET:
+     cli();
+     eeprom_read_block (eebuffer, &eemem_p_name, sizeof(eemem_p_name));
+     sei();
+     /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
+     // jSON Format
+     index += sprintf(message + index,"{\n \"name\" : \"%s\"\n",eebuffer);
+     index += sprintf(message + index,"}\n");
+
+     length = strlen(message);
+     memcpy(buffer, message,length );
+
+     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+     REST.set_response_payload(response, buffer, length);
+     break;
+     
+   case METHOD_POST:     
+     if (success &&  (length=REST.get_post_variable(request, "name", &name))) {
+       PRINTF("name %s\n", name);
+       if (length < P_NAME_MAX) {
+         memcpy(&eebuffer, name,length);
+         eebuffer[length]=0;
+         cli();
+         eeprom_write_block(&eebuffer,  &eemem_p_name, sizeof(eemem_p_name));
+         sei();
+       } else {
+         success = 0;
+       }		   
+     } else {
+       success = 0;
+     }
+     break;
+  default:
+    success = 0;
+  }
+  if (!success) {
+    REST.set_response_status(response, REST.status.BAD_REQUEST);
+  }
+}
+#endif
+
+
+/******************************************************************************/
+#if REST_RES_TIMER
+/*A simple actuator example*/
+RESOURCE(timer, METHOD_GET | METHOD_POST , "a/timer", "title=\"TIMER, POST timer=XXX\";rt=\"Control\"");
+/* eeprom space */ 
+#define P_TIMER "60"
+#define P_TIMER_MAX 10
+uint8_t eemem_p_timer[P_TIMER_MAX] EEMEM = P_TIMER;
+
+void
+timer_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  uint8_t eebuffer[32];
+  const char *timer = NULL;
+  char message[100];
+  int length = 0; /*           |<-------->| */
+  int index = 0;
+  int success = 1;
+
+  switch(REST.get_method_type(request)){
+
+   case METHOD_GET:
+     cli();
+     eeprom_read_block (eebuffer, &eemem_p_timer, sizeof(eemem_p_timer));
+     sei();
+     /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
+     // jSON Format
+     index += sprintf(message + index,"{\n \"timer\" : \"%s\"\n",eebuffer);
+     index += sprintf(message + index,"}\n");
+
+     length = strlen(message);
+     memcpy(buffer, message,length );
+
+     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+     REST.set_response_payload(response, buffer, length);
+     break;
+
+   case METHOD_POST:
+     if (success &&  (length=REST.get_post_variable(request, "timer", &timer))) {
+       PRINTF("name %s\n", timer);
+       if (length < P_TIMER_MAX) {
+		 memcpy(&eebuffer, timer,length);
+         eebuffer[length]=0;     
+         cli();
+         eeprom_write_block(&eebuffer,  &eemem_p_timer, sizeof(eemem_p_timer));
+         sei();
+       } else {
+         success = 0;
+       }
+    } else {
+      success = 0;
+    }
+    break;
+  default:
+    success = 0;
+  }
+  if (!success) {
+    REST.set_response_status(response, REST.status.BAD_REQUEST);
+  }
+}
+#endif
+
+/******************************************************************************/
+#if REST_RES_RESET
+/*A simple actuator example*/
+RESOURCE(reset, METHOD_GET | METHOD_POST , "p/reset", "title=\"RESET, POST mode=on\";rt=\"Control\"");
+/* eeprom space */ 
+#define P_RESET "0"
+#define P_RESET_MAX 10
+uint8_t eemem_p_reset[P_RESET_MAX] EEMEM = P_RESET;
+
+void
+reset_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  uint8_t eebuffer[32];
+  const char *mode = NULL;
+  char message[100];
+  int length = 0; /*           |<-------->| */
+  int index = 0;
+  int reset = 0;
+  size_t len = 0;
+  int success = 1;
+
+  switch(REST.get_method_type(request)){
+
+   case METHOD_GET:
+     cli();
+     eeprom_read_block (eebuffer, &eemem_p_reset, sizeof(eemem_p_reset));
+     sei();
+     /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
+     // jSON Format
+     index += sprintf(message + index,"{\n \"reset\" : \"%s\"\n",eebuffer);
+     index += sprintf(message + index,"}\n");
+
+     length = strlen(message);
+     memcpy(buffer, message,length );
+
+     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+     REST.set_response_payload(response, buffer, length);
+     break;
+
+   case METHOD_POST:
+     if (success && (len=REST.get_post_variable(request, "mode", &mode))) {
+     PRINTF("mode %s\n", mode);
+       if (strncmp(mode, "on", len)==0) {
+		 length=strlen(P_NAME);  
+         memcpy(&eebuffer, P_NAME,length);
+         eebuffer[length]=0;		   
+         cli();
+         eeprom_write_block(&eebuffer,  &eemem_p_name, sizeof(eemem_p_name));
+         sei();
+		 length=strlen(P_TIMER);  
+         memcpy(&eebuffer, P_TIMER,length);
+         eebuffer[length]=0;		   
+         cli();
+         eeprom_write_block(&eebuffer,  &eemem_p_timer, sizeof(eemem_p_timer));         
+         eeprom_read_block (eebuffer, &eemem_p_reset, sizeof(eemem_p_reset));
+         sei();
+         reset= atoi((char*)eebuffer) + 1;
+		 length=sprintf((char*)eebuffer,"%d",reset);  
+         cli();
+         eeprom_write_block(&eebuffer,  &eemem_p_reset, sizeof(eemem_p_reset));
+         sei();		   
+       } else {
+         success = 0;
+       }
+    } else {
+      success = 0;
+    }
+    break;
+  default:
+    success = 0;
+  }
+  if (!success) {
+    REST.set_response_status(response, REST.status.BAD_REQUEST);
+  }
+}
+#endif
+
+/******************************************************************************/
 // pcintkey_ext
 /*A simple actuator example. read the key button status*/
-RESOURCE(extbutton, METHOD_GET | METHOD_PUT , "sensors/extbutton",  "title=\"ext.Button\";rt=\"Text\"");
+RESOURCE(extbutton, METHOD_GET | METHOD_POST , "s/extbutton",  "title=\"ext.Button\";rt=\"Text\"");
 void
 extbutton_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -202,7 +449,7 @@ extbutton_handler(void* request, void* response, uint8_t *buffer, uint16_t prefe
      REST.set_response_payload(response, buffer, length);
 
      break;
-   case METHOD_PUT:
+   case METHOD_POST:
 
      if (success &&  (len=REST.get_post_variable(request, "name", &name))) {
        PRINTF("name %s\n", name);
@@ -223,10 +470,10 @@ extbutton_handler(void* request, void* response, uint8_t *buffer, uint16_t prefe
 /******************************************************************************/
 #if REST_RES_LED
 /*A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated*/
-RESOURCE(led, METHOD_POST | METHOD_PUT , "a/led", "title=\"LED: POST/PUT mode=on|off\";rt=\"simple.act.led\"");
+RESOURCE(led1, METHOD_POST | METHOD_PUT , "a/led1", "title=\"LED: POST/PUT mode=on|off\";rt=\"simple.act.led\"");
 
 void
-led_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+led1_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   size_t len = 0;
   const char *mode = NULL;
@@ -253,6 +500,36 @@ led_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_s
     REST.set_response_status(response, REST.status.BAD_REQUEST);
   }
 }
+
+/*A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated*/
+RESOURCE(led2, METHOD_POST | METHOD_PUT , "a/led2", "title=\"LED: POST/PUT mode=on|off\";rt=\"simple.act.led\"");
+
+void
+led2_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  size_t len = 0;
+  const char *mode = NULL;
+  int success = 1;
+
+
+  if (success && (len=REST.get_post_variable(request, "mode", &mode))) {
+    PRINTF("mode %s\n", mode);
+
+    if (strncmp(mode, "on", len)==0) {
+      statusled_on();
+    } else if (strncmp(mode, "off", len)==0) {
+      statusled_off();
+    } else {
+      success = 0;
+    }
+  } else {
+    success = 0;
+  }
+
+  if (!success) {
+    REST.set_response_status(response, REST.status.BAD_REQUEST);
+  }
+}
 #endif
 
 /******************************************************************************/
@@ -260,7 +537,7 @@ led_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_s
 /******************************************************************************/
 #if REST_RES_OPTRIAC
 /*A simple actuator example*/
-RESOURCE(optriac, METHOD_GET | METHOD_POST | METHOD_PUT , "actuators/optriac", "title=\"TRIAC, POST/PUT mode=on|off\";rt=\"Control\"");
+RESOURCE(optriac, METHOD_GET | METHOD_POST | METHOD_PUT , "a/optriac", "title=\"TRIAC, POST/PUT mode=on|off\";rt=\"Control\"");
 
 void
 optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
@@ -296,10 +573,10 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
      REST.set_response_payload(response, buffer, len);
      break;
 
-   case METHOD_POST:
+   case METHOD_PUT:
      success = 0;
      break;
-   case METHOD_PUT:
+   case METHOD_POST:
      if (success && (len=REST.get_post_variable(request, "mode", &mode))) {
      PRINTF("mode %s\n", mode);
        if (strncmp(mode, "on", len)==0) {
@@ -333,7 +610,7 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 /******************************************************************************/
 #if REST_RES_OPTRIAC
 /*A simple actuator example*/
-RESOURCE(optriac, METHOD_GET | METHOD_POST | METHOD_PUT , "actuators/optriac", "title=\"TRIAC: ?type=a|b, POST/PUT mode=on|off\";rt=\"Control\"");
+RESOURCE(optriac, METHOD_GET | METHOD_POST | METHOD_PUT , "a/optriac", "title=\"TRIAC: ?type=a|b, POST/PUT mode=on|off\";rt=\"Control\"");
 
 void
 optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
@@ -371,10 +648,10 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
      REST.set_response_payload(response, buffer, len);
      break;
 
-   case METHOD_POST:
+   case METHOD_PUT:
      success = 0;
      break;
-   case METHOD_PUT:
+   case METHOD_POST:
   if ((len=REST.get_query_variable(request, "type", &type))) {
     PRINTF("type %.*s\n", len, type);
 
@@ -393,11 +670,9 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
     PRINTF("mode %s\n", mode);
 
     if (strncmp(mode, "on", len)==0) {
-      led1_on();  // Debug
       optriac_sensor.configure(triac,1);
     } else if (strncmp(mode, "off", len)==0) {
       optriac_sensor.configure(triac,0);
-      led1_off();  // Debug
     } else {
       success = 0;
     }
@@ -416,33 +691,63 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 /******************************************************************************/
 #endif /* PLATFORM_HAS_OPTRIAC */
 
+
 /******************************************************************************/
-#if defined (PLATFORM_HAS_LEDS)
+#if (defined (PLATFORM_HAS_OPTRIAC) && defined (OSDSHUTTER))
 /******************************************************************************/
-#if REST_RES_LEDS
-/*A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated*/
-RESOURCE(leds, METHOD_POST | METHOD_PUT , "actuators/leds", "title=\"LEDs: ?color=r|g|b, POST/PUT mode=on|off\";rt=\"Control\"");
+#if REST_RES_OPTRIAC
+/*A simple actuator example*/
+RESOURCE(optriac, METHOD_GET | METHOD_POST | METHOD_PUT , "a/optriac", "title=\"TRIAC: ?type=a|b, POST/PUT mode=on|off\";rt=\"Control\"");
 
 void
-leds_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  size_t len = 0;
-  const char *color = NULL;
+  const char *type = NULL;
   const char *mode = NULL;
-  uint8_t led = 0;
+  static char namea[17]="Triac-a";
+  static char nameb[17]="Triac-b";
+
+  char temp[100];
+  int index = 0;
+  size_t len = 0;
+
+  uint8_t triac = 0;
   int success = 1;
+  switch(REST.get_method_type(request)){
+   case METHOD_GET:
+     // jSON Format
+     index += sprintf(temp + index,"{\n \"%s\" : ",namea);
+     if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 0)
+         index += sprintf(temp + index,"\"off\",\n");
+     if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 1)
+         index += sprintf(temp + index,"\"on\",\n");
+     index += sprintf(temp + index," \"%s\" : ",nameb);
+     if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 0)
+         index += sprintf(temp + index,"\"off\"\n");
+     if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 1)
+         index += sprintf(temp + index,"\"on\"\n");
+     index += sprintf(temp + index,"}\n");
 
-  if ((len=REST.get_query_variable(request, "color", &color))) {
-    PRINTF("color %.*s\n", len, color);
+     len = strlen(temp);
+     memcpy(buffer, temp,len );
 
-    if (strncmp(color, "r", len)==0) {
-      led = LEDS_RED;
-    } else if(strncmp(color,"g", len)==0) {
-      led = LEDS_GREEN;
-    } else if (strncmp(color,"b", len)==0) {
-      led = LEDS_BLUE;
+     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+     REST.set_response_payload(response, buffer, len);
+     break;
+
+   case METHOD_PUT:
+     success = 0;
+     break;
+   case METHOD_POST:
+  if ((len=REST.get_query_variable(request, "type", &type))) {
+    PRINTF("type %.*s\n", len, type);
+
+    if (strncmp(type, "a", len)==0) {
+      triac = OPTRIAC_SENSOR_A;
+    } else if(strncmp(type,"b", len)==0) {
+      triac = OPTRIAC_SENSOR_B;
     } else {
-      success = 0;
+      triac = OPTRIAC_SENSOR_A;
     }
   } else {
     success = 0;
@@ -452,40 +757,42 @@ leds_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
     PRINTF("mode %s\n", mode);
 
     if (strncmp(mode, "on", len)==0) {
-      leds_on(led);
+	  if (triac == OPTRIAC_SENSOR_A){
+		statusled_off();  
+        optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
+        leds_on(LEDS_RED);
+        optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
+      } else {
+		leds_off(LEDS_RED);
+        optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
+        statusled_on();
+        optriac_sensor.configure(OPTRIAC_SENSOR_B,1);
+      }  
     } else if (strncmp(mode, "off", len)==0) {
-      leds_off(led);
+      optriac_sensor.configure(triac,0);
     } else {
       success = 0;
     }
   } else {
     success = 0;
   }
-
+    break;
+  default:
+    success = 0;
+  }
   if (!success) {
     REST.set_response_status(response, REST.status.BAD_REQUEST);
   }
 }
 #endif
-
 /******************************************************************************/
-#if REST_RES_TOGGLE
-/* A simple actuator example. Toggles the red led */
-RESOURCE(toggle, METHOD_GET | METHOD_PUT | METHOD_POST, "actuators/toggle", "title=\"Red LED\";rt=\"Control\"");
-void
-toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  leds_toggle(LEDS_RED);
-}
-#endif
-#endif /* PLATFORM_HAS_LEDS */
+#endif /* PLATFORM_HAS_OPTRIAC */
 
-/******************************************************************************/
 
 /******************************************************************************/
 #if REST_RES_TEMPERATURE && defined (PLATFORM_HAS_TEMPERATURE)
 /* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(temperature, METHOD_GET, "sensors/cputemp", "title=\"Temperature status\";rt=\"temperature-c\"");
+RESOURCE(temperature, METHOD_GET, "s/cputemp", "title=\"Temperature status\";rt=\"temperature-c\"");
 void
 temperature_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -520,7 +827,7 @@ temperature_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
 /******************************************************************************/
 #if REST_RES_BATTERY && defined (PLATFORM_HAS_BATTERY)
 /* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(battery, METHOD_GET, "sensors/battery", "title=\"Battery status\";rt=\"battery-mV\"");
+RESOURCE(battery, METHOD_GET, "s/battery", "title=\"Battery status\";rt=\"battery-mV\"");
 void
 battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -607,10 +914,23 @@ PROCESS_THREAD(rest_server_example, ev, data)
   rest_init_engine();
 
   /* Activate the application-specific resources. */
-  rest_activate_resource(&resource_extbutton);
-#if REST_RES_INFO
-  rest_activate_resource(&resource_info);
+#if REST_RES_MODEL
+  rest_activate_resource(&resource_model);
 #endif
+#if REST_RES_SW
+  rest_activate_resource(&resource_sw);
+#endif
+#if REST_RES_NAME
+  rest_activate_resource(&resource_name);
+#endif
+#if REST_RES_RESET
+  rest_activate_resource(&resource_reset);
+#endif
+#if REST_RES_TIMER
+  rest_activate_resource(&resource_timer);
+#endif
+
+  rest_activate_resource(&resource_extbutton);
   /* Activate the application-specific resources. */
 #if REST_RES_OPTRIAC
   SENSORS_ACTIVATE(optriac_sensor);
@@ -621,14 +941,12 @@ PROCESS_THREAD(rest_server_example, ev, data)
   rest_activate_event_resource(&resource_pir);
   PRINTF("ACTIVATE PIR\n");
 #endif
-#if defined (PLATFORM_HAS_LEDS)
-#if REST_RES_LEDS
-  rest_activate_resource(&resource_leds);
+#if defined (PLATFORM_HAS_LED)
+#if REST_RES_LED
+  rest_activate_resource(&resource_led1);
+  rest_activate_resource(&resource_led2);
 #endif
-#if REST_RES_TOGGLE
-  rest_activate_resource(&resource_toggle);
-#endif
-#endif /* PLATFORM_HAS_LEDS */
+#endif /* PLATFORM_HAS_LED */
 #if defined (PLATFORM_HAS_TEMPERATURE) && REST_RES_TEMPERATURE
   SENSORS_ACTIVATE(temperature_sensor);
   rest_activate_resource(&resource_temperature);
