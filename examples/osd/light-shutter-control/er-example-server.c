@@ -119,6 +119,10 @@
 #endif
 
 /******************************************************************************/
+uint8_t g_triac_a = 0;
+uint8_t g_triac_b = 0;
+
+/******************************************************************************/
 #if REST_RES_MODEL
 /*
  * Resources are defined by the RESOURCE macro.
@@ -183,7 +187,7 @@ sw_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_si
 
   /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
        // jSON Format
-     index += sprintf(message + index,"{\n \"sw\" : \"V0.8\"\n");
+     index += sprintf(message + index,"{\n \"sw\" : \"V0.9\"\n");
      index += sprintf(message + index,"}\n");
 
     length = strlen(message);
@@ -273,6 +277,15 @@ RESOURCE(timer, METHOD_GET | METHOD_POST , "a/timer", "title=\"TIMER, POST timer
 #define P_TIMER "60"
 #define P_TIMER_MAX 10
 uint8_t eemem_p_timer[P_TIMER_MAX] EEMEM = P_TIMER;
+
+int gtimer_read(){
+  uint8_t eebuffer[32];
+
+  cli();
+  eeprom_read_block (eebuffer, &eemem_p_timer, sizeof(eemem_p_timer));
+  sei();
+  return atoi((const char *)eebuffer);
+}
 
 void
 timer_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
@@ -758,15 +771,17 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
 
     if (strncmp(mode, "on", len)==0) {
 	  if (triac == OPTRIAC_SENSOR_A){
-		statusled_off();  
-        optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
-        leds_on(LEDS_RED);
-        optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
+//		statusled_off();  
+//        optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
+//        leds_on(LEDS_RED);
+//        optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
+        g_triac_a = 1;
       } else {
-		leds_off(LEDS_RED);
-        optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
-        statusled_on();
-        optriac_sensor.configure(OPTRIAC_SENSOR_B,1);
+//		leds_off(LEDS_RED);
+//        optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
+//        statusled_on();
+//        optriac_sensor.configure(OPTRIAC_SENSOR_B,1);
+        g_triac_b = 1;
       }  
     } else if (strncmp(mode, "off", len)==0) {
       optriac_sensor.configure(triac,0);
@@ -880,6 +895,7 @@ AUTOSTART_PROCESSES(&rest_server_example, &sensors_process);
 PROCESS_THREAD(rest_server_example, ev, data)
 {
   static struct etimer ds_periodic_timer;
+  static struct etimer triac_off_timer;
   static int ext4=0;
   static int ext5=0;
   static int ext6=0;
@@ -977,6 +993,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
     /* Button Tric Logic */
     if(etimer_expired(&ds_periodic_timer)) {
         PRINTF("Periodic %d %d\n",ext5,ext6);
+#if (defined (OSDLIGHT))		          
 	if(ext5 != is_button_ext5()) {
 	  ext5 = is_button_ext5();
           PRINTF("Toggle Triac A\n");
@@ -1001,8 +1018,44 @@ PROCESS_THREAD(rest_server_example, ev, data)
             statusled_off();
           }
 	}
+#endif
+#if (defined (OSDSHUTTER))		          
+	if( is_button_ext5() || g_triac_a == 1) {
+        PRINTF("Triac A\n");
+        g_triac_a = 0;
+        // Triac B off
+        optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
+        statusled_off();
+        // Triac A on 
+        optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
+        leds_on(LEDS_RED);
+        etimer_set(&triac_off_timer, gtimer_read()*CLOCK_SECOND);
+	}
+	if( is_button_ext6() || g_triac_b == 1) {
+        PRINTF("Triac B\n");
+        g_triac_b = 0;
+        // Triac A off        
+        optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
+        leds_off(LEDS_RED);
+        // Triac B on 
+        optriac_sensor.configure(OPTRIAC_SENSOR_B,1);
+        statusled_on();
+        etimer_set(&triac_off_timer, gtimer_read()*CLOCK_SECOND);
+	}
+#endif
       etimer_reset(&ds_periodic_timer);
     }
+  
+    if(etimer_expired(&triac_off_timer)) {
+        PRINTF("Triac off timer\n");
+        // Triac A off
+        optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
+        leds_off(LEDS_RED);
+        // Triac B off
+        optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
+        statusled_off();
+    }
+    
   } /* while (1) */
 
   PROCESS_END();
