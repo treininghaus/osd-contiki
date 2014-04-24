@@ -896,6 +896,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 {
   static struct etimer ds_periodic_timer;
   static struct etimer triac_off_timer;
+  static uint8_t state=0;
   static int ext4=0;
   static int ext5=0;
   static int ext6=0;
@@ -990,6 +991,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #endif /* PLATFORM_HAS_PIR */
     }
 #endif /* REST_RES_EVENT */
+
     /* Button Tric Logic */
     if(etimer_expired(&ds_periodic_timer)) {
         PRINTF("Periodic %d %d\n",ext5,ext6);
@@ -1019,29 +1021,51 @@ PROCESS_THREAD(rest_server_example, ev, data)
           }
 	}
 #endif
-#if (defined (OSDSHUTTER))		          
-	if( is_button_ext5() || g_triac_a == 1) {
-        PRINTF("Triac A\n");
-        g_triac_a = 0;
-        // Triac B off
-        optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
-        statusled_off();
-        // Triac A on 
-        optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
-        leds_on(LEDS_RED);
-        etimer_set(&triac_off_timer, gtimer_read()*CLOCK_SECOND);
+#if (defined (OSDSHUTTER))
+	if( is_button_ext5()) {
+        g_triac_a = 1;
 	}
-	if( is_button_ext6() || g_triac_b == 1) {
-        PRINTF("Triac B\n");
-        g_triac_b = 0;
-        // Triac A off        
-        optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
-        leds_off(LEDS_RED);
-        // Triac B on 
-        optriac_sensor.configure(OPTRIAC_SENSOR_B,1);
-        statusled_on();
-        etimer_set(&triac_off_timer, gtimer_read()*CLOCK_SECOND);
+	if( is_button_ext6()) {
+        g_triac_b = 1;		
 	}
+    
+    PRINTF("State: %d\n",state);		          
+	switch(state)
+	    {
+        case  0:
+	    if( g_triac_a == 1) {
+          PRINTF("Triac A\n");
+          g_triac_a = 0;
+          // Triac B off
+          optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
+          statusled_off();
+          state = 1;
+        }
+	    if( g_triac_b == 1) {
+          PRINTF("Triac B\n");
+          g_triac_b = 0;
+          // Triac A off        
+          optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
+          leds_off(LEDS_RED);
+          state = 2;
+        }
+        break;
+        case 1:
+          // Triac A on 
+          optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
+          leds_on(LEDS_RED);
+          etimer_set(&triac_off_timer, gtimer_read()*CLOCK_SECOND);
+          state=0; 
+        break;    
+        case 2:
+          // Triac B on 
+          optriac_sensor.configure(OPTRIAC_SENSOR_B,1);
+          statusled_on();
+          etimer_set(&triac_off_timer, gtimer_read()*CLOCK_SECOND);
+          state=0;         
+        break;    
+        default : state = 0;
+  	} // switch
 #endif
       etimer_reset(&ds_periodic_timer);
     }
