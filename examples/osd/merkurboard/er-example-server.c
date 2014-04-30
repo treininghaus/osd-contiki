@@ -293,10 +293,17 @@ EVENT_RESOURCE(event, METHOD_GET, "s/button", "title=\"Event demo\";obs");
 void
 event_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
+  char message[100];
+  int index = 0;
+  int length = 0; /*           |<-------->| */
+  int button = button_sensor.value(0);
+
+  index += sprintf(message + index,"%d",button);
+  length = strlen(message);
+  memcpy(buffer, message,length );
+    
   REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-  /* Usually, a CoAP server would response with the current resource representation. */
-  const char *msg = "It's eventful!";
-  REST.set_response_payload(response, (uint8_t *)msg, strlen(msg));
+  REST.set_response_payload(response, buffer, length);
 
   /* A post_handler that handles subscriptions/observing will be called for periodic resources by the framework. */
 }
