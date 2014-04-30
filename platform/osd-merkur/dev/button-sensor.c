@@ -39,7 +39,8 @@ ISR(INT4_vect)
 static int
 value(int type)
 {
- return (PORTE & _BV(PE4) ? 0 : 1) || !timer_expired(&debouncetimer);
+ return (PINE & _BV(PE4) ? 0 : 1) || !timer_expired(&debouncetimer);
+
  //return 0;
 }
 
