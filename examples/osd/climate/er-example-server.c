@@ -46,9 +46,9 @@
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
-#define REST_RES_DS1820 1
+#define REST_RES_DS1820 0
 #define REST_RES_DHT11 1
-#define REST_RES_DHT11TEMP 0
+#define REST_RES_DHT11TEMP 1
 #define REST_RES_LEDS 1
 #define REST_RES_TOGGLE 0
 #define REST_RES_BATTERY 1
@@ -147,7 +147,7 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 #define DS1820_TEMP_MSB                1
 #define DS1820_COUNT_REMAIN    6
 #define DS1820_COUNT_PER_C     7
-RESOURCE(ds1820, METHOD_GET, "sensors/temp", "title=\"Temperatur DS1820\";rt=\"temperature-c\"");
+RESOURCE(ds1820, METHOD_GET, "s/temp", "title=\"Temperatur DS1820\";rt=\"temperature-c\"");
 void
 ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -204,7 +204,7 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 
 #if REST_RES_DHT11TEMP
 /*A simple getter example. Returns the reading from dhtxx sensor*/
-RESOURCE(dht11temp, METHOD_GET, "sensors/temp", "title=\"Temperatur DHTxx\";rt=\"temperature-c\"");
+RESOURCE(dht11temp, METHOD_GET, "s/temp", "title=\"Temperatur DHTxx\";rt=\"temperature-c\"");
 void
 dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -217,7 +217,7 @@ dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16_t prefe
   if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
   {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "%4d",dht11_temp);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "%d.%02d",dht11_temp/100, dht11_temp % 100);
 
     length = strlen(message);
     memcpy(buffer, message,length );
@@ -227,7 +227,7 @@ dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16_t prefe
   else if (num && (accept[0]==REST.type.APPLICATION_JSON))
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%4d\"}",dht11_temp);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d.%02d\"}",dht11_temp/100, dht11_temp % 100);
 
     length = strlen(message);
     memcpy(buffer, message,length );
@@ -244,7 +244,7 @@ dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16_t prefe
 
 #if REST_RES_DHT11
 /*A simple getter example. Returns the reading from dhtxx sensor*/
-RESOURCE(dht11, METHOD_GET, "sensors/hum", "title=\"Humidity DHTxx\";rt=\"humidity-%\"");
+RESOURCE(dht11, METHOD_GET, "s/hum", "title=\"Humidity DHTxx\";rt=\"humidity-%\"");
 void
 dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -257,7 +257,7 @@ dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
   if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
   {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "%2d",dht11_hum);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "%d.%02d",dht11_hum/100, dht11_hum % 100);
 
     length = strlen(message);
     memcpy(buffer, message,length );
@@ -267,7 +267,7 @@ dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
   else if (num && (accept[0]==REST.type.APPLICATION_JSON))
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"hum\":\"%d\"}",dht11_hum);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"hum\":\"%d.%02d\"}",dht11_hum/100, dht11_hum % 100);
 
     length = strlen(message);
     memcpy(buffer, message,length );
@@ -287,7 +287,7 @@ dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
 /******************************************************************************/
 #if REST_RES_LEDS
 /*A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated*/
-RESOURCE(leds, METHOD_POST | METHOD_PUT , "actuators/leds", "title=\"LEDs: ?color=r|g|b, POST/PUT mode=on|off\";rt=\"Control\"");
+RESOURCE(leds, METHOD_POST | METHOD_PUT , "a/leds", "title=\"LEDs: ?color=r|g|b, POST/PUT mode=on|off\";rt=\"Control\"");
 
 void
 leds_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
@@ -337,7 +337,7 @@ leds_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 /******************************************************************************/
 #if REST_RES_TOGGLE
 /* A simple actuator example. Toggles the red led */
-RESOURCE(toggle, METHOD_GET | METHOD_PUT | METHOD_POST, "actuators/toggle", "title=\"Red LED\";rt=\"Control\"");
+RESOURCE(toggle, METHOD_GET | METHOD_PUT | METHOD_POST, "a/toggle", "title=\"Red LED\";rt=\"Control\"");
 void
 toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -349,7 +349,7 @@ toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 /******************************************************************************/
 #if REST_RES_BATTERY && defined (PLATFORM_HAS_BATTERY)
 /* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(battery, METHOD_GET, "sensors/battery", "title=\"Battery status\";rt=\"battery-mV\"");
+RESOURCE(battery, METHOD_GET, "s/battery", "title=\"Battery status\";rt=\"battery-mV\"");
 void
 battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -361,14 +361,14 @@ battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
   if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
   {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d", battery);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d.%02d", battery/1000, battery % 1000);
 
     REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
   }
   else if (num && (accept[0]==REST.type.APPLICATION_JSON))
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'battery':%d}", battery);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'battery':%d.%02d}", battery/1000, battery % 1000);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   }
