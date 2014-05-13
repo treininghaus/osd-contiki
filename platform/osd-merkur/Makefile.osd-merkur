@@ -50,7 +50,14 @@ AVRDUDE_MCU=m128rfa1
 # CFLAGS  += -save-temps
 # Bootloader bonsai
 # LDFLAGS  += -save-temps
-LDFLAGS  += -Wl,--defsym,bootloader_get_mac=0x0001f3a0
+# For the old bonsai bootloader compiled with squeeze gcc-avr we
+# directly used the address of the bootloader:
+#BOOTLOADER_GET_MAC=0x0001f3a0
+# For newer bonsai we have a jump table at the end of the bootloader
+# section:
+BOOTLOADER_GET_MAC=0x0001ff80
+
+LDFLAGS  += -Wl,--defsym,bootloader_get_mac=$(BOOTLOADER_GET_MAC)
 
 
 include $(CONTIKIAVR)/Makefile.avr
