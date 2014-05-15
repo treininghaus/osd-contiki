@@ -13,8 +13,7 @@
  * Note the parameters in this file can be changed without forcing a complete rebuild.
  */
 // default settings
-#define CHANNEL_802_15_4          26     // default frequency (11-26)
-#define IEEE802154_CONF_PANID     0xABCD // default panid
+#define CHANNEL_802_15_4          26     // default frequency (11-26) 
 
 // end default settings
 
