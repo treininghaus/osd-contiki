@@ -62,14 +62,14 @@ void
 key_init(void)
 {
     // Pairing Button
-    PORTB |= (1<<PORTB4); // Set port PORTE bint 4 with pullup resistor
-    DDRB |= (1<<DDB4); // Set pin as input
+//    PORTB |= (1<<PORTE0); // Set port PORTE pint 0 with pullup resistor
+//    DDRB |= (1<<DDE0); // Set pin as input
     // ext1
-    PORTB |= (1<<PORTB5); // Set port PORTE bint 5 with pullup resistor
-    DDRB |= (1<<DDB5); // Set pin as input
+    PORTF |= (1<<PORTF6); // Set port PORTF pint 6 with pullup resistor
+    DDRF |= (1<<DDF6); // Set pin as input
     // ext2
-    PORTB |= (1<<PORTB6); // Set port PORTE bint 6 with pullup resistor
-    DDRB |= (1<<DDB6); // Set pin as input
+    PORTF |= (1<<PORTF7); // Set port PORTF pint 7 with pullup resistor
+    DDRF |= (1<<DDF7); // Set pin as input
     // Interrupt
     //PCICR |= _BV(PCIE0);
     //PCMSK0 |= _BV(PCINT4) | _BV(PCINT5) | _BV(PCINT6);
@@ -87,7 +87,7 @@ uint8_t
 is_button_ext4(void)
 {
     /* Return true if button has been pressed. */
-    if ( PINB & (1<<PINB4) ) {
+    if ( PINE & (1<<PINE0) ) {
         return 0;
     }
     else{
@@ -98,7 +98,7 @@ uint8_t
 is_button_ext5(void)
 {
     /* Return true if button has been pressed. */
-    if ( PINB & (1<<PINB5) ) {
+    if ( PINF & (1<<PINF6) ) {
         return 0;
     }
     else{
@@ -109,7 +109,7 @@ uint8_t
 is_button_ext6(void)
 {
     /* Return true if button has been pressed. */
-    if ( PINB & (1<<PINB6) ) {
+    if ( PINF & (1<<PINF7) ) {
         return 0;
     }
     else{
