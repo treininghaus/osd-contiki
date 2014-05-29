@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, Swedish Institute of Computer Science.
+ * Copyright (c) 2013, Matthias Kovatsch
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,19 +29,25 @@
  *
  */
 
-#ifndef PROJECT_RPL_WEB_CONF_H_
-#define PROJECT_RPL_WEB_CONF_H_
+#ifndef PROJECT_ERBIUM_CONF_H_
+#define PROJECT_ERBIUM_CONF_H_
 
-#define SICSLOWPAN_CONF_FRAG	1
+#define PLATFORM_HAS_LED     1
+#define PLATFORM_HAS_BUTTON  1
+#define PLATFORM_HAS_TEMPERATURE   1
+#define PLATFORM_HAS_BATTERY 1
 
-/* For Debug: Dont allow MCU sleeping between channel checks */
-#undef RDC_CONF_MCU_SLEEP
-#define RDC_CONF_MCU_SLEEP       0
+/* Some platforms have weird includes. */
+// #undef IEEE802154_CONF_PANID
+// #define IEEE802154_CONF_PANID 0xAAAA
 
 /* Disabling RDC for demo purposes. Core updates often require more memory. */
 /* For projects, optimize memory and enable RDC again. */
 // #undef NETSTACK_CONF_RDC
 //#define NETSTACK_CONF_RDC     nullrdc_driver
+
+// enabel LEAF-NODE mode
+//#define RPL_CONF_LEAF_ONLY	1
 
 /* Increase rpl-border-router IP-buffer when using more than 64. */
 #undef REST_MAX_CHUNK_SIZE
@@ -93,5 +99,4 @@
 #undef SICSLOWPAN_CONF_FRAG
 #define SICSLOWPAN_CONF_FRAG	1
 */
-
-#endif /* PROJECT_RPL_WEB_CONF_H_ */
+#endif /* PROJECT_ERBIUM_CONF_H_ */

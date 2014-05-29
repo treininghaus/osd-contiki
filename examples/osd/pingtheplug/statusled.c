@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2010  harald pichler
+ *  Copyright (c) 2014  harald pichler
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,88 +31,56 @@
  * \file
  *
  * \brief
- *      This file provides Raven KEY support.
+ *      This file provides Raven LED support.
  *
  * \author
  *      Harald Pichler harald@the-develop.net
  *
  */
 
-#include <avr/interrupt.h>
-#include "dev/led.h"
-#include "pcintkey.h"
+#include "statusled.h"
 
-/*---------------------------------------------------------------------------*/
-
-ISR(PCINT0_vect)
-{
-//  if(BUTTON_CHECK_IRQ()) {
-//    if(timer_expired(&debouncetimer)) {
-//    led1_on();
-//      timer_set(&debouncetimer, CLOCK_SECOND / 4);
-//      sensors_changed(&button_sensor);
-//    led1_off();
-//    }
-//  }
-}
 /**
- *   \brief This will intialize the KEY for button readings.
+ * \addtogroup statusled
+ * \{
+*/
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Initialisation Staus led
 */
 void
-key_init(void)
+statusledinit(void)
 {
-    // Pairing Button
-//    PORTB |= (1<<PORTE0); // Set port PORTE pint 0 with pullup resistor
-//    DDRB |= (1<<DDE0); // Set pin as input
-    // ext1
-    PORTF |= (1<<PORTF6); // Set port PORTF pint 6 with pullup resistor
-    DDRF |= (1<<DDF6); // Set pin as input
-    // ext2
-    PORTF |= (1<<PORTF7); // Set port PORTF pint 7 with pullup resistor
-    DDRF |= (1<<DDF7); // Set pin as input
-    // Interrupt
-    //PCICR |= _BV(PCIE0);
-    //PCMSK0 |= _BV(PCINT4) | _BV(PCINT5) | _BV(PCINT6);
+  uint8_t temp;
+
+  /* Get MCUCR */
+  temp = MCUCR;
+  /* disable jtag */
+  MCUCR = temp|(1<<JTD);
+  MCUCR = temp|(1<<JTD);
 }
 
 /*---------------------------------------------------------------------------*/
 
 /**
- *   \brief This will poll run key_task() to determine if a button has been pressed.
- *
- *   \retval True if button is pressed
- *   \retval False if button is not pressed
+ * \brief Turns the Raven LED1 on.
 */
-uint8_t
-is_button_ext4(void)
+void
+statusled_on(void)
 {
-    /* Return true if button has been pressed. */
-    if ( PINE & (1<<PINE0) ) {
-        return 0;
-    }
-    else{
-        return 1;
-    }
+    PORTF &= ~(1<<PINF5);
+    DDRF  |=  (1<<PINF5);
 }
-uint8_t
-is_button_ext5(void)
+
+/*---------------------------------------------------------------------------*/
+
+/**
+ *  \brief Turns the Raven LED1 off.
+*/
+void
+statusled_off(void)
 {
-    /* Return true if button has been pressed. */
-    if ( PINF & (1<<PINF6) ) {
-        return 0;
-    }
-    else{
-        return 1;
-    }
+    PORTF |= (1<<PINF5);
+    DDRF  |= (1<<PINF5);
 }
-uint8_t
-is_button_ext6(void)
-{
-    /* Return true if button has been pressed. */
-    if ( PINF & (1<<PINF7) ) {
-        return 0;
-    }
-    else{
-        return 1;
-    }
-}
+/*---------------------------------------------------------------------------*/

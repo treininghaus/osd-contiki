@@ -1,4 +1,4 @@
-all: er-example-server
+all: er-example-server er-example-client
 # use this target explicitly if requried: er-plugtest-server
 
 
@@ -14,9 +14,6 @@ CFLAGS += -DUIP_CONF_IPV6=1
 CONTIKI=../../..
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
-# pcintkey
-PROJECT_SOURCEFILES += pcintkey.c
-PROJECT_SOURCEFILES += statusled.c
 
 # variable for Makefile.include
 ifneq ($(TARGET), minimal-net)
