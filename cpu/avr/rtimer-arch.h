@@ -58,14 +58,45 @@
 #define RTIMER_ARCH_SECOND 0
 #endif
 
-
+#ifndef PLAT_TIMER
+/* By default use timer 3 if available. Fall back to timer1 if not. */
 #ifdef TCNT3
-#define rtimer_arch_now() (TCNT3)
-#elif RTIMER_ARCH_PRESCALER
-#define rtimer_arch_now() (TCNT1)
+#define PLAT_TIMER 3
+#else
+#define PLAT_TIMER 1
+#endif /* TCNT3 */
+#endif /* !PLAT_TIMER */
+
+#define _R_CONC_(_x,_y,_z)   _x##_y##_z
+#define _C_R_CONC_(_X,_Y,_Z) _R_CONC_(_X,_Y,_Z)
+
+#define PLAT_ICF    _C_R_CONC_(ICF,PLAT_TIMER,)
+#define PLAT_ICIE   _C_R_CONC_(ICIE,PLAT_TIMER,)
+#define PLAT_OCFA   _C_R_CONC_(OCF,PLAT_TIMER,A)
+#define PLAT_OCFB   _C_R_CONC_(OCF,PLAT_TIMER,B)
+#define PLAT_OCFC   _C_R_CONC_(OCF,PLAT_TIMER,C)
+#define PLAT_OCIEA  _C_R_CONC_(OCIE,PLAT_TIMER,A)
+#define PLAT_OCIEB  _C_R_CONC_(OCIE,PLAT_TIMER,B)
+#define PLAT_OCIEC  _C_R_CONC_(OCIE,PLAT_TIMER,C)
+#define PLAT_OCRA   _C_R_CONC_(OCR,PLAT_TIMER,A)
+#define PLAT_TCCRA  _C_R_CONC_(TCCR,PLAT_TIMER,A)
+#define PLAT_TCCRB  _C_R_CONC_(TCCR,PLAT_TIMER,B)
+#define PLAT_TCCRC  _C_R_CONC_(TCCR,PLAT_TIMER,C)
+#define PLAT_TCNT   _C_R_CONC_(TCNT,PLAT_TIMER,)
+#define PLAT_TIFR   _C_R_CONC_(TIFR,PLAT_TIMER,)
+#define PLAT_TIMSK  _C_R_CONC_(TIMSK,PLAT_TIMER,)
+#define PLAT_TOIE   _C_R_CONC_(TOIE,PLAT_TIMER,)
+#define PLAT_TOV    _C_R_CONC_(TOV,PLAT_TIMER,)
+#define PLAT_VECT   _C_R_CONC_(TIMER,PLAT_TIMER,_COMPA_vect)
+#if RTIMER_ARCH_PRESCALER
+#define rtimer_arch_now() (PLAT_TCNT)
 #else
 #define rtimer_arch_now() (0)
 #endif
+/* some platforms don't have OCIEXC, we rely on the processor
+ * definition to #define OCIEXC OCIEXB in that case. This won't hurt
+ * since OCIEXC isn't used anyway.
+ */
 
 void rtimer_arch_sleep(rtimer_clock_t howlong);
 #endif /* RTIMER_ARCH_H_ */
