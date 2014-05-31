@@ -270,11 +270,13 @@ send_list(mac_callback_t sent, void *ptr, struct rdc_buf_list *buf_list)
 static void
 packet_input(void)
 {
+#if NULLRDC_SEND_802154_ACK
   int original_datalen;
   uint8_t *original_dataptr;
 
   original_datalen = packetbuf_datalen();
   original_dataptr = packetbuf_dataptr();
+#endif
 #ifdef NETSTACK_DECRYPT
     NETSTACK_DECRYPT();
 #endif /* NETSTACK_DECRYPT */

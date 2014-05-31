@@ -38,6 +38,7 @@
  */
 
 
+#include <string.h>
 #include "net/ipv4/uaodv-rt.h"
 #include "contiki-net.h"
 
