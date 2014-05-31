@@ -51,29 +51,24 @@
 #include "rtimer-arch.h"
 
 #if defined(__AVR_ATmega1284P__)
-#define ETIMSK TIMSK3
-#define ETIFR TIFR3
-#define TICIE3 ICIE3
-
 //Has no 'C', so we just set it to B. The code doesn't really use C so this
 //is safe to do but lets it compile. Probably should enable the warning if
 //it is ever used on other platforms.
 //#warning no OCIE3C in timer3 architecture, hopefully it won't be needed!
-
 #define OCIE3C	OCIE3B
 #define OCF3C	OCF3B
+#define PLAT_TCCRC PLAT_TCCRB
 #endif
 
 #if defined(__AVR_ATmega1281__) || defined(__AVR_AT90USB1287__) || defined(__AVR_ATmega128RFA1__)
-#define ETIMSK TIMSK3
-#define ETIFR TIFR3
-#define TICIE3 ICIE3
 #endif
 
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega644__)
-#define TIMSK TIMSK1
-#define TICIE1 ICIE1
-#define TIFR TIFR1
+//Has no 'C', so we just set it to B. The code doesn't really use C so this
+//is safe to do but lets it compile.
+#define OCIE1C	OCIE1B
+#define OCF1C	OCF1B
+#define PLAT_TCCRC PLAT_TCCRB
 #endif
 
 /* Track flow through rtimer interrupts*/
@@ -85,14 +80,19 @@ extern uint8_t debugflowsize,debugflow[DEBUGFLOWSIZE];
 #endif
 
 /*---------------------------------------------------------------------------*/
-#if defined(TCNT3) && RTIMER_ARCH_PRESCALER
-ISR (TIMER3_COMPA_vect) {
+#if RTIMER_ARCH_PRESCALER
+ISR (PLAT_VECT) {
   DEBUGFLOW('/');
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
 
   /* Disable rtimer interrupts */
-  ETIMSK &= ~((1 << OCIE3A) | (1 << OCIE3B) | (1 << TOIE3) |
-      (1 << TICIE3) | (1 << OCIE3C));
+  PLAT_TIMSK &= 
+   ~( (1 << PLAT_OCIEA)
+    | (1 << PLAT_OCIEB)
+    | (1 << PLAT_OCIEC)
+    | (1 << PLAT_TOIE)
+    | (1 << PLAT_ICIE)
+    );
 
 #if RTIMER_CONF_NESTED_INTERRUPTS
   /* Enable nested interrupts. Allows radio interrupt during rtimer interrupt. */
@@ -106,17 +106,6 @@ ISR (TIMER3_COMPA_vect) {
   ENERGEST_OFF(ENERGEST_TYPE_IRQ);
   DEBUGFLOW('\\');
 }
-
-#elif RTIMER_ARCH_PRESCALER
-#warning "No Timer3 in rtimer-arch.c - using Timer1 instead"
-ISR (TIMER1_COMPA_vect) {
-  DEBUGFLOW('/');
-  TIMSK &= ~((1<<TICIE1)|(1<<OCIE1A)|(1<<OCIE1B)|(1<<TOIE1));
-
-  rtimer_run_next();
-  DEBUGFLOW('\\');
-}
-
 #endif
 /*---------------------------------------------------------------------------*/
 void
@@ -128,66 +117,44 @@ rtimer_arch_init(void)
   sreg = SREG;
   cli ();
 
-#ifdef TCNT3
   /* Disable all timer functions */
-  ETIMSK &= ~((1 << OCIE3A) | (1 << OCIE3B) | (1 << TOIE3) |
-      (1 << TICIE3) | (1 << OCIE3C));
+  PLAT_TIMSK &=
+   ~( (1 << PLAT_OCIEA)
+    | (1 << PLAT_OCIEB)
+    | (1 << PLAT_OCIEC)
+    | (1 << PLAT_TOIE)
+    | (1 << PLAT_ICIE)
+    );
   /* Write 1s to clear existing timer function flags */
-  ETIFR |= (1 << ICF3) | (1 << OCF3A) | (1 << OCF3B) | (1 << TOV3) |
-  (1 << OCF3C); 
+  PLAT_TIFR |=
+    ( (1 << PLAT_ICF)
+    | (1 << PLAT_OCFA)
+    | (1 << PLAT_OCFB)
+    | (1 << PLAT_OCFC)
+    | (1 << PLAT_TOV)
+    );
 
   /* Default timer behaviour */
-  TCCR3A = 0;
-  TCCR3B = 0;
-  TCCR3C = 0;
+  PLAT_TCCRA = 0;
+  PLAT_TCCRB = 0;
+  PLAT_TCCRC = 0;
 
   /* Reset counter */
-  TCNT3 = 0;
+  PLAT_TCNT  = 0;
 
 #if RTIMER_ARCH_PRESCALER==1024
-  TCCR3B |= 5;
+  PLAT_TCCRB |= 5;
 #elif RTIMER_ARCH_PRESCALER==256
-  TCCR3B |= 4;
+  PLAT_TCCRB |= 4;
 #elif RTIMER_ARCH_PRESCALER==64
-  TCCR3B |= 3;
+  PLAT_TCCRB |= 3;
 #elif RTIMER_ARCH_PRESCALER==8
-  TCCR3B |= 2;
+  PLAT_TCCRB |= 2;
 #elif RTIMER_ARCH_PRESCALER==1
-  TCCR3B |= 1;
+  PLAT_TCCRB |= 1;
 #else
-#error Timer3 PRESCALER factor not supported.
+#error Timer PRESCALER factor not supported.
 #endif
-
-#elif RTIMER_ARCH_PRESCALER
-  /* Leave timer1 alone if PRESCALER set to zero */
-  /* Obviously you can not then use rtimers */
-
-  TIMSK &= ~((1<<TICIE1)|(1<<OCIE1A)|(1<<OCIE1B)|(1<<TOIE1));
-  TIFR |= (1 << ICF1) | (1 << OCF1A) | (1 << OCF1B) | (1 << TOV1);
-
-  /* Default timer behaviour */
-  TCCR1A = 0;
-  TCCR1B = 0;
-
-  /* Reset counter */
-  TCNT1 = 0;
-
-  /* Start clock */
-#if RTIMER_ARCH_PRESCALER==1024
-  TCCR1B |= 5;
-#elif RTIMER_ARCH_PRESCALER==256
-  TCCR1B |= 4;
-#elif RTIMER_ARCH_PRESCALER==64
-  TCCR1B |= 3;
-#elif RTIMER_ARCH_PRESCALER==8
-  TCCR1B |= 2;
-#elif RTIMER_ARCH_PRESCALER==1
-  TCCR1B |= 1;
-#else
-#error Timer1 PRESCALER factor not supported.
-#endif
-
-#endif /* TCNT3 */
 
   /* Restore interrupt state */
   SREG = sreg;
@@ -203,23 +170,18 @@ rtimer_arch_schedule(rtimer_clock_t t)
   sreg = SREG;
   cli ();
   DEBUGFLOW(':');
-#ifdef TCNT3
   /* Set compare register */
-  OCR3A = t;
+  PLAT_OCRA = t;
   /* Write 1s to clear all timer function flags */
-  ETIFR |= (1 << ICF3) | (1 << OCF3A) | (1 << OCF3B) | (1 << TOV3) |
-  (1 << OCF3C);
-  /* Enable interrupt on OCR3A match */
-  ETIMSK |= (1 << OCIE3A);
-
-#elif RTIMER_ARCH_PRESCALER
-  /* Set compare register */
-  OCR1A = t;
-  TIFR |= (1 << ICF1) | (1 << OCF1A) | (1 << OCF1B) | (1 << TOV1);
-  TIMSK |= (1 << OCIE1A);
-
-#endif
-
+  PLAT_TIFR |=
+    ( (1 << PLAT_ICF)
+    | (1 << PLAT_OCFA)
+    | (1 << PLAT_OCFB)
+    | (1 << PLAT_OCFC)
+    | (1 << PLAT_TOV)
+    );
+  /* Enable interrupt on OCRXA match */
+  PLAT_TIMSK |= (1 << PLAT_OCIEA);
   /* Restore interrupt state */
   SREG = sreg;
 #endif /* RTIMER_ARCH_PRESCALER */
@@ -293,11 +255,7 @@ uint32_t longhowlong;
 
 /* Adjust rtimer ticks if rtimer is enabled. TIMER3 is preferred, else TIMER1 */
 #if RTIMER_ARCH_PRESCALER
-#ifdef TCNT3
-    TCNT3 += howlong;
-#else
-    TCNT1 += howlong;
-#endif
+    PLAT_TCNT += howlong;
 #endif
 	ENERGEST_ON(ENERGEST_TYPE_CPU);
 
