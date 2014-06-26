@@ -215,48 +215,6 @@ const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[] = {
 //	_BV( 7 )	, // PB 7 ** 35 ** D35 / LED2 / PWM
 };
 
-// !!!
-const uint8_t PROGMEM digital_pin_to_timer_PGM[] = {
-	// TIMERS		
-	// -------------------------------------------	
-	NOT_ON_TIMER	, // PE 1 ** 0 ** USART0_TX	
-	NOT_ON_TIMER	, // PE 0 ** 1 ** USART0_RX	
-	TIMER3A			, // PE 3 ** 2 ** D3 / PWM
-	TIMER3B			, // PE 4 ** 3 ** D4 / PWM
-	TIMER3C			, // PE 5 ** 4 ** D5 / PWM
-	NOT_ON_TIMER	, // PE 6 ** 5 ** D6
-	NOT_ON_TIMER	, // PD 3 ** 6 ** D21 / USART1_TX
-	NOT_ON_TIMER	, // PD 2 ** 7 ** D20 / USART1_RX
-	NOT_ON_TIMER	, // PD 0 ** 8 ** D15 / I2C_SCL
-	NOT_ON_TIMER	, // PD 1 ** 9 ** D14 / I2C_SDA
-	NOT_ON_TIMER	, // PB 0 ** 10 ** D10 / SPI_SSN
-	NOT_ON_TIMER	, // PB 2 ** 11 ** D11 / SPI_MOSI
-	NOT_ON_TIMER	, // PB 1 ** 12 ** D13 / SPI_SCK
-	NOT_ON_TIMER	, // PB 3 ** 13 ** D12 / SPI_MISO
-	TIMER2A			, // PB 4 ** 14 ** D9 / PWM
-	NOT_ON_TIMER	, // PF 7 ** 15 ** A0 / D33	
-	NOT_ON_TIMER	, // PF 6 ** 16 ** A1 / D32	
-	NOT_ON_TIMER	, // PF 5 ** 17 ** A2 / D31	
-	NOT_ON_TIMER	, // PF 4 ** 18 ** A3 / D30	
-	NOT_ON_TIMER	, // PF 0 ** 19 ** A4 / D26
-	NOT_ON_TIMER	, // PF 1 ** 20 ** A5 / D27
-//	NOT_ON_TIMER	, // PF 2 ** 28 ** A6 / D28
-//	NOT_ON_TIMER	, // PF 3 ** 29 ** A7 / D29
-//	NOT_ON_TIMER	, // PE 2 ** 2 ** D2
-//	NOT_ON_TIMER	, // PE 7 ** 7 ** D7
-//	TIMER1A			, // PB 5 ** 8 ** D8 / PWM
-//	NOT_ON_TIMER	, // PG 0 ** 16 ** D16
-//	NOT_ON_TIMER	, // PG 1 ** 17 ** D17	
-//	NOT_ON_TIMER	, // PG 2 ** 18 ** D18	
-//	TIMER0B			, // PG 5 ** 19 ** D19 / PWM
-//	NOT_ON_TIMER	, // PD 4 ** 22 ** D22
-//	NOT_ON_TIMER  	, // PD 5 ** 23 ** D23
-//	NOT_ON_TIMER  	, // PD 6 ** 24 ** D24
-//	NOT_ON_TIMER	, // PD 7 ** 25 ** D25
-//	TIMER1B			, // PB 6 ** 34 ** D34/ PWM
-//	TIMER1C			, // PB 7 ** 35 ** D35 / PWM
-};	
-
 #endif
 
 #endif
