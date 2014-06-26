@@ -69,10 +69,6 @@ extern "C"{
 #define interrupts() sei()
 #define noInterrupts() cli()
 
-#define clockCyclesPerMicrosecond() ( F_CPU / 1000000L )
-#define clockCyclesToMicroseconds(a) ( (a) / clockCyclesPerMicrosecond() )
-#define microsecondsToClockCycles(a) ( (a) * clockCyclesPerMicrosecond() )
-
 #define lowByte(w) ((uint8_t) ((w) & 0xff))
 #define highByte(w) ((uint8_t) ((w) >> 8))
 
@@ -102,10 +98,6 @@ int digitalRead(uint8_t);
 int analogRead(uint8_t);
 void analogReference(uint8_t mode);
 
-unsigned long millis(void);
-unsigned long micros(void);
-void delay(unsigned long);
-void delayMicroseconds(unsigned int us);
 unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout);
 
 void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val);

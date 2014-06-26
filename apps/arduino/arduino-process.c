@@ -50,6 +50,8 @@
  */
 
 #include "arduino-process.h"
+#include "hw_timer.h"
+#include "hw-arduino.h"
 
 PROCESS(arduino_sketch, "Arduino Sketch Wrapper");
 
@@ -57,7 +59,7 @@ PROCESS_THREAD(arduino_sketch, ev, data)
 {
   PROCESS_BEGIN();
 
-  arduino_init ();
+  arduino_pwm_timer_init ();
   setup ();
   while (1) {
     loop ();

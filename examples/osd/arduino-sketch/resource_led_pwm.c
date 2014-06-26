@@ -62,6 +62,7 @@ led_pwm_handler
   const uint16_t *accept = NULL;
   uint16_t a_ctype = REST.type.APPLICATION_JSON;
   uint16_t c_ctype = REST.get_header_content_type (request);
+  uint32_t tmp = 0;
 
   /* Seems like accepted type is currently unsupported? */
   n_acc = REST.get_header_accept (request, &accept);
@@ -136,7 +137,10 @@ led_pwm_handler
           temp [sizeof (temp) - 1] = 0;
         }
         PRINTF ("GOT: %s\n", temp);
-        pwm = atoi (temp);
+        tmp = strtoul (temp, NULL, 10);
+        if (tmp > 255) {
+            pwm = 255;
+        }
         PRINTF ("Setting: %d\n", pwm);
         REST.set_response_status(response, REST.status.CHANGED);
       } else {
@@ -181,6 +185,7 @@ led_period_handler
   const uint16_t *accept = NULL;
   uint16_t a_ctype = REST.type.APPLICATION_JSON;
   uint16_t c_ctype = REST.get_header_content_type (request);
+  uint32_t tmp = 0;
 
   /* Seems like accepted type is currently unsupported? */
   n_acc = REST.get_header_accept (request, &accept);
@@ -255,7 +260,14 @@ led_period_handler
           temp [sizeof (temp) - 1] = 0;
         }
         PRINTF ("GOT: %s\n", temp);
-        period_100ms = (atoi (temp) + 50) / 100;
+        tmp = (strtoul (temp, NULL, 10) + 50) / 100;
+        if (tmp > 10) {
+            tmp = 10;
+        }
+        if (tmp == 0) {
+            tmp = 1;
+        }
+        period_100ms = tmp;
         PRINTF ("Setting: %dms\n", period_100ms * 100);
         REST.set_response_status(response, REST.status.CHANGED);
       } else {

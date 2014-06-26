@@ -28,20 +28,10 @@ void setup (void)
 
 void loop (void)
 {
-    static uint8_t last_pwm = 0;
-    if (last_pwm != pwm) {
-        last_pwm = pwm;
-        analogWrite (LED_PIN, pwm);
-        printf
-            ( "TCNT3: %04X TCCR3A: %04X TCCR3B: %04X TCCR3C: %04X OCR3C: %04X\n"
-            , TCNT3, TCCR3A, TCCR3B, TCCR3C, OCR3C
-            );
-    }
-
-    // Originally I wanted to sleep here to make the LED blink.
-    // Sleeping currently doesn't work, something turns off the chip.
-    // Maybe a mechanism to guard agains proto-threads taking too long?
-    //clock_wait (CLOCK_SECOND * period_100ms / 10);
-    //analogWrite (LED_PIN, 0);
-    //printf ("After write\n");
+    /* Use 255 - pwm, LED on merkur-board is wired to +3.3V */
+    analogWrite (LED_PIN, 255 - pwm); /* 
+    printf ("clock : %u\nmillis: %lu\n", clock_time (), millis ());
+    delay (period_100ms * 100);
+    analogWrite (LED_PIN, 255); /* OFF: LED on merkur-board is wired to +3.3V */
+    delay (period_100ms * 100);
 }
