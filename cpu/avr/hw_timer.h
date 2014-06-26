@@ -215,7 +215,57 @@
  * Note that this sets the compare output mode COM registers to 0,
  * turning off PWM on outputs.
  */
-int8_t hwtimer_ini (uint8_t timer, uint8_t wgm, uint8_t clock, uint16_t maxt);
+static inline int8_t
+hwtimer_ini (uint8_t timer, uint8_t wgm, uint8_t clock, uint16_t maxt)
+{
+  int8_t i;
+  HWT_CHECK_TIMER (timer);
+  if (wgm > HWT_WGM_MASK || wgm == HWT_WGM_RESERVED) {
+    return HWT_ERR_INVALID_WGM;
+  }
+  if (clock > HWT_CLOCK_MASK) {
+    return HWT_ERR_INVALID_CLOCK;
+  }
+  /* Turn off clock, no need to disable interrupt */
+  *HWT_TCCRB (timer) &= ~HWT_CLOCK_MASK;
+
+  *HWT_TCCRA (timer) &= ~(HWT_WGM_MASK_LOW         << HWT_WGM_SHIFT_LOW);
+  *HWT_TCCRA (timer) |= ((wgm & HWT_WGM_MASK_LOW)  << HWT_WGM_SHIFT_LOW);
+  *HWT_TCCRB (timer) &= ~(HWT_WGM_MASK_HIGH        << HWT_WGM_SHIFT_HIGH);
+  *HWT_TCCRB (timer) |= ((wgm & HWT_WGM_MASK_HIGH) << HWT_WGM_SHIFT_HIGH);
+
+  for (i=0; i<3; i++) {
+    HWT_SET_COM (timer, i, HWT_COM_NORMAL);
+  }
+
+  if (  wgm == HWT_WGM_PWM_PHASE_FRQ_ICR
+     || wgm == HWT_WGM_PWM_PHASE_ICR
+     || wgm == HWT_WGM_CTC_ICR
+     || wgm == HWT_WGM_PWM_FAST_ICR
+     )
+  {
+    *HWT_ICR (timer) = maxt;
+  }
+
+  if (  wgm == HWT_WGM_CTC_OCRA
+     || wgm == HWT_WGM_PWM_PHASE_FRQ_OCRA
+     || wgm == HWT_WGM_PWM_PHASE_OCRA
+     || wgm == HWT_WGM_PWM_FAST_OCRA
+     )
+  {
+    *HWT_OCRA (timer) = maxt;
+  }
+
+  /* Set clock, finally */
+  *HWT_TCCRB (timer) |= clock;
+  return 0;
+}
+
+/* Needed for implementation */
+#define HWT_PERIOD_MAX_ (0xFFFFFFFF / (F_CPU / 1000000))
+/* for 16-bit timer: */
+#define HWT_TICKS_MAX_  0xFFFF
+#define HWT_TICKS_MIN_  0xFF
 
 /**
  * \brief Convenience function to initialize hardware timer for PWM
@@ -248,8 +298,76 @@ int8_t hwtimer_ini (uint8_t timer, uint8_t wgm, uint8_t clock, uint16_t maxt);
  * pin associated with this register can not be used for PWM. Instead it
  * can be used to change the period.
  */
-int8_t
-hwtimer_pwm_ini (uint8_t timer, uint32_t period_us, uint8_t pwm_type, uint8_t ocra);
+static inline int8_t
+hwtimer_pwm_ini (uint8_t timer, uint32_t period_us, uint8_t pwm_type, uint8_t ocra)
+{
+  uint32_t ticks = 0;
+  uint8_t  clock = HWT_CLOCK_PRESCALER_1024;
+  uint8_t  wgm   = HWT_WGM_NORMAL;
+  HWT_CHECK_TIMER (timer);
+  if (period_us > HWT_PERIOD_MAX_) {
+    period_us = HWT_PERIOD_MAX_;
+  }
+  ticks = (F_CPU / 1000000) * period_us;
+  /* Non-fast PWM modes have half the frequency */
+  if (pwm_type != HWT_PWM_FAST) {
+    ticks >>= 1;
+  }
+
+  /*
+   * Divisors are 1, 8, 64, 256, 1024, shifts between these are
+   * 3, 3, 2, 2, respectively. We modify `ticks` in place, the AVR can
+   * shift only one bit in one instruction, so shifting isn't cheap.
+   * We try to get the *maximum* prescaler that still permits a tick
+   * resolution of at least 8 bit.
+   */
+  if (ticks <= (HWT_TICKS_MIN_ << 3)) {
+    clock = HWT_CLOCK_PRESCALER_1;
+  }
+  else if ((ticks >>= 3) <= (HWT_TICKS_MIN_ << 3)) {
+    clock = HWT_CLOCK_PRESCALER_8;
+  }
+  else if ((ticks >>= 3) <= (HWT_TICKS_MIN_ << 2)) {
+    clock = HWT_CLOCK_PRESCALER_64;
+  }
+  else if ((ticks >>= 2) <= (HWT_TICKS_MIN_ << 2)) {
+    clock = HWT_CLOCK_PRESCALER_256;
+  }
+  else if ((ticks >>= 2) > HWT_TICKS_MAX_) {
+    ticks = HWT_TICKS_MAX_;
+  }
+  switch (pwm_type) {
+    case HWT_PWM_FAST:
+      wgm = ocra ? HWT_WGM_PWM_FAST_OCRA : HWT_WGM_PWM_FAST_ICR;
+      break;
+    case HWT_PWM_PHASE_CORRECT:
+      wgm = ocra ? HWT_WGM_PWM_PHASE_OCRA : HWT_WGM_PWM_PHASE_ICR;
+      break;
+    case HWT_PWM_PHASE_FRQ_CORRECT:
+    default:
+      wgm = ocra ? HWT_WGM_PWM_PHASE_FRQ_OCRA : HWT_WGM_PWM_PHASE_FRQ_ICR;
+      break;
+  }
+  /* Special 8- 9- 10-bit modes */
+  if (pwm_type == HWT_PWM_FAST || pwm_type == HWT_PWM_PHASE_CORRECT) {
+    if (ticks == 0xFF) {
+      wgm = (pwm_type == HWT_PWM_FAST)
+          ? HWT_WGM_PWM_FAST_8_BIT
+          : HWT_WGM_PWM_PHASE_8_BIT;
+    }
+    else if (ticks == 0x1FF) {
+      wgm = (pwm_type == HWT_PWM_FAST)
+          ? HWT_WGM_PWM_FAST_9_BIT
+          : HWT_WGM_PWM_PHASE_9_BIT;
+    }
+    else if (ticks == 0x3FF) {
+      wgm = (pwm_type == HWT_PWM_FAST)
+          ? HWT_WGM_PWM_FAST_10_BIT
+          : HWT_WGM_PWM_PHASE_10_BIT;
+    }
+  }
+  return hwtimer_ini (timer, wgm, clock, ticks);
+}
 
 /*
  * Simple init macro for sane default values
@@ -260,11 +378,42 @@ hwtimer_pwm_ini (uint8_t timer, uint32_t period_us, uint8_t pwm_type, uint8_t oc
 /**
  * \brief  Maximum timer value usable in hwtimer_set_pwm
  * \param  timer: Timer to use
- * \return 
- *
- * 
+ * \return max. timer value according to current timer setup
+ *         negative value if wrong timer given
+ *         a positive value is guaranteed to fit into 16 bit unsigned.
  */
-uint32_t hwtimer_pwm_max_ticks (uint8_t timer);
+static inline int32_t hwtimer_pwm_max_ticks (uint8_t timer)
+{
+  uint8_t wgm = 0;
+  HWT_CHECK_TIMER (timer);
+  wgm = ((*HWT_TCCRA (timer) >> HWT_WGM_SHIFT_LOW)  & HWT_WGM_MASK_LOW)
+      | ((*HWT_TCCRB (timer) >> HWT_WGM_SHIFT_HIGH) & HWT_WGM_MASK_HIGH)
+      ;
+  switch (wgm) {
+    case HWT_WGM_PWM_PHASE_8_BIT:
+    case HWT_WGM_PWM_FAST_8_BIT:
+      return 0xFF;
+    case HWT_WGM_PWM_PHASE_9_BIT:
+    case HWT_WGM_PWM_FAST_9_BIT:
+      return 0x1FF;
+    case HWT_WGM_PWM_PHASE_10_BIT:
+    case HWT_WGM_PWM_FAST_10_BIT:
+      return 0x3FF;
+    case HWT_WGM_CTC_OCRA:
+    case HWT_WGM_PWM_PHASE_FRQ_OCRA:
+    case HWT_WGM_PWM_PHASE_OCRA:
+    case HWT_WGM_PWM_FAST_OCRA:
+      return *HWT_OCRA (timer);
+    case HWT_WGM_PWM_PHASE_FRQ_ICR:
+    case HWT_WGM_PWM_PHASE_ICR:
+    case HWT_WGM_CTC_ICR:
+    case HWT_WGM_PWM_FAST_ICR:
+      return *HWT_ICR (timer);
+    case HWT_WGM_NORMAL:
+      return 0xFFFF;
+  }
+  return HWT_ERR_INVALID_WGM;
+}
 
 /*
  * The following functions are defined inline to allow for compiler
