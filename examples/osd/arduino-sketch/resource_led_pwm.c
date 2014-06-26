@@ -139,8 +139,9 @@ led_pwm_handler
         PRINTF ("GOT: %s\n", temp);
         tmp = strtoul (temp, NULL, 10);
         if (tmp > 255) {
-            pwm = 255;
+            tmp = 255;
         }
+        pwm = tmp;
         PRINTF ("Setting: %d\n", pwm);
         REST.set_response_status(response, REST.status.CHANGED);
       } else {

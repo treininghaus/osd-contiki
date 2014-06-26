@@ -29,7 +29,7 @@ void setup (void)
 void loop (void)
 {
     /* Use 255 - pwm, LED on merkur-board is wired to +3.3V */
-    analogWrite (LED_PIN, 255 - pwm); /* 
+    analogWrite (LED_PIN, 255 - pwm);
     printf ("clock : %u\nmillis: %lu\n", clock_time (), millis ());
     delay (period_100ms * 100);
     analogWrite (LED_PIN, 255); /* OFF: LED on merkur-board is wired to +3.3V */
