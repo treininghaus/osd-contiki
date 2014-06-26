@@ -371,13 +371,13 @@ volatile static uint8_t osccalhigh,osccallow;
   if (seconds < 60) { //give a minute to stabilize
     if(++lockcount >= 8192UL*128/RTIMER_ARCH_SECOND) {
       lockcount=0;
-      rtimer_phase = TCNT3 & 0x0fff;
+      rtimer_phase = PLAT_TCNT & 0x0fff;
       if (seconds < 2) OSCCAL=100;
       if (last_phase > rtimer_phase) osccalhigh=++OSCCAL; else osccallow=--OSCCAL;
       last_phase = rtimer_phase;
     }
   } else {
-    uint8_t error = (TCNT3 - last_phase) & 0x3f;
+    uint8_t error = (PLAT_TCNT - last_phase) & 0x3f;
     if (error == 0) {
     } else if (error<32) {
       OSCCAL=osccallow-1;

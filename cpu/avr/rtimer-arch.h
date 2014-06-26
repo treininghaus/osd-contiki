@@ -88,6 +88,40 @@
 #define PLAT_TOIE   _C_R_CONC_(TOIE,PLAT_TIMER,)
 #define PLAT_TOV    _C_R_CONC_(TOV,PLAT_TIMER,)
 #define PLAT_VECT   _C_R_CONC_(TIMER,PLAT_TIMER,_COMPA_vect)
+
+/*
+ * Unavailable timer channels on some platforms
+ * A hack originally found for some architectures.
+ * Since OCIEnC isn't used we simple define it to OCIEnB which allows
+ * the code to compile. Same for OCFnC and TCCRnC. Note that the TCCRnX
+ * registers are only (all) set to 0 in the code. The OCIEnC and OCFnC
+ * are shifts which are always set to the same value as OCIEnB and
+ * OCFnB, respectively.
+ */
+#if PLAT_TIMER == 3
+#ifndef OCIE3C
+#define PLAT_OCIEC PLAT_OCIEB
+#endif
+#ifndef OCF3C
+#define PLAT_OCFC PLAT_OCFB
+#endif
+#ifndef TCCR3C
+#define PLAT_TCCRC PLAT_TCCRB
+#endif
+#endif /* PLAT_TIMER == 3 */
+
+#if PLAT_TIMER == 1
+#ifndef OCIE1C
+#define PLAT_OCIEC PLAT_OCIEB
+#endif
+#ifndef OCF1C
+#define PLAT_OCFC PLAT_OCFB
+#endif
+#ifndef TCCR1C
+#define PLAT_TCCRC PLAT_TCCRB
+#endif
+#endif /* PLAT_TIMER == 3 */
+
 #if RTIMER_ARCH_PRESCALER
 #define rtimer_arch_now() (PLAT_TCNT)
 #else
