@@ -1,6 +1,7 @@
 #ifndef Arduino_h
 #define Arduino_h
 
+#include <hw-arduino.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -88,14 +89,18 @@ typedef unsigned int word;
 typedef uint8_t boolean;
 typedef uint8_t byte;
 
-void init(void);
+/*
+ * This has been renamed from init to arduino_init, the original
+ * function name is way too generic. The arduino compatibility framework
+ * makes sure the correct function is called.
+ */
+void arduino_init(void);
 
 void pinMode(uint8_t, uint8_t);
 void digitalWrite(uint8_t, uint8_t);
 int digitalRead(uint8_t);
 int analogRead(uint8_t);
 void analogReference(uint8_t mode);
-void analogWrite(uint8_t, int);
 
 unsigned long millis(void);
 unsigned long micros(void);
@@ -126,7 +131,6 @@ extern const uint16_t PROGMEM port_to_output_PGM[];
 extern const uint8_t PROGMEM digital_pin_to_port_PGM[];
 // extern const uint8_t PROGMEM digital_pin_to_bit_PGM[];
 extern const uint8_t PROGMEM digital_pin_to_bit_mask_PGM[];
-extern const uint8_t PROGMEM digital_pin_to_timer_PGM[];
 
 // Get the bit location within the hardware port of the given virtual pin.
 // This comes from the pins_*.c file for the active board configuration.
@@ -135,7 +139,6 @@ extern const uint8_t PROGMEM digital_pin_to_timer_PGM[];
 //
 #define digitalPinToPort(P) ( pgm_read_byte( digital_pin_to_port_PGM + (P) ) )
 #define digitalPinToBitMask(P) ( pgm_read_byte( digital_pin_to_bit_mask_PGM + (P) ) )
-#define digitalPinToTimer(P) ( pgm_read_byte( digital_pin_to_timer_PGM + (P) ) )
 #define analogInPinToBit(P) (P)
 #define portOutputRegister(P) ( (volatile uint8_t *)( pgm_read_word( port_to_output_PGM + (P))) )
 #define portInputRegister(P) ( (volatile uint8_t *)( pgm_read_word( port_to_input_PGM + (P))) )
@@ -158,35 +161,15 @@ extern const uint8_t PROGMEM digital_pin_to_timer_PGM[];
 #define PL 12
 #endif
 
-#define NOT_ON_TIMER 0
-#define TIMER0A 1
-#define TIMER0B 2
-#define TIMER1A 3
-#define TIMER1B 4
-#define TIMER1C 5
-#define TIMER2  6
-#define TIMER2A 7
-#define TIMER2B 8
-
-#define TIMER3A 9
-#define TIMER3B 10
-#define TIMER3C 11
-#define TIMER4A 12
-#define TIMER4B 13
-#define TIMER4C 14
-#define TIMER4D 15	
-#define TIMER5A 16
-#define TIMER5B 17
-#define TIMER5C 18
-
 #ifdef __cplusplus
 } // extern "C"
 #endif
 
 #ifdef __cplusplus
-#include "WCharacter.h"
-#include "WString.h"
-#include "HardwareSerial.h"
+// look at this again when considering implementing serial
+//#include "WCharacter.h"
+//#include "WString.h"
+//#include "HardwareSerial.h"
 
 uint16_t makeWord(uint16_t w);
 uint16_t makeWord(byte h, byte l);
@@ -207,5 +190,7 @@ long map(long, long, long, long, long);
 #endif
 
 #include "pins_arduino.h"
+
+#include "dev/arduino/arduino-compat.h"
 
 #endif

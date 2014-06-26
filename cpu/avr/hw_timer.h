@@ -137,6 +137,8 @@
 #define HWT_CHANNEL_A 0
 #define HWT_CHANNEL_B 1
 #define HWT_CHANNEL_C 2
+#define HWT_CHANNEL_D 3
+#define HWT_CHANNEL_MASK 3
 
 /* The following macros are defined for timer values 1,3,4,5 */
 #define HWT_ICR(t) \

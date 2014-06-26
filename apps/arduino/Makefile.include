@@ -1,0 +1,4 @@
+%.cpp: %.pde
+	echo '#include "Arduino.h"'                                > $@
+	echo '#include "$<"'                                      >> $@
+

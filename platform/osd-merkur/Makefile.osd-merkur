@@ -27,7 +27,7 @@ CONTIKI_TARGET_SOURCEFILES += servo.c servo-sensor.c
 #Needed for Relay 1 to 4
 CONTIKI_TARGET_SOURCEFILES += relay.c relay-sensor.c
 # Arduino
-CONTIKI_TARGET_SOURCEFILES += wiring_digital.c
+CONTIKI_TARGET_SOURCEFILES += wiring_digital.c wiring.c wiring_analog.c
 
 CONTIKIBOARD=.
 BOOTLOADER_START = 0x1F000
