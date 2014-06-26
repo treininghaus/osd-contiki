@@ -50,27 +50,6 @@
 #include "sys/rtimer.h"
 #include "rtimer-arch.h"
 
-#if defined(__AVR_ATmega1284P__)
-//Has no 'C', so we just set it to B. The code doesn't really use C so this
-//is safe to do but lets it compile. Probably should enable the warning if
-//it is ever used on other platforms.
-//#warning no OCIE3C in timer3 architecture, hopefully it won't be needed!
-#define OCIE3C	OCIE3B
-#define OCF3C	OCF3B
-#define PLAT_TCCRC PLAT_TCCRB
-#endif
-
-#if defined(__AVR_ATmega1281__) || defined(__AVR_AT90USB1287__) || defined(__AVR_ATmega128RFA1__)
-#endif
-
-#if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega644__)
-//Has no 'C', so we just set it to B. The code doesn't really use C so this
-//is safe to do but lets it compile.
-#define OCIE1C	OCIE1B
-#define OCF1C	OCF1B
-#define PLAT_TCCRC PLAT_TCCRB
-#endif
-
 /* Track flow through rtimer interrupts*/
 #if DEBUGFLOWSIZE&&0
 extern uint8_t debugflowsize,debugflow[DEBUGFLOWSIZE];
