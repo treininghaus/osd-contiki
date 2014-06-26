@@ -65,7 +65,7 @@ CONTIKI_SOURCEFILES += $(CONTIKIFILES)
 CONTIKIDIRS += ${addprefix $(CONTIKI)/core/,dev lib net net/mac net/rime \
                  net/rpl sys cfs ctk lib/ctk loader . }
 
-oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
+oname = ${patsubst %.cpp,%.o,${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}}
 
 CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFILES)}}
 
@@ -117,16 +117,18 @@ endif
 ### Verbosity control. Use  make V=1  to get verbose builds.
 
 ifeq ($(V),1)
-  TRACE_CC =
-  TRACE_LD =
-  TRACE_AR =
-  TRACE_AS =
+  TRACE_CC  =
+  TRACE_CXX =
+  TRACE_LD  =
+  TRACE_AR  =
+  TRACE_AS  =
   Q=
 else
-  TRACE_CC = @echo "  CC       " $<
-  TRACE_LD = @echo "  LD       " $@
-  TRACE_AR = @echo "  AR       " $@
-  TRACE_AS = @echo "  AS       " $<
+  TRACE_CC  = @echo "  CC       " $<
+  TRACE_CXX = @echo "  CXX      " $<
+  TRACE_LD  = @echo "  LD       " $@
+  TRACE_AR  = @echo "  AR       " $@
+  TRACE_AS  = @echo "  AS       " $<
   Q=@
 endif
 
@@ -145,8 +147,9 @@ CONTIKI_CPU_DIRS_CONCAT    = ${addprefix $(CONTIKI_CPU)/, \
 SOURCEDIRS = . $(PROJECTDIRS) $(CONTIKI_TARGET_DIRS_CONCAT) \
              $(CONTIKI_CPU_DIRS_CONCAT) $(CONTIKIDIRS) $(APPDS) ${dir $(target_makefile)}
 
-vpath %.c $(SOURCEDIRS)
-vpath %.S $(SOURCEDIRS)
+vpath %.c   $(SOURCEDIRS)
+vpath %.cpp $(SOURCEDIRS)
+vpath %.S   $(SOURCEDIRS)
 
 CFLAGS += ${addprefix -I,$(SOURCEDIRS) $(CONTIKI)}
 
@@ -162,7 +165,7 @@ endif
 
 ifneq ($(MAKECMDGOALS),clean)
 -include ${addprefix $(OBJECTDIR)/,$(CONTIKI_SOURCEFILES:.c=.d) \
-                                   $(PROJECT_SOURCEFILES:.c=.d)}
+                                   $(PROJECT_OBJECTFILES:.o=.d)}
 endif
 
 ### See http://make.paulandlesley.org/autodep.html#advanced
@@ -201,6 +204,13 @@ $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
 	@$(FINALIZE_DEPENDENCY)
 endif
 
+ifndef CUSTOM_RULE_CPP_TO_OBJECTDIR_O
+$(OBJECTDIR)/%.o: %.cpp | $(OBJECTDIR)
+	$(TRACE_CXX)
+	$(Q)$(CXX) $(CFLAGS) -MMD -c $< -o $@
+	@$(FINALIZE_DEPENDENCY)
+endif
+
 ifndef CUSTOM_RULE_S_TO_OBJECTDIR_O
 $(OBJECTDIR)/%.o: %.S | $(OBJECTDIR)
 	$(TRACE_AS)
@@ -211,6 +221,12 @@ ifndef CUSTOM_RULE_C_TO_O
 %.o: %.c
 	$(TRACE_CC)
 	$(Q)$(CC) $(CFLAGS) -c $< -o $@
+endif
+
+ifndef CUSTOM_RULE_CPP_TO_O
+%.o: %.cpp
+	$(TRACE_CXX)
+	$(Q)$(CXX) $(CFLAGS) -c $< -o $@
 endif
 
 
@@ -255,6 +271,8 @@ endif
 # a single C source into a binary to force GNU make to consider
 # the match-anything rule below instead.
 %: %.c
+
+%: %.cpp
 
 # Match-anything pattern rule to allow the project makefiles to
 # abstract from the actual binary name. It needs to contain some

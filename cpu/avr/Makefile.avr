@@ -90,6 +90,7 @@ CONTIKI_SOURCEFILES        += $(CONTIKI_TARGET_SOURCEFILES)
 
 ### Compiler definitions
 CC       = avr-gcc
+CXX      = avr-g++
 LD       = avr-gcc
 AS       = avr-as
 AR       = avr-ar
@@ -129,6 +130,12 @@ $(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJECTDIR)/%.o: %.cpp | $(OBJECTDIR)
+	$(CXX) $(CFLAGS) -c $< -o $@
+
+%.o: %.cpp
+	$(CXX) $(CFLAGS) -c $< -o $@
 
 %.ko: %.o
 	$(STRIP) -K _init -K _fini --strip-unneeded -g -x $< -o $@
