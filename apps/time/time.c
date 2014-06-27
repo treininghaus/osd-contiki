@@ -44,13 +44,13 @@ gmtime_r (const time_t *timep, struct tm *ptm)
     ptm->tm_hour = t % 24;
     t /= 24;
     ptm->tm_wday = (t+4) % 7;
-    year = 70;
+    year = 1970;
     days =  0;
     while ((days += YDAYS (year)) <= t)
     {
         year++;
     }
-    ptm->tm_year = year;
+    ptm->tm_year = year - 1900;
     days -= YDAYS(year);
     t    -= days;
     ptm->tm_yday = t;
