@@ -21,7 +21,7 @@
 
 extern resource_t resource_timestamp;
 extern resource_t resource_localtime;
-extern resource_t resource_gmtime;
+extern resource_t resource_utc;
 
 #endif // time_resource_h
 /** @} */

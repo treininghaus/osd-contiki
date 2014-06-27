@@ -66,7 +66,7 @@ CFLAGS += -DUIP_CONF_TCP=1
 APPS += er-http-engine
 endif
 
-APPS += erbium time json
+APPS += erbium time json json-resource
 
 include $(CONTIKI)/Makefile.include
 
