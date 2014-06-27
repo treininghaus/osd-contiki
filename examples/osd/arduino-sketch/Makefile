@@ -68,7 +68,7 @@ CFLAGS += -DUIP_CONF_TCP=1
 APPS += er-http-engine
 endif
 
-APPS += erbium time json arduino
+APPS += erbium time json arduino json-resource
 
 include $(CONTIKI)/Makefile.include
 include $(CONTIKI)/apps/arduino/Makefile.include

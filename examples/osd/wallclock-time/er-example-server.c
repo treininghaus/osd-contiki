@@ -286,7 +286,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #endif
   rest_activate_resource(&resource_timestamp);
   rest_activate_resource(&resource_localtime);
-  rest_activate_resource(&resource_gmtime);
+  rest_activate_resource(&resource_utc);
 
   /* Define application-specific events here. */
   while(1) {
