@@ -17,14 +17,6 @@
 #include "hw_timer.h"
 #include "generic_resource.h"
 
-/* Error-handling macro */
-# define BYE(_exp, _tag) \
-   do {                                  \
-     PRINTF("Expect "_exp": %d\n",_tag); \
-     success=0;                          \
-     goto bye;                           \
-   } while(0)
-
 #define DEBUG 1
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
