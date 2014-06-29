@@ -13,7 +13,7 @@
 extern "C" {
 #include <stdio.h>
 #include "led_pwm.h"
-#define LED_PIN 5
+#define LED_PIN 4
 
 uint8_t  pwm             = 128;
 uint8_t  period_100ms    = 10; /* one second */
