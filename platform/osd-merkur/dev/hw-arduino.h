@@ -59,11 +59,11 @@ extern "C"{
  * contiki for sleep/wakeup timing and is not usable for PWM.
  */
 #define digitalPinToTimer(pin)                \
-    ( (pin) == 3                              \
+    ( (pin) == 2                              \
     ? TIMER3A                                 \
-    : ( (pin) == 4                            \
+    : ( (pin) == 3                            \
       ? TIMER3B                               \
-      : ((pin == 5) ? TIMER3C : NOT_ON_TIMER) \
+      : ((pin == 4) ? TIMER3C : NOT_ON_TIMER) \
       )                                       \
     )
 
