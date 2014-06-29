@@ -177,9 +177,12 @@
     : ((t)==4?(&TCNT4) :(&TCNT5))  \
     )
 
-#define HWT_SET_COM(timer, channel, com)                            \
-    ((*HWT_TCCRA (timer) &= ~(HWT_COM_MASK << (6 - 2 * (channel)))) \
-    ,(*HWT_TCCRA (timer) |=  ((com)        << (6 - 2 * (channel)))) \
+#define HWT_CLR_COM(timer, channel)                                  \
+    (*HWT_TCCRA (timer) &= ~(HWT_COM_MASK << (6 - 2 * (channel))))
+
+#define HWT_SET_COM(timer, channel, com)                             \
+    ( HWT_CLR_COM (timer, channel)                                   \
+    , (*HWT_TCCRA (timer) |=  ((com)        << (6 - 2 * (channel)))) \
     )
 
 #define HWT_CHECK_TIMER(timer)                                                 \
@@ -235,7 +238,7 @@ hwtimer_ini (uint8_t timer, uint8_t wgm, uint8_t clock, uint16_t maxt)
   *HWT_TCCRB (timer) |= ((wgm & HWT_WGM_MASK_HIGH) << HWT_WGM_SHIFT_HIGH);
 
   for (i=0; i<3; i++) {
-    HWT_SET_COM (timer, i, HWT_COM_NORMAL);
+    HWT_CLR_COM (timer, i);
   }
 
   if (  wgm == HWT_WGM_PWM_PHASE_FRQ_ICR
@@ -458,7 +461,11 @@ hwtimer_set_com (uint8_t timer, uint8_t channel, uint8_t com)
   if (com > HWT_COM_MASK) {
     return HWT_ERR_INVALID_COM;
   }
-  HWT_SET_COM (timer, channel, com);
+  if (com) {
+    HWT_SET_COM (timer, channel, com);
+  } else {
+    HWT_CLR_COM (timer, channel);
+  }
   return 0;
 }
 
