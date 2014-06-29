@@ -36,33 +36,28 @@
 * Paulo Louro <paulolouro@binarylabs.dk>
 */
 
-#include <avr/io.h>
+#include "adc.h"
 
-#ifndef cbi
-#define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
-#endif
-#ifndef sbi
-#define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
-#endif
+static uint8_t analog_reference = ADC_DEFAULT;
+
+/*
+ * For arduino interface for setting external reference voltage
+ * Note that applying an external voltage *and* then setting the analog
+ * reference to something internal will short the internal and the
+ * external reference voltage and most likely destroy the processor.
+ */
+void analogReference(uint8_t mode)
+{
+    analog_reference = mode;
+}
 
 int readADC(uint8_t pin)
 {
   int result = 0;
 
-  if ( pin >= 14 )
-    pin -= 14;
-
-  ADMUX = _BV(REFS1) | _BV(REFS0) | ( pin & 7 ) ;
-  ADCSRA = _BV(ADEN) | _BV(ADPS0) | _BV(ADPS2) ;
-  sbi(ADCSRA,ADSC);
-  loop_until_bit_is_clear(ADCSRA,ADSC);
-
-
-  result = ADC;
-  
-  ADCSRA=0; //disable ADC
-  ADMUX=0; //turn off internal vref
-
+  adc_setup (analog_reference, pin);
+  result = adc_read ();
+  adc_fin ();
   return result;
 }
 
@@ -77,12 +72,12 @@ int readInternalTemp(void)
   ADMUX = _BV(REFS1) | _BV(REFS0) | 0b1001 ;
   ADCSRA = _BV(ADEN) | _BV(ADPS0) | _BV(ADPS2) ;
 
-  sbi(ADCSRA,ADSC);
+  ADCSRA |= 1 << ADSC;
   loop_until_bit_is_clear(ADCSRA,ADSC);
   reading = ADC;
 
+  ADCSRB=0; //disable ADC, need to write B first for MUX5 bit
   ADCSRA=0; //disable ADC
-  ADCSRB=0; //disable ADC
   ADMUX=0; //turn off internal vref
 
   return reading * 113 - 27280;
