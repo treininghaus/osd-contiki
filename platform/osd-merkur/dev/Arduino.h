@@ -42,15 +42,8 @@ extern "C"{
 #define FALLING 2
 #define RISING 3
 
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
-#define INTERNAL1V1 2
-#define INTERNAL2V56 3
-#elif defined(__AVR_ATmega128RFA1__)
-#else
-#define INTERNAL 3
-#endif
-#define DEFAULT 1
-#define EXTERNAL 0
+#define DEFAULT  ADC_DEFAULT
+#define EXTERNAL ADC_EXTERNAL
 
 // undefine stdlib's abs if encountered
 #ifdef abs
@@ -85,18 +78,9 @@ typedef unsigned int word;
 typedef uint8_t boolean;
 typedef uint8_t byte;
 
-/*
- * This has been renamed from init to arduino_init, the original
- * function name is way too generic. The arduino compatibility framework
- * makes sure the correct function is called.
- */
-void arduino_init(void);
-
 void pinMode(uint8_t, uint8_t);
 void digitalWrite(uint8_t, uint8_t);
 int digitalRead(uint8_t);
-int analogRead(uint8_t);
-void analogReference(uint8_t mode);
 
 unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout);
 

@@ -72,32 +72,6 @@ extern "C"{
   (hwtimer_ini (3, HWT_WGM_PWM_PHASE_8_BIT, HWT_CLOCK_PRESCALER_64, 0))
 
 /*
- * micros on arduino takes timer overflows into account.
- * We put in the seconds counter. To get a consistent seconds / ticks
- * value we have to disable interrupts.
- */
-static inline uint32_t micros (void)
-{
-  uint32_t ticks;
-  uint8_t sreg = SREG;
-  cli ();
-  ticks = clock_seconds () * 1000000L
-        + clock_time () * 1000L / CLOCK_SECOND;
-  SREG = sreg;
-  return ticks;
-}
-/*
- * millis counts only internal timer ticks since start, not trying to do
- * something about overflows. Note that we don't try to emulate overflow
- * behaviour of arduino implementation.
- */
-#define millis()              (((uint32_t)clock_time())*1000L/CLOCK_SECOND)
-#define micros()              (clock_seconds()*1000L+
-#define delay(ms)             clock_delay_msec(ms)
-#define delayMicroseconds(us) clock_delay_usec(us)
-
-
-/*
  * VI settings, see coding style
  * ex:ts=8:et:sw=2
  */

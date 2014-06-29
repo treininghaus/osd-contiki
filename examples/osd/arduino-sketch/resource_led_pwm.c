@@ -69,6 +69,38 @@ GENERIC_RESOURCE \
     , period_to_string
     );
 
+size_t
+analog1_v (const char *name, uint8_t is_json, char *buf, size_t bufsize)
+{
+  return snprintf
+    (buf, bufsize, "%d.%03d", analog1_voltage / 1000, analog1_voltage % 1000);
+}
+
+GENERIC_RESOURCE \
+    ( analog1_voltage, METHOD_GET
+    , "analog/1"
+    , Analog 1 voltage
+    , V
+    , NULL
+    , analog1_v
+    );
+
+size_t
+analog5_v (const char *name, uint8_t is_json, char *buf, size_t bufsize)
+{
+  return snprintf
+    (buf, bufsize, "%d.%03d", analog5_voltage / 1000, analog5_voltage % 1000);
+}
+
+GENERIC_RESOURCE \
+    ( analog5_voltage, METHOD_GET
+    , "analog/5"
+    , Analog 5 voltage
+    , V
+    , NULL
+    , analog5_v
+    );
+
 /*
  * VI settings, see coding style
  * ex:ts=8:et:sw=2

@@ -21,10 +21,15 @@
 #include "erbium.h"
 #include "er-coap-13.h"
 
-extern uint8_t pwm;
-extern uint8_t period_100ms;
+extern uint8_t  pwm;
+extern uint8_t  period_100ms;
+extern uint16_t analog1_voltage;
+extern uint16_t analog5_voltage;
+
 extern resource_t resource_led_pwm;
 extern resource_t resource_led_period;
+extern resource_t resource_analog1_voltage;
+extern resource_t resource_analog5_voltage;
 
 #endif // led_pwm_h
 /** @} */

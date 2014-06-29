@@ -84,6 +84,7 @@ extern "C" {
 
 #include "contiki.h"
 #include "hw_timer.h"
+#include "adc.h"
 
 #ifdef __cplusplus
 } // extern "C"
@@ -144,6 +145,43 @@ static inline void analogWrite(uint8_t pin, int val)
     hwtimer_set_pwm (t, c, val);
   }
 }
+
+/*
+ * turnOffPWM of arduino is implemented by hw_timer
+ */
+#define turnOffPWM(atimer)                                   \
+  ( (atimer) == NOT_ON_TIMER                                 \
+  ? (void)0                                                  \
+  : (void)hwtimer_pwm_disable                                \
+      (atimer >> HW_TIMER_SHIFT, atimer & HWT_CHANNEL_MASK)  \
+  )
+
+/*
+ * micros on arduino takes timer overflows into account.
+ * We put in the seconds counter. To get a consistent seconds / ticks
+ * value we have to disable interrupts.
+ */
+static inline uint32_t micros (void)
+{
+  uint32_t ticks;
+  uint8_t sreg = SREG;
+  cli ();
+  ticks = clock_seconds () * 1000000L
+        + clock_time () * 1000L / CLOCK_SECOND;
+  SREG = sreg;
+  return ticks;
+}
+/*
+ * millis counts only internal timer ticks since start, not trying to do
+ * something about overflows. Note that we don't try to emulate overflow
+ * behaviour of arduino implementation.
+ */
+#define millis()              (((uint32_t)clock_time())*1000L/CLOCK_SECOND)
+#define micros()              (clock_seconds()*1000L+
+#define delay(ms)             clock_delay_msec(ms)
+#define delayMicroseconds(us) clock_delay_usec(us)
+
+#define analogRead(analogpin) readADC(analogpin)
 
 #ifdef __cplusplus
 } // extern "C"
