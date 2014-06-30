@@ -16,8 +16,8 @@ extern "C" {
 #define LED_PIN 4
 
 uint8_t  pwm             = 128;
-uint8_t  period_100ms    = 10; /* one second */
-uint16_t analog1_voltage = 0;
+uint8_t  period_100ms    = 1; /* 1/10 second (period_100ms * 100ms) */
+uint16_t analog2_voltage = 0;
 uint16_t analog5_voltage = 0;
 }
 
@@ -26,7 +26,7 @@ void setup (void)
     rest_init_engine ();
     rest_activate_resource (&resource_led_pwm);
     rest_activate_resource (&resource_led_period);
-    rest_activate_resource (&resource_analog1_voltage);
+    rest_activate_resource (&resource_analog2_voltage);
     rest_activate_resource (&resource_analog5_voltage);
 }
 
@@ -34,8 +34,8 @@ void loop (void)
 {
     /* Use 255 - pwm, LED on merkur-board is wired to +3.3V */
     analogWrite (LED_PIN, 255 - pwm);
-    analog1_voltage = analogRead (1) * 1600L / 1023L;
-    analog5_voltage = analogRead (5) * 1600L / 1023L;
+    analog2_voltage = analogRead (A2) * 1600L / 1023L;
+    analog5_voltage = analogRead (A5) * 1600L / 1023L;
     printf ("clock : %u\nmillis: %lu\n", clock_time (), millis ());
     delay (period_100ms * 100);
     analogWrite (LED_PIN, 255); /* OFF: LED on merkur-board is wired to +3.3V */

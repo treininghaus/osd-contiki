@@ -70,19 +70,19 @@ GENERIC_RESOURCE \
     );
 
 size_t
-analog1_v (const char *name, uint8_t is_json, char *buf, size_t bufsize)
+analog2_v (const char *name, uint8_t is_json, char *buf, size_t bufsize)
 {
   return snprintf
-    (buf, bufsize, "%d.%03d", analog1_voltage / 1000, analog1_voltage % 1000);
+    (buf, bufsize, "%d.%03d", analog2_voltage / 1000, analog2_voltage % 1000);
 }
 
 GENERIC_RESOURCE \
-    ( analog1_voltage, METHOD_GET
-    , "analog/1"
-    , Analog 1 voltage
+    ( analog2_voltage, METHOD_GET
+    , "analog/2"
+    , Analog 2 voltage
     , V
     , NULL
-    , analog1_v
+    , analog2_v
     );
 
 size_t
