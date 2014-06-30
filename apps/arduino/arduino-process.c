@@ -66,8 +66,7 @@ PROCESS_THREAD(arduino_sketch, ev, data)
   while (1) {
     loop ();
     /* Give other processes a chance to run */
-    process_post (&arduino_sketch, PROCESS_EVENT_CONTINUE, NULL);
-    PROCESS_WAIT_EVENT();
+    PROCESS_PAUSE();
   }
   PROCESS_END();
 }
