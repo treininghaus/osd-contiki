@@ -39,9 +39,22 @@ static inline void adc_fin (void)
   
 static inline void adc_init (void)
 {
+    uint8_t temp;
     ADCSRC = 0;
     ADCSRB = 0;
     adc_fin ();
+    /*
+     * Disable JTAG interface
+     * Hardware manual about JTD bit:
+     * "In order to avoid unintentional disabling or enabling of the
+     * JTAG interface, a timed sequence must be followed when changing
+     * this bit: The application software must write this bit to the
+     * desired value twice within four cycles to change its value."
+     * 15.4.1 "MCUCR - MCU Control Register", p. 219
+     */
+    temp = MCUCR | (1 << JTD);
+    MCUCR = temp;
+    MCUCR = temp;
 }
 
 int readADC(uint8_t pin);
