@@ -57,14 +57,12 @@ const static uint8_t LED = 4;
 const static uint8_t LED1 = 4;
 const static uint8_t LED2 = 5;
 
-const static uint8_t A0 = 15;
-const static uint8_t A1 = 16;
-const static uint8_t A2 = 17;
-const static uint8_t A3 = 18;
-const static uint8_t A4 = 19;
-const static uint8_t A5 = 20;
-//const static uint8_t A6 = 21;
-//const static uint8_t A7 = 22;
+const static uint8_t A0 = 7;
+const static uint8_t A1 = 6;
+const static uint8_t A2 = 5;
+const static uint8_t A3 = 4;
+const static uint8_t A4 = 0;
+const static uint8_t A5 = 1;
 
 // A majority of the pins are NOT PCINTs, SO BE WARNED (i.e. you cannot use them as receive pins)
 // Only pins available for RECEIVE (TRANSMIT can be on any pin):
