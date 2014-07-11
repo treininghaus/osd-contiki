@@ -37,7 +37,7 @@
  *      Harald Pichler harald@the-develop.net
  *
  */
-
+#include "Arduino.h"
 #include "relay.h"
 
 /**
@@ -45,92 +45,32 @@
  * \{
 */
 /*---------------------------------------------------------------------------*/
-
 /**
- * \brief Turns the RELAY1 on.
+ * \brief  init RELAY PINS.
 */
 void
-relay1_off(void)
+relay_init(uint8_t pin)
 {
-    PORTB &= ~(1<<PINB0);
-    DDRB  |=  (1<<DDB0);
+   pinMode(pin, OUTPUT);
+   digitalWrite(pin, LOW);
+}
+/**
+ * \brief Turns the RELAY on.
+*/
+
+void
+relay_on(uint8_t pin)
+{
+   digitalWrite(pin, HIGH);
 }
 
 /*---------------------------------------------------------------------------*/
 
 /**
- *  \brief Turns the RELAY1 off
+ *  \brief Turns the RELAY off
 */
 void
-relay1_on(void)
+relay_off(uint8_t pin)
 {
-    PORTB |= (1<<PINB0);
-    DDRB  |= (1<<DDB0);
+   digitalWrite(pin, LOW);
 }
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Turns the RELAY2 on.
-*/
-void
-relay2_off(void)
-{
-    PORTB &= ~(1<<PINB1);
-    DDRB  |=  (1<<DDB1);
-}
-
-/*---------------------------------------------------------------------------*/
-
-/**
- *  \brief Turns the RELAY2 off.
-*/
-void
-relay2_on(void)
-{
-    PORTB |= (1<<PINB1);
-    DDRB  |= (1<<DDB1);
-}
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Turns the RELAY3 on.
-*/
-void
-relay3_off(void)
-{
-    PORTB &= ~(1<<PINB2);
-    DDRB  |=  (1<<DDB2);
-}
-
-/*---------------------------------------------------------------------------*/
-
-/**
- *  \brief Turns the RELAY3 off.
-*/
-void
-relay3_on(void)
-{
-    PORTB |= (1<<PINB2);
-    DDRB  |= (1<<DDB2);
-}
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Turns the RELAY4 on.
-*/
-void
-relay4_off(void)
-{
-    PORTB &= ~(1<<PINB3);
-    DDRB  |=  (1<<DDB3);
-}
-
-/*---------------------------------------------------------------------------*/
-
-/**
- *  \brief Turns the RELAY4 off.
-*/
-void
-relay4_on(void)
-{
-    PORTB |= (1<<PINB3);
-    DDRB  |= (1<<DDB3);
-}
-/*---------------------------------------------------------------------------*/

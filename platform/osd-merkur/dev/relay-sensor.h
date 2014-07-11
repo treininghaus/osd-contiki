@@ -48,5 +48,19 @@ extern const struct sensors_sensor relay_sensor;
 #define RELAY_SENSOR_2          1
 #define RELAY_SENSOR_3          2
 #define RELAY_SENSOR_4          3
+#define RELAY_SENSOR_5          4
+#define RELAY_SENSOR_6          5
+#define RELAY_SENSOR_7          6
+#define RELAY_SENSOR_8          7
+
+/* default pins Arduino-Merkurboard */
+#define RELAY_PIN_1          10
+#define RELAY_PIN_2          11
+#define RELAY_PIN_3          12
+#define RELAY_PIN_4          13
+#define RELAY_PIN_5          15
+#define RELAY_PIN_6          16
+#define RELAY_PIN_7          17
+#define RELAY_PIN_8          18
 
 #endif /* __RELAY_SENSOR_H__ */ 
