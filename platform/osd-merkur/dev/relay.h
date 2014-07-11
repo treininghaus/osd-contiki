@@ -45,14 +45,10 @@
 
 /** @name RELAY Functions */
 /** @{ */
-void relay1_on(void);
-void relay1_off(void);
-void relay2_on(void);
-void relay2_off(void);
-void relay3_on(void);
-void relay3_off(void);
-void relay4_on(void);
-void relay4_off(void);
+void relay_init(uint8_t pin);
+void relay_on(uint8_t pin);
+void relay_off(uint8_t pin);
+
 /** @} */
 
 #endif /* __RELAY_H__ */

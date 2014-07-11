@@ -45,26 +45,13 @@
 const struct sensors_sensor relay_sensor;
 static int status(int type);
 static int enabled = 0;
-static int relay1=0;
-static int relay2=0;
-static int relay3=0;
-static int relay4=0;
-
+static int relay[8]={0,0,0,0,0,0,0,0};
+static int relaypin[8]={RELAY_PIN_1,RELAY_PIN_2,RELAY_PIN_3,RELAY_PIN_4,RELAY_PIN_5,RELAY_PIN_6,RELAY_PIN_7,RELAY_PIN_8};
 /*---------------------------------------------------------------------------*/
 static int
 value(int type)
 {
-  switch(type) {
-  case RELAY_SENSOR_1:
-    return relay1;
-  case RELAY_SENSOR_2:
-    return relay2;
-  case RELAY_SENSOR_3:
-    return relay2;
-  case RELAY_SENSOR_4:
-    return relay2;
-  }
-  return 0;
+    return relay[type];
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -74,6 +61,14 @@ configure(int type, int c)
   case SENSORS_ACTIVE:
     if(c) {
       if(!status(SENSORS_ACTIVE)) {
+		relay_init(relaypin[RELAY_SENSOR_1]);
+		relay_init(relaypin[RELAY_SENSOR_2]);
+		relay_init(relaypin[RELAY_SENSOR_3]);
+		relay_init(relaypin[RELAY_SENSOR_4]);
+		relay_init(relaypin[RELAY_SENSOR_5]);
+		relay_init(relaypin[RELAY_SENSOR_6]);
+		relay_init(relaypin[RELAY_SENSOR_7]);
+		relay_init(relaypin[RELAY_SENSOR_8]);
         enabled = 1;
       }
     } else {
@@ -81,39 +76,19 @@ configure(int type, int c)
     }
     break;
   case RELAY_SENSOR_1:
-    if(c==0){
-	relay1_off();
-	relay1=0;
-    }else{
-	relay1_on();
-	relay1=1;
-    };
-    break;
   case RELAY_SENSOR_2:
-    if(c==0){
-	relay2_off();
-	relay2=0;
-    }else{
-	relay2_on();
-	relay2=1;
-    };
-    break;
   case RELAY_SENSOR_3:
-    if(c==0){
-	relay3_off();
-	relay3=0;
-    }else{
-	relay3_on();
-	relay3=1;
-    };
-    break;
   case RELAY_SENSOR_4:
+  case RELAY_SENSOR_5:
+  case RELAY_SENSOR_6:
+  case RELAY_SENSOR_7:
+  case RELAY_SENSOR_8:
     if(c==0){
-	relay4_off();
-	relay4=0;
+	relay_off(relaypin[type]);
+	relay[type]=0;
     }else{
-	relay4_on();
-	relay4=1;
+	relay_on(relaypin[type]);
+	relay[type]=1;
     };
     break;
   }
