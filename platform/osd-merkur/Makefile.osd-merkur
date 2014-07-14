@@ -18,7 +18,7 @@ CONTIKI_TARGET_SOURCEFILES += battery-sensor.c batmon.c
 #Needed for PIR
 CONTIKI_TARGET_SOURCEFILES += pir-sensor.c
 #Needed for OPTRIAC
-CONTIKI_TARGET_SOURCEFILES += optriac.c optriac-sensor.c
+CONTIKI_TARGET_SOURCEFILES += optriac-sensor.c
 CONTIKIAVR=$(CONTIKI)/cpu/avr
 #Needed for SERVO
 CONTIKI_TARGET_SOURCEFILES += servo.c servo-sensor.c

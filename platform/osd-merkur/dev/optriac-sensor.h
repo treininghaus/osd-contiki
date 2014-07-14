@@ -44,7 +44,11 @@
 extern const struct sensors_sensor optriac_sensor;
 
 #define OPTRIAC_SENSOR "TRIAC"
-#define OPTRIAC_SENSOR_A          0
-#define OPTRIAC_SENSOR_B          1
+#define OPTRIAC_SENSOR_1          0
+#define OPTRIAC_SENSOR_2          1
+
+/* default pins Arduino-Merkurboard */
+#define OPTRIAC_PIN_1          2
+#define OPTRIAC_PIN_2          3
 
 #endif /* __OPTRIAC_SENSOR_H__ */ 

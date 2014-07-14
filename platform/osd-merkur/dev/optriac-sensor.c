@@ -37,7 +37,7 @@
 */
 
 #include "contiki.h"
-#include "dev/optriac.h"
+#include "Arduino.h"
 #include "dev/optriac-sensor.h"
 
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -45,22 +45,14 @@
 const struct sensors_sensor optriac_sensor;
 static int status(int type);
 static int enabled = 0;
-static int optriac1=0;
-static int optriac2=0;
+static int optriac[2]={0,0};
+static int optriacpin[8]={OPTRIAC_PIN_1,OPTRIAC_PIN_2};
 
 /*---------------------------------------------------------------------------*/
 static int
 value(int type)
 {
-  switch(type) {
-  case OPTRIAC_SENSOR_A:
-    return optriac1;
-
-    /* Total Solar Radiation. */
-  case OPTRIAC_SENSOR_B:
-    return optriac2;
-  }
-  return 0;
+  return optriac[type];
 }
 /*---------------------------------------------------------------------------*/
 static int
@@ -70,32 +62,30 @@ configure(int type, int c)
   case SENSORS_ACTIVE:
     if(c) {
       if(!status(SENSORS_ACTIVE)) {
+		pinMode(optriacpin[OPTRIAC_SENSOR_1], OUTPUT);
+		digitalWrite(optriacpin[OPTRIAC_SENSOR_1], LOW);
+		pinMode(optriacpin[OPTRIAC_SENSOR_2], OUTPUT);
+		digitalWrite(optriacpin[OPTRIAC_SENSOR_2], LOW);
+
         enabled = 1;
       }
     } else {
       enabled = 1;
     }
     break;
-  case OPTRIAC_SENSOR_A:
+  case OPTRIAC_SENSOR_1:
+  case OPTRIAC_SENSOR_2:
+
     if(c==0){
-	optriac1_off();
-	optriac1=0;
+	digitalWrite(optriacpin[type], LOW);
+	optriac[type]=0;
     }else{
-	optriac1_on();
-	optriac1=1;
-    };
-    break;
-  case OPTRIAC_SENSOR_B:
-    if(c==0){
-	optriac2_off();
-	optriac2=0;
-    }else{
-	optriac2_on();
-	optriac2=1;
+	digitalWrite(optriacpin[type], HIGH);
+	optriac[type]=1;
     };
     break;
   }
-  return 0;
+  return 0;	
 }
 /*---------------------------------------------------------------------------*/
 static int
