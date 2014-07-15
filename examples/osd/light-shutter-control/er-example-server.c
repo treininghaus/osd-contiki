@@ -92,7 +92,6 @@
 #include "dev/battery-sensor.h"
 #endif
 
-#include "dev/optriac.h"
 
 /* For CoAP-specific example: not required for normal RESTful Web service. */
 #if WITH_COAP == 3
@@ -546,80 +545,7 @@ led2_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 #endif
 
 /******************************************************************************/
-#if (defined (PLATFORM_HAS_OPTRIAC) && defined (OSDPLUG))
-/******************************************************************************/
-#if REST_RES_OPTRIAC
-/*A simple actuator example*/
-RESOURCE(optriac, METHOD_GET | METHOD_POST | METHOD_PUT , "a/optriac", "title=\"TRIAC, POST/PUT mode=on|off\";rt=\"Control\"");
-
-void
-optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  const char *mode = NULL;
-  static char namea[17]="Triac-a";
-  static char nameb[17]="Triac-b";
-
-  char temp[100];
-  int index = 0;
-  size_t len = 0;
-  int success = 1;
-
-  switch(REST.get_method_type(request)){
-   case METHOD_GET:
-     // jSON Format
-     index += sprintf(temp + index,"{\n \"%s\" : ",namea);
-     if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 0)
-         index += sprintf(temp + index,"\"off\",\n");
-     if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 1)
-         index += sprintf(temp + index,"\"on\",\n");
-     index += sprintf(temp + index," \"%s\" : ",nameb);
-     if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 0)
-         index += sprintf(temp + index,"\"off\"\n");
-     if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 1)
-         index += sprintf(temp + index,"\"on\"\n");
-     index += sprintf(temp + index,"}\n");
-
-     len = strlen(temp);
-     memcpy(buffer, temp,len );
-
-     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-     REST.set_response_payload(response, buffer, len);
-     break;
-
-   case METHOD_PUT:
-     success = 0;
-     break;
-   case METHOD_POST:
-     if (success && (len=REST.get_post_variable(request, "mode", &mode))) {
-     PRINTF("mode %s\n", mode);
-       if (strncmp(mode, "on", len)==0) {
-         optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
-         optriac_sensor.configure(OPTRIAC_SENSOR_B,1);
-         statusled_on();
-       } else if (strncmp(mode, "off", len)==0) {
-         optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
-         optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
-		 statusled_off();
-       } else {
-         success = 0;
-       }
-    } else {
-      success = 0;
-    }
-    break;
-  default:
-    success = 0;
-  }
-  if (!success) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
-  }
-}
-#endif
-/******************************************************************************/
-#endif /* PLATFORM_HAS_OPTRIAC */
-
-/******************************************************************************/
-#if (defined (PLATFORM_HAS_OPTRIAC) && defined (OSDLIGHT))
+#if (defined PLATFORM_HAS_OPTRIAC)
 /******************************************************************************/
 #if REST_RES_OPTRIAC
 /*A simple actuator example*/
@@ -643,14 +569,14 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
    case METHOD_GET:
      // jSON Format
      index += sprintf(temp + index,"{\n \"%s\" : ",namea);
-     if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 0)
+     if(optriac_sensor.value(OPTRIAC_SENSOR_1) == 0)
          index += sprintf(temp + index,"\"off\",\n");
-     if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 1)
+     if(optriac_sensor.value(OPTRIAC_SENSOR_1) == 1)
          index += sprintf(temp + index,"\"on\",\n");
      index += sprintf(temp + index," \"%s\" : ",nameb);
-     if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 0)
+     if(optriac_sensor.value(OPTRIAC_SENSOR_2) == 0)
          index += sprintf(temp + index,"\"off\"\n");
-     if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 1)
+     if(optriac_sensor.value(OPTRIAC_SENSOR_2) == 1)
          index += sprintf(temp + index,"\"on\"\n");
      index += sprintf(temp + index,"}\n");
 
@@ -669,11 +595,11 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
     PRINTF("type %.*s\n", len, type);
 
     if (strncmp(type, "a", len)==0) {
-      triac = OPTRIAC_SENSOR_A;
+      triac = OPTRIAC_SENSOR_1;
     } else if(strncmp(type,"b", len)==0) {
-      triac = OPTRIAC_SENSOR_B;
+      triac = OPTRIAC_SENSOR_2;
     } else {
-      triac = OPTRIAC_SENSOR_A;
+      triac = OPTRIAC_SENSOR_1;
     }
   } else {
     success = 0;
@@ -683,108 +609,18 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
     PRINTF("mode %s\n", mode);
 
     if (strncmp(mode, "on", len)==0) {
-      optriac_sensor.configure(triac,1);
-    } else if (strncmp(mode, "off", len)==0) {
-      optriac_sensor.configure(triac,0);
-    } else {
-      success = 0;
-    }
-  } else {
-    success = 0;
-  }
-    break;
-  default:
-    success = 0;
-  }
-  if (!success) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
-  }
-}
-#endif
-/******************************************************************************/
-#endif /* PLATFORM_HAS_OPTRIAC */
-
-
-/******************************************************************************/
-#if (defined (PLATFORM_HAS_OPTRIAC) && defined (OSDSHUTTER))
-/******************************************************************************/
-#if REST_RES_OPTRIAC
-/*A simple actuator example*/
-RESOURCE(optriac, METHOD_GET | METHOD_POST | METHOD_PUT , "a/optriac", "title=\"TRIAC: ?type=a|b, POST/PUT mode=on|off\";rt=\"Control\"");
-
-void
-optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  const char *type = NULL;
-  const char *mode = NULL;
-  static char namea[17]="Triac-a";
-  static char nameb[17]="Triac-b";
-
-  char temp[100];
-  int index = 0;
-  size_t len = 0;
-
-  uint8_t triac = 0;
-  int success = 1;
-  switch(REST.get_method_type(request)){
-   case METHOD_GET:
-     // jSON Format
-     index += sprintf(temp + index,"{\n \"%s\" : ",namea);
-     if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 0)
-         index += sprintf(temp + index,"\"off\",\n");
-     if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 1)
-         index += sprintf(temp + index,"\"on\",\n");
-     index += sprintf(temp + index," \"%s\" : ",nameb);
-     if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 0)
-         index += sprintf(temp + index,"\"off\"\n");
-     if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 1)
-         index += sprintf(temp + index,"\"on\"\n");
-     index += sprintf(temp + index,"}\n");
-
-     len = strlen(temp);
-     memcpy(buffer, temp,len );
-
-     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-     REST.set_response_payload(response, buffer, len);
-     break;
-
-   case METHOD_PUT:
-     success = 0;
-     break;
-   case METHOD_POST:
-  if ((len=REST.get_query_variable(request, "type", &type))) {
-    PRINTF("type %.*s\n", len, type);
-
-    if (strncmp(type, "a", len)==0) {
-      triac = OPTRIAC_SENSOR_A;
-    } else if(strncmp(type,"b", len)==0) {
-      triac = OPTRIAC_SENSOR_B;
-    } else {
-      triac = OPTRIAC_SENSOR_A;
-    }
-  } else {
-    success = 0;
-  }
-
-  if (success && (len=REST.get_post_variable(request, "mode", &mode))) {
-    PRINTF("mode %s\n", mode);
-
-    if (strncmp(mode, "on", len)==0) {
-	  if (triac == OPTRIAC_SENSOR_A){
-//		statusled_off();  
-//        optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
-//        leds_on(LEDS_RED);
-//        optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
+	  if (triac == OPTRIAC_SENSOR_1){
         g_triac_a = 1;
       } else {
-//		leds_off(LEDS_RED);
-//        optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
-//        statusled_on();
-//        optriac_sensor.configure(OPTRIAC_SENSOR_B,1);
         g_triac_b = 1;
       }  
     } else if (strncmp(mode, "off", len)==0) {
-      optriac_sensor.configure(triac,0);
+	  if (triac == OPTRIAC_SENSOR_1){
+        g_triac_a = 0;
+      } else {
+        // Triac B off
+        g_triac_b = 0;
+      }  
     } else {
       success = 0;
     }
@@ -954,11 +790,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
   SENSORS_ACTIVATE(optriac_sensor);
   rest_activate_resource(&resource_optriac);
 #endif
-#if defined (PLATFORM_HAS_PIR) && (REST_RES_EVENT)
-  SENSORS_ACTIVATE(pir_sensor);
-  rest_activate_event_resource(&resource_pir);
-  PRINTF("ACTIVATE PIR\n");
-#endif
+
 #if defined (PLATFORM_HAS_LED)
 #if REST_RES_LED
   rest_activate_resource(&resource_led1);
@@ -976,59 +808,25 @@ PROCESS_THREAD(rest_server_example, ev, data)
 
   etimer_set(&ds_periodic_timer, MESURE_INTERVAL);
   /* Define application-specific events here. */
+  
   while(1) {
     PROCESS_WAIT_EVENT();
-#if defined (REST_RES_EVENT)
-    if (ev == sensors_event ) {
-      PRINTF("EVENT\n");
-#if (REST_RES_EVENT && defined (PLATFORM_HAS_PIR))
-    if (data == &pir_sensor) {
-      PRINTF("PIR EVENT\n");
-        /* Call the event_handler for this application-specific event. */
-        pir_event_handler(&resource_pir);
-        PRINTF("CALL EVENT HANDLER\n");
-      }
-#endif /* PLATFORM_HAS_PIR */
-    }
-#endif /* REST_RES_EVENT */
-
     /* Button Tric Logic */
+
     if(etimer_expired(&ds_periodic_timer)) {
-        PRINTF("Periodic %d %d\n",ext5,ext6);
-#if (defined (OSDLIGHT))		          
-	if(ext5 != is_button_ext5()) {
-	  ext5 = is_button_ext5();
-          PRINTF("Toggle Triac A\n");
-          // Toggle Triac A
-          if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 0){
-            optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
-            leds_on(LEDS_RED);
-          }else{
-            optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
-            leds_off(LEDS_RED);
-          }
-	}
-	if(ext6 != is_button_ext6()) {
-	  ext6 = is_button_ext6();
-          PRINTF("Toggle Triac B\n");
-          // Toggle Triac B
-          if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 0){
-            optriac_sensor.configure(OPTRIAC_SENSOR_B,1);
-            statusled_on();
-          }else{
-            optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
-            statusled_off();
-          }
-	}
-#endif
-#if (defined (OSDSHUTTER))
+        PRINTF("Periodic \n");
+        PRINTF("extb %d %d\n",ext5,ext6);
+        PRINTF("g_triac %d %d\n",g_triac_a,g_triac_b);
+
 	if( is_button_ext5()) {
         g_triac_a = 1;
 	}
 	if( is_button_ext6()) {
         g_triac_b = 1;		
 	}
-    
+	
+
+#if (defined (OSDSHUTTER))    
     PRINTF("State: %d\n",state);		          
 	switch(state)
 	    {
@@ -1037,7 +835,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
           PRINTF("Triac A\n");
           g_triac_a = 0;
           // Triac B off
-          optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
+          optriac_sensor.configure(OPTRIAC_SENSOR_2,0);
           statusled_off();
           state = 1;
         }
@@ -1045,26 +843,26 @@ PROCESS_THREAD(rest_server_example, ev, data)
           PRINTF("Triac B\n");
           g_triac_b = 0;
           // Triac A off        
-          optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
+          optriac_sensor.configure(OPTRIAC_SENSOR_1,0);
           leds_off(LEDS_RED);
           state = 2;
         }
         break;
         case 1:
           // Triac A on 
-          optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
+          optriac_sensor.configure(OPTRIAC_SENSOR_1,1);
           leds_on(LEDS_RED);
           etimer_set(&triac_off_timer, gtimer_read()*CLOCK_SECOND);
           state=0; 
         break;    
         case 2:
           // Triac B on 
-          optriac_sensor.configure(OPTRIAC_SENSOR_B,1);
+          optriac_sensor.configure(OPTRIAC_SENSOR_2,1);
           statusled_on();
           etimer_set(&triac_off_timer, gtimer_read()*CLOCK_SECOND);
           state=0;         
         break;    
-        default : state = 0;
+        default: state = 0;
   	} // switch
 #endif
       etimer_reset(&ds_periodic_timer);
@@ -1073,11 +871,13 @@ PROCESS_THREAD(rest_server_example, ev, data)
     if(etimer_expired(&triac_off_timer)) {
         PRINTF("Triac off timer\n");
         // Triac A off
-        optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
+        optriac_sensor.configure(OPTRIAC_SENSOR_1,0);
         leds_off(LEDS_RED);
+        g_triac_a = 0;
         // Triac B off
-        optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
+        optriac_sensor.configure(OPTRIAC_SENSOR_2,0);
         statusled_off();
+        g_triac_b = 0;
     }
     
   } /* while (1) */
