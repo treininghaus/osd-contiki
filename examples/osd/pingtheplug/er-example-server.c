@@ -83,7 +83,6 @@
 #include "dev/battery-sensor.h"
 #endif
 
-#include "dev/optriac.h"
 
 /* For CoAP-specific example: not required for normal RESTful Web service. */
 #if WITH_COAP == 3
@@ -548,14 +547,14 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
    case METHOD_GET:
      // jSON Format
      index += sprintf(temp + index,"{\n \"%s\" : ",namea);
-     if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 0)
+     if(optriac_sensor.value(OPTRIAC_SENSOR_1) == 0)
          index += sprintf(temp + index,"\"off\",\n");
-     if(optriac_sensor.value(OPTRIAC_SENSOR_A) == 1)
+     if(optriac_sensor.value(OPTRIAC_SENSOR_1) == 1)
          index += sprintf(temp + index,"\"on\",\n");
      index += sprintf(temp + index," \"%s\" : ",nameb);
-     if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 0)
+     if(optriac_sensor.value(OPTRIAC_SENSOR_2) == 0)
          index += sprintf(temp + index,"\"off\"\n");
-     if(optriac_sensor.value(OPTRIAC_SENSOR_B) == 1)
+     if(optriac_sensor.value(OPTRIAC_SENSOR_2) == 1)
          index += sprintf(temp + index,"\"on\"\n");
      index += sprintf(temp + index,"}\n");
 
@@ -573,12 +572,12 @@ optriac_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
      if (success && (len=REST.get_post_variable(request, "mode", &mode))) {
      PRINTF("mode %s\n", mode);
        if (strncmp(mode, "on", len)==0) {
-         optriac_sensor.configure(OPTRIAC_SENSOR_A,1);
-         optriac_sensor.configure(OPTRIAC_SENSOR_B,1);
+         optriac_sensor.configure(OPTRIAC_SENSOR_1,1);
+         optriac_sensor.configure(OPTRIAC_SENSOR_2,1);
          statusled_on();
        } else if (strncmp(mode, "off", len)==0) {
-         optriac_sensor.configure(OPTRIAC_SENSOR_A,0);
-         optriac_sensor.configure(OPTRIAC_SENSOR_B,0);
+         optriac_sensor.configure(OPTRIAC_SENSOR_1,0);
+         optriac_sensor.configure(OPTRIAC_SENSOR_2,0);
 		 statusled_off();
        } else {
          success = 0;
@@ -687,7 +686,6 @@ AUTOSTART_PROCESSES(&rest_server_example, &sensors_process);
 PROCESS_THREAD(rest_server_example, ev, data)
 {
   static struct etimer ds_periodic_timer;
-  static uint8_t state=0;
   static int ext4=0;
   static int ext5=0;
   static int ext6=0;
