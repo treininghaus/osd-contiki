@@ -87,12 +87,13 @@ uint8_t
 is_button_ext4(void)
 {
     /* Return true if button has been pressed. */
-    if ( PINE & (1<<PINE0) ) {
-        return 0;
-    }
-    else{
-        return 1;
-    }
+//    if ( PINE & (1<<PINE0) ) {
+//        return 0;
+//    }
+//    else{
+//        return 1;
+//    }
+      return 0;
 }
 uint8_t
 is_button_ext5(void)
