@@ -362,7 +362,7 @@ temperature_handler(void* request, void* response, uint8_t *buffer, uint16_t pre
   }
   else
   {
-    REST.set_response_status(response, REST.status.UNSUPPORTED_MADIA_TYPE);
+    REST.set_response_status(response, REST.status.UNSUPPORTED_MEDIA_TYPE);
     const char *msg = "Supporting content-types text/plain and application/json";
     REST.set_response_payload(response, msg, strlen(msg));
   }
