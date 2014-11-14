@@ -82,11 +82,15 @@
 #include "er-coap-03.h"
 #elif WITH_COAP == 7
 #include "er-coap-07.h"
+#elif WITH_COAP == 12
+#include "er-coap-12.h"
+#elif WITH_COAP == 13
+#include "er-coap-13.h"
 #else
 #warning "Erbium example without CoAP-specifc functionality"
 #endif /* CoAP-specific example */
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
@@ -232,10 +236,11 @@ pir_event_handler(resource_t *r)
   ++event_counter;
 
   PRINTF("PIR TICK %u for /%s\n", event_counter, r->url);
-
-  /* Build notification. */
+  
+    /* Build notification. */
   coap_packet_t notification[1]; /* This way the packet can be treated as pointer as usual. */
-  coap_init_message(notification, COAP_TYPE_CON, CONTENT_2_05, 0 );
+  coap_init_message(notification, COAP_TYPE_CON, REST.status.OK, 0 );
+  
   coap_set_payload(notification, content, snprintf(content, sizeof(content), "EVENT %u", event_counter));
 
   /* Notify the registered observers with the given message type, observe option, and payload. */
