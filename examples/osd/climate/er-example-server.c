@@ -42,18 +42,16 @@
 #include <stdint.h>
 #include "contiki.h"
 #include "contiki-net.h"
-
+#include "rest-engine.h"
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
-#define REST_RES_DS1820 0
+#define REST_RES_DS1820 1
 #define REST_RES_DHT11 1
-#define REST_RES_DHT11TEMP 1
+#define REST_RES_DHT11TEMP 0
 #define REST_RES_LEDS 1
-#define REST_RES_TOGGLE 0
 #define REST_RES_BATTERY 1
 
-#include "erbium.h"
 
 #if REST_RES_DS1820
 #include "dev/ds1820.h"
@@ -66,9 +64,7 @@ uint16_t dht11_temp=0, dht11_hum=0;
 #if defined (PLATFORM_HAS_BUTTON)
 #include "dev/button-sensor.h"
 #endif
-#if defined (PLATFORM_HAS_LEDS)
-#include "dev/leds.h"
-#endif
+
 #if defined (PLATFORM_HAS_TEMPERATURE)
 #include "dev/temperature-sensor.h"
 #endif
@@ -79,19 +75,6 @@ uint16_t dht11_temp=0, dht11_hum=0;
 #include "dev/sht11-sensor.h"
 #endif
 
-
-/* For CoAP-specific example: not required for normal RESTful Web service. */
-#if WITH_COAP == 3
-#include "er-coap-03.h"
-#elif WITH_COAP == 7
-#include "er-coap-07.h"
-#elif WITH_COAP == 12
-#include "er-coap-12.h"
-#elif WITH_COAP == 13
-#include "er-coap-13.h"
-#else
-#warning "Erbium example without CoAP-specifc functionality"
-#endif /* CoAP-specific example */
 
 #define DEBUG 0
 #if DEBUG
@@ -104,6 +87,28 @@ uint16_t dht11_temp=0, dht11_hum=0;
 #define PRINTLLADDR(addr)
 #endif
 
+/*
+ * Resources to be activated need to be imported through the extern keyword.
+ * The build system automatically compiles the resources in the corresponding sub-directory.
+ */
+
+
+#if defined (PLATFORM_HAS_LEDS)
+#include "dev/leds.h"
+extern resource_t res_leds;
+#endif
+
+#if PLATFORM_HAS_BATTERY
+#include "dev/battery-sensor.h"
+extern resource_t res_battery;
+#endif
+
+#if PLATFORM_HAS_RADIO
+#include "dev/radio-sensor.h"
+extern resource_t res_radio;
+#endif
+
+
 
 /******************************************************************************/
 
@@ -112,16 +117,24 @@ uint16_t dht11_temp=0, dht11_hum=0;
  * Resources are defined by the RESOURCE macro.
  * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
  */
-RESOURCE(info, METHOD_GET, "info", "title=\"Info\";rt=\"text\"");
+//RESOURCE(info, METHOD_GET, "info", "title=\"Info\";rt=\"text\"");
+static void res_get_info_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
+/* A simple getter example. Returns the reading from light sensor with a simple etag */
+RESOURCE(res_info,
+         "title=\"Info\";rt=\"text\"",
+         res_get_info_handler,
+         NULL,
+         NULL,
+         NULL);
 /*
  * A handler function named [resource name]_handler must be implemented for each RESOURCE.
  * A buffer for the response payload is provided through the buffer pointer. Simple resources can ignore
  * preferred_size and offset, but must respect the REST_MAX_CHUNK_SIZE limit for the buffer.
  * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
  */
-void
-info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+static void
+res_get_info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   char message[100];
   int index = 0;
@@ -147,9 +160,20 @@ info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
 #define DS1820_TEMP_MSB                1
 #define DS1820_COUNT_REMAIN    6
 #define DS1820_COUNT_PER_C     7
-RESOURCE(ds1820, METHOD_GET, "s/temp", "title=\"Temperatur DS1820\";rt=\"temperature-c\"");
-void
-ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+
+//RESOURCE(ds1820, METHOD_GET, "s/temp", "title=\"Temperatur DS1820\";rt=\"temperature-c\"");
+static void res_get_ds1820_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+
+/* A simple getter example. Returns the reading from light sensor with a simple etag */
+RESOURCE(res_ds1820,
+         "title=\"Temperature DHTxx\";rt=\"temperature c\"",
+         res_get_ds1820_handler,
+         NULL,
+         NULL,
+         NULL);
+         
+static void
+res_get_ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
 
   char message[100];
@@ -162,8 +186,8 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
   int temp_integral;
   int temp_centi;
 
-  const uint16_t *accept = NULL;
-  int num = REST.get_header_accept(request, &accept);
+  unsigned int accept = -1;
+  REST.get_header_accept(request, &accept);
 
   // temp = temp_read - 0.25°C + (count_per_c - count_remain) / count_per_c;
   temp_raw.u_int16 = ds1820_ok[DS1820_TEMP_MSB] << 8 | ds1820_ok[DS1820_TEMP_LSB];
@@ -174,7 +198,7 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
   temp_integral = (int) temp_c;
   temp_centi = (int) (fabs (temp_c - (int) temp_c) * 100.0);
 
-  if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
+  if(accept == -1 || accept == REST.type.TEXT_PLAIN)
   {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
     snprintf(message, REST_MAX_CHUNK_SIZE, "%d.%02d C", temp_integral, temp_centi);
@@ -184,7 +208,7 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 
     REST.set_response_payload(response, buffer, length);
   }
-  else if (num && (accept[0]==REST.type.APPLICATION_JSON))
+  else if (accept == REST.type.APPLICATION_JSON)
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
     snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d.%02d\"}", temp_integral, temp_centi);
@@ -204,9 +228,20 @@ ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferre
 
 #if REST_RES_DHT11TEMP
 /*A simple getter example. Returns the reading from dhtxx sensor*/
-RESOURCE(dht11temp, METHOD_GET, "s/temp", "title=\"Temperatur DHTxx\";rt=\"temperature-c\"");
-void
-dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+//RESOURCE(dht11temp, METHOD_GET, "s/temp", "title=\"Temperatur DHTxx\";rt=\"temperature-c\"");
+
+static void res_get_dht11temp_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+
+/* A simple getter example. Returns the reading from light sensor with a simple etag */
+RESOURCE(res_dht11temp,
+         "title=\"Temperature DHTxx\";rt=\"temperature c\"",
+         res_get_dht11temp_handler,
+         NULL,
+         NULL,
+         NULL);
+
+static void
+res_get_dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   char message[100];
   int length = 0; /*           |<-------->| */
@@ -244,17 +279,27 @@ dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16_t prefe
 
 #if REST_RES_DHT11
 /*A simple getter example. Returns the reading from dhtxx sensor*/
-RESOURCE(dht11, METHOD_GET, "s/hum", "title=\"Humidity DHTxx\";rt=\"humidity-%\"");
-void
-dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+//RESOURCE(dht11, METHOD_GET, "s/hum", "title=\"Humidity DHTxx\";rt=\"humidity-%\"");
+
+static void res_get_dht11hum_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+
+/* A simple getter example. Returns the reading from light sensor with a simple etag */
+RESOURCE(res_dht11hum,
+         "title=\"Humidity DHTxx\";rt=\"humidity %\"",
+         res_get_dht11hum_handler,
+         NULL,
+         NULL,
+         NULL);
+static void
+res_get_dht11hum_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
   char message[100];
   int length = 0; /*           |<-------->| */
 
-  const uint16_t *accept = NULL;
-  int num = REST.get_header_accept(request, &accept);
+  unsigned int accept = -1;
+  REST.get_header_accept(request, &accept);
 
-  if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
+  if(accept == -1 || accept == REST.type.TEXT_PLAIN)
   {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
     snprintf(message, REST_MAX_CHUNK_SIZE, "%d.%02d",dht11_hum/100, dht11_hum % 100);
@@ -264,7 +309,7 @@ dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
 
     REST.set_response_payload(response, buffer, length);
   }
-  else if (num && (accept[0]==REST.type.APPLICATION_JSON))
+  else if (accept == REST.type.APPLICATION_JSON)
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
     snprintf(message, REST_MAX_CHUNK_SIZE, "{\"hum\":\"%d.%02d\"}",dht11_hum/100, dht11_hum % 100);
@@ -282,104 +327,6 @@ dht11_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
 }
 #endif //REST_RES_DHT11
 
-/******************************************************************************/
-#if defined (PLATFORM_HAS_LEDS)
-/******************************************************************************/
-#if REST_RES_LEDS
-/*A simple actuator example, depending on the color query parameter and post variable mode, corresponding led is activated or deactivated*/
-RESOURCE(leds, METHOD_POST | METHOD_PUT , "a/leds", "title=\"LEDs: ?color=r|g|b, POST/PUT mode=on|off\";rt=\"Control\"");
-
-void
-leds_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  size_t len = 0;
-  const char *color = NULL;
-  const char *mode = NULL;
-  uint8_t led = 0;
-  int success = 1;
-
-  if ((len=REST.get_query_variable(request, "color", &color))) {
-    PRINTF("color %.*s\n", len, color);
-
-    if (strncmp(color, "r", len)==0) {
-      led = LEDS_RED;
-    } else if(strncmp(color,"g", len)==0) {
-      led = LEDS_GREEN;
-    } else if (strncmp(color,"b", len)==0) {
-      led = LEDS_BLUE;
-    } else {
-      success = 0;
-    }
-  } else {
-    success = 0;
-  }
-
-  if (success && (len=REST.get_post_variable(request, "mode", &mode))) {
-    PRINTF("mode %s\n", mode);
-
-    if (strncmp(mode, "on", len)==0) {
-      leds_on(led);
-    } else if (strncmp(mode, "off", len)==0) {
-      leds_off(led);
-    } else {
-      success = 0;
-    }
-  } else {
-    success = 0;
-  }
-
-  if (!success) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
-  }
-}
-#endif
-
-/******************************************************************************/
-#if REST_RES_TOGGLE
-/* A simple actuator example. Toggles the red led */
-RESOURCE(toggle, METHOD_GET | METHOD_PUT | METHOD_POST, "a/toggle", "title=\"Red LED\";rt=\"Control\"");
-void
-toggle_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  leds_toggle(LEDS_RED);
-}
-#endif
-#endif /* PLATFORM_HAS_LEDS */
-
-/******************************************************************************/
-#if REST_RES_BATTERY && defined (PLATFORM_HAS_BATTERY)
-/* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(battery, METHOD_GET, "s/battery", "title=\"Battery status\";rt=\"battery-mV\"");
-void
-battery_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  int battery = battery_sensor.value(0);
-
-  const uint16_t *accept = NULL;
-  int num = REST.get_header_accept(request, &accept);
-
-  if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
-  {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d.%02d", battery/1000, battery % 1000);
-
-    REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
-  }
-  else if (num && (accept[0]==REST.type.APPLICATION_JSON))
-  {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'battery':%d.%02d}", battery/1000, battery % 1000);
-
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  }
-  else
-  {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    const char *msg = "Supporting content-types text/plain and application/json";
-    REST.set_response_payload(response, msg, strlen(msg));
-  }
-}
-#endif /* PLATFORM_HAS_BATTERY */
 
 void 
 hw_init()
@@ -438,23 +385,20 @@ PROCESS_THREAD(rest_server_example, ev, data)
 
   /* Activate the application-specific resources. */
 #if REST_RES_DS1820
-  rest_activate_resource(&resource_ds1820);
+  rest_activate_resource(&res_ds1820,"s/temp");
 #endif
 #if REST_RES_DHT11
-  rest_activate_resource(&resource_dht11);
+  rest_activate_resource(&res_dht11hum,"s/hum");
 #endif
 #if REST_RES_DHT11TEMP
-  rest_activate_resource(&resource_dht11temp);
+  rest_activate_resource(&res_dht11temp,"s/temp");
 #endif
 #if REST_RES_INFO
-  rest_activate_resource(&resource_info);
+  rest_activate_resource(&res_info,"info");
 #endif
 #if defined (PLATFORM_HAS_LEDS)
 #if REST_RES_LEDS
-  rest_activate_resource(&resource_leds);
-#endif
-#if REST_RES_TOGGLE
-  rest_activate_resource(&resource_toggle);
+  rest_activate_resource(&res_leds,"a/leds");
 #endif
 #endif /* PLATFORM_HAS_LEDS */
 #if defined (PLATFORM_HAS_TEMPERATURE) && REST_RES_TEMPERATURE
@@ -463,7 +407,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #endif
 #if defined (PLATFORM_HAS_BATTERY) && REST_RES_BATTERY
   SENSORS_ACTIVATE(battery_sensor);
-  rest_activate_resource(&resource_battery);
+  rest_activate_resource(&res_battery,"s/battery");
 #endif
 
   /* Define application-specific events here. */
