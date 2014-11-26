@@ -44,19 +44,8 @@
 #include "contiki-net.h"
 #include "rest-engine.h"
 
-/* Define which resources to include to meet memory constraints. */
-#define REST_RES_INFO 1
-#define REST_RES_DS1820 1
-#define REST_RES_DHT11 1
-#define REST_RES_DHT11TEMP 0
-#define REST_RES_LEDS 1
-#define REST_RES_BATTERY 1
 
-
-#if REST_RES_DS1820
-#include "dev/ds1820.h"
-#endif
-#if REST_RES_DHT11
+#if PLATFORM_HAS_DHT11
 #include "dev/dht11.h"
 uint16_t dht11_temp=0, dht11_hum=0;
 #endif
@@ -92,6 +81,10 @@ uint16_t dht11_temp=0, dht11_hum=0;
  * The build system automatically compiles the resources in the corresponding sub-directory.
  */
 
+#if defined (PLATFORM_HAS_DS1820)
+#include "dev/ds1820.h"
+extern resource_t res_ds1820;
+#endif
 
 #if defined (PLATFORM_HAS_LEDS)
 #include "dev/leds.h"
@@ -112,7 +105,7 @@ extern resource_t res_radio;
 
 /******************************************************************************/
 
-#if REST_RES_INFO
+#if PLATFORM_HAS_INFO
 /*
  * Resources are defined by the RESOURCE macro.
  * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
@@ -154,79 +147,8 @@ res_get_info_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
 }
 #endif
 
-#if REST_RES_DS1820
-/* A simple getter example. Returns the reading from ds1820 sensor */
-#define DS1820_TEMP_LSB                0
-#define DS1820_TEMP_MSB                1
-#define DS1820_COUNT_REMAIN    6
-#define DS1820_COUNT_PER_C     7
 
-//RESOURCE(ds1820, METHOD_GET, "s/temp", "title=\"Temperatur DS1820\";rt=\"temperature-c\"");
-static void res_get_ds1820_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-
-/* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(res_ds1820,
-         "title=\"Temperature DHTxx\";rt=\"temperature c\"",
-         res_get_ds1820_handler,
-         NULL,
-         NULL,
-         NULL);
-         
-static void
-res_get_ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-
-  char message[100];
-  int length = 0; /*           |<-------->| */
-  union temp_raw {
-         int16_t  s_int16;
-         uint16_t u_int16;
-  } temp_raw;
-  double temp_c;
-  int temp_integral;
-  int temp_centi;
-
-  unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-
-  // temp = temp_read - 0.25°C + (count_per_c - count_remain) / count_per_c;
-  temp_raw.u_int16 = ds1820_ok[DS1820_TEMP_MSB] << 8 | ds1820_ok[DS1820_TEMP_LSB];
-  temp_c = temp_raw.s_int16 / 2.0
-          - 0.25
-          + ((double) ds1820_ok[DS1820_COUNT_PER_C] - (double) ds1820_ok[DS1820_COUNT_REMAIN])
-            / (double) ds1820_ok[DS1820_COUNT_PER_C];
-  temp_integral = (int) temp_c;
-  temp_centi = (int) (fabs (temp_c - (int) temp_c) * 100.0);
-
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN)
-  {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "%d.%02d C", temp_integral, temp_centi);
-
-    length = strlen(message);
-    memcpy(buffer, message,length );
-
-    REST.set_response_payload(response, buffer, length);
-  }
-  else if (accept == REST.type.APPLICATION_JSON)
-  {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d.%02d\"}", temp_integral, temp_centi);
-
-    length = strlen(message);
-    memcpy(buffer, message,length );
-
-    REST.set_response_payload(response, buffer, length);
-  }
-  else
-  {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    REST.set_response_payload(response, (uint8_t *)"Supporting content-types text/plain and application/json", 56);
-  }
-}
-#endif //REST_RES_DS1820
-
-#if REST_RES_DHT11TEMP
+#if PLATFORM_HAS_DHT11TEMP
 /*A simple getter example. Returns the reading from dhtxx sensor*/
 //RESOURCE(dht11temp, METHOD_GET, "s/temp", "title=\"Temperatur DHTxx\";rt=\"temperature-c\"");
 
@@ -275,9 +197,9 @@ res_get_dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16
     REST.set_response_payload(response, (uint8_t *)"Supporting content-types text/plain and application/json", 56);
   }	
 }
-#endif //REST_RES_DHT11TEMP
+#endif //PLATFORM_HAS_DHT11TEMP
 
-#if REST_RES_DHT11
+#if PLATFORM_HAS_DHT11
 /*A simple getter example. Returns the reading from dhtxx sensor*/
 //RESOURCE(dht11, METHOD_GET, "s/hum", "title=\"Humidity DHTxx\";rt=\"humidity-%\"");
 
@@ -325,7 +247,7 @@ res_get_dht11hum_handler(void* request, void* response, uint8_t *buffer, uint16_
     REST.set_response_payload(response, (uint8_t *)"Supporting content-types text/plain and application/json", 56);
   }
 }
-#endif //REST_RES_DHT11
+#endif //PLATFORM_HAS_DHT11
 
 
 void 
@@ -334,10 +256,10 @@ hw_init()
 #if defined (PLATFORM_HAS_LEDS)
  leds_off(LEDS_RED);
 #endif
-#if REST_RES_DS1820
+#if PLATFORM_HAS_DS1820
   ds1820_temp();
 #endif
-#if REST_RES_DHT11
+#if PLATFORM_HAS_DHT11
   //DHT_INIT();
   DHT_Read_Data(&dht11_temp, &dht11_hum);
 #endif
@@ -351,7 +273,7 @@ AUTOSTART_PROCESSES(&rest_server_example);
 PROCESS_THREAD(rest_server_example, ev, data)
 {
   static struct etimer ds_periodic_timer;
-#if REST_RES_DS1820
+#if PLATFORM_HAS_DS1820
   static struct etimer ds_read_timer;
 #endif
 
@@ -384,28 +306,26 @@ PROCESS_THREAD(rest_server_example, ev, data)
   rest_init_engine();
 
   /* Activate the application-specific resources. */
-#if REST_RES_DS1820
+#if PLATFORM_HAS_DS1820
   rest_activate_resource(&res_ds1820,"s/temp");
 #endif
-#if REST_RES_DHT11
+#if PLATFORM_HAS_DHT11
   rest_activate_resource(&res_dht11hum,"s/hum");
 #endif
-#if REST_RES_DHT11TEMP
+#if PLATFORM_HAS_DHT11TEMP
   rest_activate_resource(&res_dht11temp,"s/temp");
 #endif
-#if REST_RES_INFO
+#if PLATFORM_HAS_INFO
   rest_activate_resource(&res_info,"info");
 #endif
-#if defined (PLATFORM_HAS_LEDS)
-#if REST_RES_LEDS
+#if PLATFORM_HAS_LEDS
   rest_activate_resource(&res_leds,"a/leds");
-#endif
 #endif /* PLATFORM_HAS_LEDS */
-#if defined (PLATFORM_HAS_TEMPERATURE) && REST_RES_TEMPERATURE
+#if PLATFORM_HAS_TEMPERATURE
   SENSORS_ACTIVATE(temperature_sensor);
   rest_activate_resource(&resource_temperature);
 #endif
-#if defined (PLATFORM_HAS_BATTERY) && REST_RES_BATTERY
+#if PLATFORM_HAS_BATTERY
   SENSORS_ACTIVATE(battery_sensor);
   rest_activate_resource(&res_battery,"s/battery");
 #endif
@@ -422,17 +342,17 @@ PROCESS_THREAD(rest_server_example, ev, data)
     if(etimer_expired(&ds_periodic_timer)) {
         PRINTF("Periodic\n");
         etimer_reset(&ds_periodic_timer);
-#if REST_RES_DHT11
+#if PLATFORM_HAS_DHT11
     //    DHT_Read_Data(&dht11_temp, &dht11_hum);
         DHT_Read_Data(&dht11_temp, &dht11_hum);
 #endif
-#if REST_RES_DS1820
+#if PLATFORM_HAS_DS1820
         if(ds1820_convert()){
           etimer_set(&ds_read_timer, READ_TIME);
         }
 #endif
     }
-#if REST_RES_DS1820
+#if PLATFORM_HAS_DS1820
     if(etimer_expired(&ds_read_timer)) {
         PRINTF("DS1820_Read\n");
         ds1820_read();
