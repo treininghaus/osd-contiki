@@ -31,9 +31,9 @@
 
 /**
  * \file
- *      DS1820 Sensor Resource
+ *      dht11hum Sensor Resource
  *
- *      This is a simple GET resource that returns the temperature in Celsius
+ *      This is a simple GET resource that returns the humidity in % rel.
  *
  * \author
  *      Harald Pichler <harald@the-develop.net>
@@ -41,7 +41,7 @@
 
 #include "contiki.h"
 
-#if PLATFORM_HAS_DS1820
+#if PLATFORM_HAS_DHT11HUM
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,55 +49,33 @@
 #include <stdint.h>
 #include <math.h>
 #include "rest-engine.h"
-#include "dev/ds1820.h"
+#include "dev/dht11.h"
 
-/* A simple getter example. Returns the reading from ds1820 sensor */
-#define DS1820_TEMP_LSB                0
-#define DS1820_TEMP_MSB                1
-#define DS1820_COUNT_REMAIN    6
-#define DS1820_COUNT_PER_C     7
+/*A simple getter example. Returns the reading from dhtxx sensor*/
+static void res_get_dht11hum_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-//RESOURCE(ds1820, METHOD_GET, "s/temp", "title=\"Temperatur DS1820\";rt=\"temperature-c\"");
-static void res_get_ds1820_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-
-/* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(res_ds1820,
-         "title=\"Temperature DHTxx\";rt=\"temperature c\"",
-         res_get_ds1820_handler,
+RESOURCE(res_dht11hum,
+         "title=\"Humidity DHTxx\";rt=\"humidity %\"",
+         res_get_dht11hum_handler,
          NULL,
          NULL,
          NULL);
          
-static void
-res_get_ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
+uint16_t dht11_hum=0;
 
+static void
+res_get_dht11hum_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
   char message[100];
   int length = 0; /*           |<-------->| */
-  union temp_raw {
-         int16_t  s_int16;
-         uint16_t u_int16;
-  } temp_raw;
-  double temp_c;
-  int temp_integral;
-  int temp_centi;
 
   unsigned int accept = -1;
   REST.get_header_accept(request, &accept);
 
-  // temp = temp_read - 0.25°C + (count_per_c - count_remain) / count_per_c;
-  temp_raw.u_int16 = ds1820_ok[DS1820_TEMP_MSB] << 8 | ds1820_ok[DS1820_TEMP_LSB];
-  temp_c = temp_raw.s_int16 / 2.0
-          - 0.25
-          + ((double) ds1820_ok[DS1820_COUNT_PER_C] - (double) ds1820_ok[DS1820_COUNT_REMAIN])
-            / (double) ds1820_ok[DS1820_COUNT_PER_C];
-  temp_integral = (int) temp_c;
-  temp_centi = (int) (fabs (temp_c - (int) temp_c) * 100.0);
-
   if(accept == -1 || accept == REST.type.TEXT_PLAIN)
   {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "%d.%02d C", temp_integral, temp_centi);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "%d.%02d",dht11_hum/100, dht11_hum % 100);
 
     length = strlen(message);
     memcpy(buffer, message,length );
@@ -107,7 +85,7 @@ res_get_ds1820_handler(void* request, void* response, uint8_t *buffer, uint16_t 
   else if (accept == REST.type.APPLICATION_JSON)
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d.%02d\"}", temp_integral, temp_centi);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"hum\":\"%d.%02d\"}",dht11_hum/100, dht11_hum % 100);
 
     length = strlen(message);
     memcpy(buffer, message,length );

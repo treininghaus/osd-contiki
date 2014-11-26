@@ -44,27 +44,6 @@
 #include "contiki-net.h"
 #include "rest-engine.h"
 
-
-#if PLATFORM_HAS_DHT11
-#include "dev/dht11.h"
-uint16_t dht11_temp=0, dht11_hum=0;
-#endif
-
-#if defined (PLATFORM_HAS_BUTTON)
-#include "dev/button-sensor.h"
-#endif
-
-#if defined (PLATFORM_HAS_TEMPERATURE)
-#include "dev/temperature-sensor.h"
-#endif
-#if defined (PLATFORM_HAS_BATTERY)
-#include "dev/battery-sensor.h"
-#endif
-#if defined (PLATFORM_HAS_SHT11)
-#include "dev/sht11-sensor.h"
-#endif
-
-
 #define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -80,6 +59,20 @@ uint16_t dht11_temp=0, dht11_hum=0;
  * Resources to be activated need to be imported through the extern keyword.
  * The build system automatically compiles the resources in the corresponding sub-directory.
  */
+ 
+#if defined (PLATFORM_HAS_INFO)
+extern resource_t res_info;
+#endif
+
+#if PLATFORM_HAS_DHT11HUM
+#include "dev/dht11.h"
+extern resource_t res_dht11hum;
+#endif
+
+#if PLATFORM_HAS_DHT11TEMP
+#include "dev/dht11.h"
+extern resource_t res_dht11temp;
+#endif
 
 #if defined (PLATFORM_HAS_DS1820)
 #include "dev/ds1820.h"
@@ -100,155 +93,6 @@ extern resource_t res_battery;
 #include "dev/radio-sensor.h"
 extern resource_t res_radio;
 #endif
-
-
-
-/******************************************************************************/
-
-#if PLATFORM_HAS_INFO
-/*
- * Resources are defined by the RESOURCE macro.
- * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
- */
-//RESOURCE(info, METHOD_GET, "info", "title=\"Info\";rt=\"text\"");
-static void res_get_info_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-
-/* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(res_info,
-         "title=\"Info\";rt=\"text\"",
-         res_get_info_handler,
-         NULL,
-         NULL,
-         NULL);
-/*
- * A handler function named [resource name]_handler must be implemented for each RESOURCE.
- * A buffer for the response payload is provided through the buffer pointer. Simple resources can ignore
- * preferred_size and offset, but must respect the REST_MAX_CHUNK_SIZE limit for the buffer.
- * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
- */
-static void
-res_get_info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  char message[100];
-  int index = 0;
-  int length = 0; /*           |<-------->| */
-
-  /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
-       // jSON Format
-     index += sprintf(message + index,"{\n \"version\" : \"V0.4.3\",\n");
-     index += sprintf(message + index," \"name\" : \"6lowpan-climate\"\n");
-     index += sprintf(message + index,"}\n");
-
-    length = strlen(message);
-    memcpy(buffer, message,length );
-
-  REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-  REST.set_response_payload(response, buffer, length);
-}
-#endif
-
-
-#if PLATFORM_HAS_DHT11TEMP
-/*A simple getter example. Returns the reading from dhtxx sensor*/
-//RESOURCE(dht11temp, METHOD_GET, "s/temp", "title=\"Temperatur DHTxx\";rt=\"temperature-c\"");
-
-static void res_get_dht11temp_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-
-/* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(res_dht11temp,
-         "title=\"Temperature DHTxx\";rt=\"temperature c\"",
-         res_get_dht11temp_handler,
-         NULL,
-         NULL,
-         NULL);
-
-static void
-res_get_dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  char message[100];
-  int length = 0; /*           |<-------->| */
-
-  const uint16_t *accept = NULL;
-  int num = REST.get_header_accept(request, &accept);
-
-  if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
-  {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "%d.%02d",dht11_temp/100, dht11_temp % 100);
-
-    length = strlen(message);
-    memcpy(buffer, message,length );
-
-    REST.set_response_payload(response, buffer, length);
-  }
-  else if (num && (accept[0]==REST.type.APPLICATION_JSON))
-  {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d.%02d\"}",dht11_temp/100, dht11_temp % 100);
-
-    length = strlen(message);
-    memcpy(buffer, message,length );
-
-    REST.set_response_payload(response, buffer, length);
-  }
-  else
-  {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    REST.set_response_payload(response, (uint8_t *)"Supporting content-types text/plain and application/json", 56);
-  }	
-}
-#endif //PLATFORM_HAS_DHT11TEMP
-
-#if PLATFORM_HAS_DHT11
-/*A simple getter example. Returns the reading from dhtxx sensor*/
-//RESOURCE(dht11, METHOD_GET, "s/hum", "title=\"Humidity DHTxx\";rt=\"humidity-%\"");
-
-static void res_get_dht11hum_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
-
-/* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(res_dht11hum,
-         "title=\"Humidity DHTxx\";rt=\"humidity %\"",
-         res_get_dht11hum_handler,
-         NULL,
-         NULL,
-         NULL);
-static void
-res_get_dht11hum_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
-{
-  char message[100];
-  int length = 0; /*           |<-------->| */
-
-  unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
-
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN)
-  {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "%d.%02d",dht11_hum/100, dht11_hum % 100);
-
-    length = strlen(message);
-    memcpy(buffer, message,length );
-
-    REST.set_response_payload(response, buffer, length);
-  }
-  else if (accept == REST.type.APPLICATION_JSON)
-  {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"hum\":\"%d.%02d\"}",dht11_hum/100, dht11_hum % 100);
-
-    length = strlen(message);
-    memcpy(buffer, message,length );
-
-    REST.set_response_payload(response, buffer, length);
-  }
-  else
-  {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    REST.set_response_payload(response, (uint8_t *)"Supporting content-types text/plain and application/json", 56);
-  }
-}
-#endif //PLATFORM_HAS_DHT11
-
 
 void 
 hw_init()
