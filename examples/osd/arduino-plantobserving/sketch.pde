@@ -13,7 +13,7 @@
 extern "C" {
 #include "rest-engine.h"
 
-extern resource_t res_moisture;
+extern resource_t res_moisture, res_battery;
 uint8_t moisture_pin = A5;
 uint16_t moisture_voltage = 0;
 
@@ -28,6 +28,7 @@ void setup (void)
     // init coap resourcen
     rest_init_engine ();
     rest_activate_resource (&res_moisture, "s/moisture");
+    rest_activate_resource (&res_battery, "s/battery");
 }
 
 void loop (void)
