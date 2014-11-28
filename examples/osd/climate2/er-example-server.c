@@ -67,11 +67,13 @@ extern resource_t res_info;
 #if PLATFORM_HAS_DHT11HUM
 #include "dev/dht11.h"
 extern resource_t res_dht11hum;
+extern uint16_t dht11_hum;
 #endif
 
 #if PLATFORM_HAS_DHT11TEMP
 #include "dev/dht11.h"
 extern resource_t res_dht11temp;
+extern uint16_t dht11_temp;
 #endif
 
 #if defined (PLATFORM_HAS_DS1820)
@@ -103,8 +105,7 @@ hw_init()
 #if PLATFORM_HAS_DS1820
   ds1820_temp();
 #endif
-#if PLATFORM_HAS_DHT11
-  //DHT_INIT();
+#if PLATFORM_HAS_DHT11HUM
   DHT_Read_Data(&dht11_temp, &dht11_hum);
 #endif
 }
@@ -153,7 +154,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #if PLATFORM_HAS_DS1820
   rest_activate_resource(&res_ds1820,"s/temp");
 #endif
-#if PLATFORM_HAS_DHT11
+#if PLATFORM_HAS_DHT11HUM
   rest_activate_resource(&res_dht11hum,"s/hum");
 #endif
 #if PLATFORM_HAS_DHT11TEMP
@@ -186,8 +187,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
     if(etimer_expired(&ds_periodic_timer)) {
         PRINTF("Periodic\n");
         etimer_reset(&ds_periodic_timer);
-#if PLATFORM_HAS_DHT11
-    //    DHT_Read_Data(&dht11_temp, &dht11_hum);
+#if PLATFORM_HAS_DHT11HUM
         DHT_Read_Data(&dht11_temp, &dht11_hum);
 #endif
 #if PLATFORM_HAS_DS1820

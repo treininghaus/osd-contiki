@@ -71,12 +71,11 @@ res_get_dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16
 {
   char message[100];
   int length = 0; /*           |<-------->| */
+ 
+  unsigned int accept = -1;
+  REST.get_header_accept(request, &accept);
 
-  const uint16_t *accept = NULL;
-  int num = REST.get_header_accept(request, &accept);
-
-  if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
-  {
+  if(accept == -1 || accept == REST.type.TEXT_PLAIN){
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
     snprintf(message, REST_MAX_CHUNK_SIZE, "%d.%02d",dht11_temp/100, dht11_temp % 100);
 
@@ -85,7 +84,7 @@ res_get_dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16
 
     REST.set_response_payload(response, buffer, length);
   }
-  else if (num && (accept[0]==REST.type.APPLICATION_JSON))
+  else if (accept == REST.type.APPLICATION_JSON)
   {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
     snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d.%02d\"}",dht11_temp/100, dht11_temp % 100);

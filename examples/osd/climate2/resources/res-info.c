@@ -72,8 +72,8 @@ res_get_info_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
 
   /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
        // jSON Format
-     index += sprintf(message + index,"{\n \"version\" : \"V0.4.3\",\n");
-     index += sprintf(message + index," \"name\" : \"6lowpan-climate\"\n");
+     index += sprintf(message + index,"{\n \"version\" : \"V0.5.0\",\n");
+     index += sprintf(message + index," \"name\" : \"6lowpan-climate2\"\n");
      index += sprintf(message + index,"}\n");
 
     length = strlen(message);

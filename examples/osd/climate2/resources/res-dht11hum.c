@@ -98,4 +98,4 @@ res_get_dht11hum_handler(void* request, void* response, uint8_t *buffer, uint16_
     REST.set_response_payload(response, (uint8_t *)"Supporting content-types text/plain and application/json", 56);
   }
 }
-#endif /* PLATFORM_HAS_DS1820 */
+#endif /* PLATFORM_HAS_DHT11HUM */
