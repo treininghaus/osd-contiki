@@ -7,10 +7,7 @@ all: arduino-example \
 CONTIKI=../../..
 
 # Contiki IPv6 configuration
-WITH_UIP6=1
-UIP_CONF_IPV6=1
-CFLAGS += -DUIP_CONF_IPV6=1
-CFLAGS += -DUIP_CONF_IPV6_RPL=1
+CONTIKI_WITH_IPV6 = 1
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
@@ -48,13 +45,17 @@ endif
 # linker optimizations
 SMALL=1
 
+
 # REST Engine shall use Erbium CoAP implementation
 APPS += er-coap
 APPS += rest-engine
-APPS += json arduino json-resource
+APPS += arduino
 
 include $(CONTIKI)/Makefile.include
 include $(CONTIKI)/apps/arduino/Makefile.include
+
+arduino-example: arduino-example.osd-merkur
+	avr-size -C --mcu=MCU=atmega128rfa1 arduino-example.osd-merkur
 
 arduino-example.osd-merkur.hex: arduino-example.osd-merkur
 	avr-objcopy -j .text -j .data -O ihex arduino-example.osd-merkur \
