@@ -56,17 +56,26 @@
 
 PROCESS(arduino_sketch, "Arduino Sketch Wrapper");
 
+#ifndef LOOP_INTERVAL
+#define LOOP_INTERVAL		(1 * CLOCK_SECOND)
+#endif
+
 PROCESS_THREAD(arduino_sketch, ev, data)
 {
+  static struct etimer loop_periodic_timer;
+  
   PROCESS_BEGIN();
 
-  arduino_pwm_timer_init ();
   adc_init ();
   setup ();
+  /* Define application-specific events here. */
+  etimer_set(&loop_periodic_timer, LOOP_INTERVAL);
   while (1) {
-    loop ();
-    /* Give other processes a chance to run */
-    PROCESS_PAUSE();
+	PROCESS_WAIT_EVENT();
+	if(etimer_expired(&loop_periodic_timer)) {
+        loop ();		
+        etimer_reset(&loop_periodic_timer);
+    }
   }
   PROCESS_END();
 }

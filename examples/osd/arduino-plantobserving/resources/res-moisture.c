@@ -53,13 +53,15 @@ RESOURCE(res_moisture,
          NULL);
 
 extern  uint8_t moisture_pin;
+extern  uint8_t moisture_vcc;
 extern  uint16_t moisture_voltage;
 
 static void
 res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  
+  digitalWrite(moisture_vcc, HIGH);  
   moisture_voltage = analogRead(moisture_pin);
+  digitalWrite(moisture_vcc, LOW);
   
   unsigned int accept = -1;
   REST.get_header_accept(request, &accept);
