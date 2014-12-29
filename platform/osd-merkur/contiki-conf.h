@@ -242,9 +242,9 @@ typedef unsigned short uip_stats_t;
 /* So without the header this needed for RPL mesh to form */
 #define CONTIKIMAC_FRAMER_CONF_SHORTEST_PACKET_SIZE   43-18  //multicast RPL DIS length
 /* Not tested much yet */
-#define WITH_PHASE_OPTIMIZATION  0
+#define CONTIKIMAC_CONF_WITH_PHASE_OPTIMIZATION 0
 #define CONTIKIMAC_CONF_COMPOWER               1
-#define RIMESTATS_CONF_ENABLED                 1
+#define RIMESTATS_CONF_ENABLED                 0
 
 #if NETSTACK_CONF_WITH_IPV6
 //#define NETSTACK_CONF_FRAMER      framer802154
