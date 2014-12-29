@@ -23,6 +23,7 @@ uint16_t analog5_voltage = 0;
 
 void setup (void)
 {
+    arduino_pwm_timer_init ();
     rest_init_engine ();
     rest_activate_resource (&resource_led_pwm);
     rest_activate_resource (&resource_led_period);

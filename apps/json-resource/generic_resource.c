@@ -46,8 +46,7 @@
 #include <string.h>
 #include "contiki.h"
 #include "jsonparse.h"
-/* Only coap 13 for now */
-#include "er-coap-13.h"
+#include "er-coap.h"
 #include "generic_resource.h"
 
 /* Error-handling macro */
@@ -125,7 +124,8 @@ void generic_handler
   const uint8_t  *bytes  = NULL;
   const uint16_t *accept = NULL;
   uint16_t a_ctype = REST.type.APPLICATION_JSON;
-  uint16_t c_ctype = REST.get_header_content_type (request);
+  uint16_t c_ctype;
+  n_acc = REST.get_header_content_type (request, &c_ctype);
 
   /* Seems like accepted type is currently unsupported? */
   n_acc = REST.get_header_accept (request, &accept);
