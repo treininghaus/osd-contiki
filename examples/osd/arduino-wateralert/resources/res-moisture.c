@@ -31,45 +31,47 @@
 
 /**
  * \file
- *      Example resource
+ *      Moisture resource
  * \author
- *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
+ *      Harald Pichler <harald@the-develop.net>
  */
 
 #include "contiki.h"
 
-#if PLATFORM_HAS_BATTERY
-
 #include <string.h>
 #include "rest-engine.h"
-#include "dev/battery-sensor.h"
+#include "Arduino.h"
 
 static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-/* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(res_battery,
-         "title=\"Battery status\";rt=\"Battery\"",
+/* A simple getter example. Returns the reading from the sensor with a simple etag */
+RESOURCE(res_moisture,
+         "title=\"Moisture status\";rt=\"Moisture\"",
          res_get_handler,
          NULL,
          NULL,
          NULL);
 
+extern  uint8_t moisture_pin;
+extern  uint16_t moisture_voltage;
+
 static void
 res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  int battery = battery_sensor.value(0);
-
+  
+  moisture_voltage = analogRead(moisture_pin);
+  
   unsigned int accept = -1;
   REST.get_header_accept(request, &accept);
 
   if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d.%02d", battery/1000, battery % 1000);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d", moisture_voltage);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   } else if(accept == REST.type.APPLICATION_JSON) {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'battery':%d.%02d}", battery/1000, battery % 1000);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'moisture':%d}", moisture_voltage);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   } else {
@@ -78,4 +80,3 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
     REST.set_response_payload(response, msg, strlen(msg));
   }
 }
-#endif /* PLATFORM_HAS_BATTERY */

@@ -38,17 +38,17 @@
 
 #include "contiki.h"
 
-#if PLATFORM_HAS_BATTERY
+#if PLATFORM_HAS_RADIO
 
 #include <string.h>
 #include "rest-engine.h"
-#include "dev/battery-sensor.h"
+#include "dev/radio-sensor.h"
 
 static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
-/* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(res_battery,
-         "title=\"Battery status\";rt=\"Battery\"",
+/* A simple getter example. Returns the reading of the rssi/lqi from radio sensor */
+RESOURCE(res_radio,
+         "title=\"RADIO: ?p=lqi|rssi\";rt=\"RadioSensor\"",
          res_get_handler,
          NULL,
          NULL,
@@ -57,25 +57,46 @@ RESOURCE(res_battery,
 static void
 res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  int battery = battery_sensor.value(0);
+  size_t len = 0;
+  const char *p = NULL;
+  uint8_t param = 0;
+  int success = 1;
 
   unsigned int accept = -1;
   REST.get_header_accept(request, &accept);
 
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d.%02d", battery/1000, battery % 1000);
-
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_JSON) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'battery':%d.%02d}", battery/1000, battery % 1000);
-
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
+  if((len = REST.get_query_variable(request, "p", &p))) {
+    if(strncmp(p, "lqi", len) == 0) {
+      param = RADIO_SENSOR_LAST_VALUE;
+    } else if(strncmp(p, "rssi", len) == 0) {
+      param = RADIO_SENSOR_LAST_PACKET;
+    } else {
+      success = 0;
+    }
   } else {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    const char *msg = "Supporting content-types text/plain and application/json";
-    REST.set_response_payload(response, msg, strlen(msg));
+    success = 0;
+  } if(success) {
+    if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+      REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
+      snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d", radio_sensor.value(param));
+
+      REST.set_response_payload(response, (uint8_t *)buffer, strlen((char *)buffer));
+    } else if(accept == REST.type.APPLICATION_JSON) {
+      REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+
+      if(param == RADIO_SENSOR_LAST_VALUE) {
+        snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'lqi':%d}", radio_sensor.value(param));
+      } else if(param == RADIO_SENSOR_LAST_PACKET) {
+        snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'rssi':%d}", radio_sensor.value(param));
+      }
+      REST.set_response_payload(response, buffer, strlen((char *)buffer));
+    } else {
+      REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
+      const char *msg = "Supporting content-types text/plain and application/json";
+      REST.set_response_payload(response, msg, strlen(msg));
+    }
+  } else {
+    REST.set_response_status(response, REST.status.BAD_REQUEST);
   }
 }
-#endif /* PLATFORM_HAS_BATTERY */
+#endif /* PLATFORM_HAS_RADIO */

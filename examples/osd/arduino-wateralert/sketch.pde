@@ -1,7 +1,7 @@
 /*
  * Sample arduino sketch using contiki features.
  * We turn the LED off 
- * We allow read the water sensor
+ * We allow read the moisture sensor
  * Unfortunately sleeping for long times in loop() isn't currently
  * possible, something turns off the CPU (including PWM outputs) if a
  * Proto-Thread is taking too long. We need to find out how to sleep in
@@ -11,21 +11,24 @@
  */
 
 extern "C" {
-#include <stdio.h>
-#include "resource_water.h"
+#include "rest-engine.h"
+
+extern resource_t res_moisture, res_battery;
+uint8_t moisture_pin = A5;
+uint16_t moisture_voltage = 0;
 
 #define LED_PIN 4
-
-uint8_t water_pin = A5;
-uint16_t water_voltage = 0;
 }
 
 void setup (void)
 {
+    // switch off the led
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH);
+    // init coap resourcen
     rest_init_engine ();
-    rest_activate_resource (&resource_water);
+    rest_activate_resource (&res_moisture, "s/moisture");
+    rest_activate_resource (&res_battery, "s/battery");
 }
 
 void loop (void)

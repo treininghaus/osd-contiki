@@ -4,19 +4,29 @@ SKETCH=sketch
 all: arduino-example \
      arduino-example.osd-merkur.hex arduino-example.osd-merkur.eep
 
-# variable for this Makefile
-# configure CoAP implementation (3|7|12|13) (er-coap-07 also supports CoAP draft 08)
-WITH_COAP=13
-
-# for some platforms
-UIP_CONF_IPV6=1
-# IPv6 make config disappeared completely
-CFLAGS += -DUIP_CONF_IPV6=1
-
 CONTIKI=../../..
+
+# Contiki IPv6 configuration
+CONTIKI_WITH_IPV6 = 1
+
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
-PROJECT_SOURCEFILES += resource_door.c ${SKETCH}.cpp
+PROJECT_SOURCEFILES += ${SKETCH}.cpp
+
+# automatically build RESTful resources
+REST_RESOURCES_DIR = ./resources
+ifndef TARGET
+REST_RESOURCES_FILES = $(notdir $(shell find $(REST_RESOURCES_DIR) -name '*.c'))
+else
+ifeq ($(TARGET), native)
+REST_RESOURCES_FILES = $(notdir $(shell find $(REST_RESOURCES_DIR) -name '*.c'))
+else
+REST_RESOURCES_FILES = $(notdir $(shell find $(REST_RESOURCES_DIR) -name '*.c' ! -name 'res-plugtest*'))
+endif
+endif
+
+PROJECTDIRS += $(REST_RESOURCES_DIR)
+PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 
 # variable for Makefile.include
 ifneq ($(TARGET), minimal-net)
@@ -35,43 +45,17 @@ endif
 # linker optimizations
 SMALL=1
 
-# REST framework, requires WITH_COAP
-ifeq ($(WITH_COAP), 13)
-${info INFO: compiling with CoAP-13}
-CFLAGS += -DWITH_COAP=13
-CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
-APPS += er-coap-13
-else ifeq ($(WITH_COAP), 12)
-${info INFO: compiling with CoAP-12}
-CFLAGS += -DWITH_COAP=12
-CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
-APPS += er-coap-12
-else ifeq ($(WITH_COAP), 7)
-${info INFO: compiling with CoAP-08}
-CFLAGS += -DWITH_COAP=7
-CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
-APPS += er-coap-07
-else ifeq ($(WITH_COAP), 3)
-${info INFO: compiling with CoAP-03}
-CFLAGS += -DWITH_COAP=3
-CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
-APPS += er-coap-03
-else
-${info INFO: compiling with HTTP}
-CFLAGS += -DWITH_HTTP
-CFLAGS += -DREST=http_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=1
-APPS += er-http-engine
-endif
 
-APPS += erbium time json arduino json-resource
+# REST Engine shall use Erbium CoAP implementation
+APPS += er-coap
+APPS += rest-engine
+APPS += arduino
 
 include $(CONTIKI)/Makefile.include
 include $(CONTIKI)/apps/arduino/Makefile.include
+
+arduino-example: arduino-example.osd-merkur
+	avr-size -C --mcu=MCU=atmega128rfa1 arduino-example.osd-merkur
 
 arduino-example.osd-merkur.hex: arduino-example.osd-merkur
 	avr-objcopy -j .text -j .data -O ihex arduino-example.osd-merkur \

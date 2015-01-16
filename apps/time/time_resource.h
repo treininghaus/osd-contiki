@@ -17,7 +17,7 @@
 #ifndef time_resource_h
 #define time_resource_h
 #include "contiki.h"
-#include "erbium.h"
+#include "rest-engine.h"
 
 extern resource_t resource_timestamp;
 extern resource_t resource_localtime;

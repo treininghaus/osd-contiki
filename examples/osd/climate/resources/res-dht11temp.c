@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
+ * Copyright (c) 2014, OSDomotics, Institute of Technology.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,51 +31,74 @@
 
 /**
  * \file
- *      Example resource
+ *      DHT11temp Sensor Resource
+ *
+ *      This is a simple GET resource that returns the temperature in Celsius
+ *
  * \author
- *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
+ *      Harald Pichler <harald@the-develop.net>
  */
 
 #include "contiki.h"
 
-#if PLATFORM_HAS_BATTERY
+#if PLATFORM_HAS_DHT11TEMP
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include <math.h>
 #include "rest-engine.h"
-#include "dev/battery-sensor.h"
+#include "dev/dht11.h"
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+/*A simple getter example. Returns the reading from dhtxx sensor*/
+//RESOURCE(dht11temp, METHOD_GET, "s/temp", "title=\"Temperatur DHTxx\";rt=\"temperature-c\"");
+
+static void res_get_dht11temp_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(res_battery,
-         "title=\"Battery status\";rt=\"Battery\"",
-         res_get_handler,
+RESOURCE(res_dht11temp,
+         "title=\"Temperature DHTxx\";rt=\"temperature c\"",
+         res_get_dht11temp_handler,
          NULL,
          NULL,
          NULL);
 
+uint16_t dht11_temp=0;
+
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  int battery = battery_sensor.value(0);
+  char message[100];
+  int length = 0; /*           |<-------->| */
 
-  unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
+  const uint16_t *accept = NULL;
+  int num = REST.get_header_accept(request, &accept);
 
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
+  if ((num==0) || (num && accept[0]==REST.type.TEXT_PLAIN))
+  {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d.%02d", battery/1000, battery % 1000);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "%d.%02d",dht11_temp/100, dht11_temp % 100);
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_JSON) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'battery':%d.%02d}", battery/1000, battery % 1000);
+    length = strlen(message);
+    memcpy(buffer, message,length );
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  } else {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    const char *msg = "Supporting content-types text/plain and application/json";
-    REST.set_response_payload(response, msg, strlen(msg));
+    REST.set_response_payload(response, buffer, length);
   }
+  else if (num && (accept[0]==REST.type.APPLICATION_JSON))
+  {
+    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+    snprintf(message, REST_MAX_CHUNK_SIZE, "{\"temp\":\"%d.%02d\"}",dht11_temp/100, dht11_temp % 100);
+
+    length = strlen(message);
+    memcpy(buffer, message,length );
+
+    REST.set_response_payload(response, buffer, length);
+  }
+  else
+  {
+    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
+    REST.set_response_payload(response, (uint8_t *)"Supporting content-types text/plain and application/json", 56);
+  }	
 }
-#endif /* PLATFORM_HAS_BATTERY */
+#endif /* PLATFORM_HAS_DS1820 */

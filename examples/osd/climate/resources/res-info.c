@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Institute for Pervasive Computing, ETH Zurich
+ * Copyright (c) 2014, OSDomotics, Institute of Technology.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,51 +31,55 @@
 
 /**
  * \file
- *      Example resource
+ *      Info Resource
+ *
+ *      This is a simple GET resource that returns Information
+ *
  * \author
- *      Matthias Kovatsch <kovatsch@inf.ethz.ch>
+ *      Harald Pichler <harald@the-develop.net>
  */
 
 #include "contiki.h"
 
-#if PLATFORM_HAS_BATTERY
+#if PLATFORM_HAS_INFO
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "rest-engine.h"
-#include "dev/battery-sensor.h"
 
-static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_get_info_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /* A simple getter example. Returns the reading from light sensor with a simple etag */
-RESOURCE(res_battery,
-         "title=\"Battery status\";rt=\"Battery\"",
-         res_get_handler,
+RESOURCE(res_info,
+         "title=\"Info\";rt=\"text\"",
+         res_get_info_handler,
          NULL,
          NULL,
          NULL);
-
+/*
+ * A handler function named [resource name]_handler must be implemented for each RESOURCE.
+ * A buffer for the response payload is provided through the buffer pointer. Simple resources can ignore
+ * preferred_size and offset, but must respect the REST_MAX_CHUNK_SIZE limit for the buffer.
+ * If a smaller block size is requested for CoAP, the REST framework automatically splits the data.
+ */
 static void
-res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+res_get_info_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  int battery = battery_sensor.value(0);
+  char message[100];
+  int index = 0;
+  int length = 0; /*           |<-------->| */
 
-  unsigned int accept = -1;
-  REST.get_header_accept(request, &accept);
+  /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
+       // jSON Format
+     index += sprintf(message + index,"{\n \"version\" : \"V0.4.3\",\n");
+     index += sprintf(message + index," \"name\" : \"6lowpan-climate\"\n");
+     index += sprintf(message + index,"}\n");
 
-  if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
-    REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d.%02d", battery/1000, battery % 1000);
+    length = strlen(message);
+    memcpy(buffer, message,length );
 
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  } else if(accept == REST.type.APPLICATION_JSON) {
-    REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'battery':%d.%02d}", battery/1000, battery % 1000);
-
-    REST.set_response_payload(response, buffer, strlen((char *)buffer));
-  } else {
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
-    const char *msg = "Supporting content-types text/plain and application/json";
-    REST.set_response_payload(response, msg, strlen(msg));
-  }
+  REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
+  REST.set_response_payload(response, buffer, length);
 }
-#endif /* PLATFORM_HAS_BATTERY */
+#endif /* PLATFORM_HAS_INFO */

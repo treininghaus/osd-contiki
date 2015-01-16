@@ -454,8 +454,10 @@ powercycle(struct rtimer *t, void *ptr)
         rtimer_arch_sleep(CYCLE_TIME - (RTIMER_NOW() - cycle_start));
       } else {
         sleepcycle = 0;
+#ifndef RDC_CONF_PT_YIELD_OFF
         schedule_powercycle_fixed(t, CYCLE_TIME + cycle_start);
         PT_YIELD(&pt);
+#endif
       }
 #else
       schedule_powercycle_fixed(t, CYCLE_TIME + cycle_start);

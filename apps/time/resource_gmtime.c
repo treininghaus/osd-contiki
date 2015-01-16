@@ -14,8 +14,7 @@
 #include "time.h"
 #include "time_resource.h"
 #include "jsonparse.h"
-/* Only coap 13 for now */
-#include "er-coap-13.h"
+#include "er-coap.h"
 #include "generic_resource.h"
 
 size_t time_to_string (const char *name, uint8_t is_json, char *buf, size_t bs)
