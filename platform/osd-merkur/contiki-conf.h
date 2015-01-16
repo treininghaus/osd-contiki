@@ -247,13 +247,11 @@ typedef unsigned short uip_stats_t;
 #define RIMESTATS_CONF_ENABLED                 0
 
 #if NETSTACK_CONF_WITH_IPV6
-//#define NETSTACK_CONF_FRAMER      framer802154
+#define NETSTACK_CONF_FRAMER      framer_802154
 #else /* NETSTACK_CONF_WITH_IPV6 */
 #define NETSTACK_CONF_FRAMER      contikimac_framer
 #endif /* NETSTACK_CONF_WITH_IPV6 */
 
-
-#define NETSTACK_CONF_FRAMER      framer_802154
 #define NETSTACK_CONF_RADIO       rf230_driver
 /* The radio needs to interrupt during an rtimer interrupt */
 #define RTIMER_CONF_NESTED_INTERRUPTS 1
