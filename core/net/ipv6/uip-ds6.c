@@ -50,8 +50,6 @@
 #include "net/ipv6/uip-ds6.h"
 #include "net/ip/uip-packetqueue.h"
 
-#if UIP_CONF_IPV6
-
 #define DEBUG DEBUG_NONE
 #include "net/ip/uip-debug.h"
 
@@ -188,12 +186,12 @@ uip_ds6_periodic(void)
 
   uip_ds6_neighbor_periodic();
 
-#if UIP_CONF_ROUTER & UIP_ND6_SEND_RA
+#if UIP_CONF_ROUTER && UIP_ND6_SEND_RA
   /* Periodic RA sending */
   if(stimer_expired(&uip_ds6_timer_ra) && (uip_len == 0)) {
     uip_ds6_send_ra_periodic();
   }
-#endif /* UIP_CONF_ROUTER & UIP_ND6_SEND_RA */
+#endif /* UIP_CONF_ROUTER && UIP_ND6_SEND_RA */
   etimer_reset(&uip_ds6_timer_periodic);
   return;
 }
@@ -704,6 +702,5 @@ uip_ds6_compute_reachable_time(void)
                 UIP_ND6_MIN_RANDOM_FACTOR(uip_ds6_if.base_reachable_time));
 }
 /*---------------------------------------------------------------------------*/
-#endif /* UIP_CONF_IPV6 */
 
 /** @}*/

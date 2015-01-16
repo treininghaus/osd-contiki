@@ -61,7 +61,6 @@
 
 #include "net/ip/uip-debug.h"
 
-#if UIP_CONF_IPV6
 /*---------------------------------------------------------------------------*/
 #define RPL_DIO_GROUNDED                 0x80
 #define RPL_DIO_MOP_SHIFT                3
@@ -779,6 +778,7 @@ dao_input(void)
 
   rep->state.lifetime = RPL_LIFETIME(instance, lifetime);
   rep->state.learned_from = learned_from;
+  rep->state.nopath_received = 0;
 
 #if RPL_CONF_MULTICAST
 fwd_dao:
@@ -958,6 +958,5 @@ rpl_icmp6_register_handlers()
   uip_icmp6_register_input_handler(&dao_ack_handler);
 }
 /*---------------------------------------------------------------------------*/
-#endif /* UIP_CONF_IPV6 */
 
 /** @}*/

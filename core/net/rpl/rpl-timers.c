@@ -47,8 +47,6 @@
 #include "lib/random.h"
 #include "sys/ctimer.h"
 
-#if UIP_CONF_IPV6
-
 #define DEBUG DEBUG_NONE
 #include "net/ip/uip-debug.h"
 
@@ -147,7 +145,7 @@ handle_dio_timer(void *ptr)
 
   if(instance->dio_send) {
     /* send DIO if counter is less than desired redundancy */
-    if(instance->dio_counter < instance->dio_redundancy) {
+    if(instance->dio_redundancy != 0 && instance->dio_counter < instance->dio_redundancy) {
 #if RPL_CONF_STATS
       instance->dio_totsend++;
 #endif /* RPL_CONF_STATS */
@@ -325,6 +323,5 @@ rpl_cancel_dao(rpl_instance_t *instance)
   ctimer_stop(&instance->dao_lifetime_timer);
 }
 /*---------------------------------------------------------------------------*/
-#endif /* UIP_CONF_IPV6 */
 
 /** @}*/
