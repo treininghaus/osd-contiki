@@ -40,8 +40,6 @@ size_t time_to_string (const char *name, uint8_t is_json, char *buf, size_t bs)
 
 GENERIC_RESOURCE \
     ( localtime
-    , METHOD_GET
-    , "clock/localtime"
     , Local time
     , formatted time
     , NULL
@@ -50,8 +48,6 @@ GENERIC_RESOURCE \
 
 GENERIC_RESOURCE \
     ( utc
-    , METHOD_GET
-    , "clock/utc"
     , UTC
     , formatted time
     , NULL
