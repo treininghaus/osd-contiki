@@ -1,19 +1,32 @@
-all: er-example-server er-example-client
-# use this target explicitly if requried: er-plugtest-server
+# Set this to the name of your sketch (without extension .pde)
+SKETCH=sketch
 
+ifeq ($(TARGET), osd-merkur)
+PLATFORM_FILES= avr-size arduino-example.osd-merkur.hex \
+    arduino-example.osd-merkur.eep
+endif
 
-# variable for this Makefile
-# configure CoAP implementation (3|7|12|13) (er-coap-07 also supports CoAP draft 08)
-WITH_COAP=13
-
-# for some platforms
-UIP_CONF_IPV6=1
-# IPv6 make config disappeared completely
-CFLAGS += -DUIP_CONF_IPV6=1
+all: arduino-example $(PLATFORM_FILES)
 
 CONTIKI=../../..
+
+# Contiki IPv6 configuration
+CONTIKI_WITH_IPV6 = 1
+
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
+PROJECT_SOURCEFILES += ${SKETCH}.cpp
+
+# automatically build RESTful resources
+REST_RESOURCES_DIR = ./resources
+REST_RESOURCES_DIR_COMMON = ../resources-common
+REST_RESOURCES_FILES= $(notdir \
+    $(shell find $(REST_RESOURCES_DIR) -name '*.c') \
+    $(shell find $(REST_RESOURCES_DIR_COMMON) -name '*.c') \
+    )
+
+PROJECTDIRS += $(REST_RESOURCES_DIR) $(REST_RESOURCES_DIR_COMMON)
+PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 
 # variable for Makefile.include
 ifneq ($(TARGET), minimal-net)
@@ -32,63 +45,41 @@ endif
 # linker optimizations
 SMALL=1
 
-# REST framework, requires WITH_COAP
-ifeq ($(WITH_COAP), 13)
-${info INFO: compiling with CoAP-13}
-CFLAGS += -DWITH_COAP=13
-CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
-APPS += er-coap-13
-else ifeq ($(WITH_COAP), 12)
-${info INFO: compiling with CoAP-12}
-CFLAGS += -DWITH_COAP=12
-CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
-APPS += er-coap-12
-else ifeq ($(WITH_COAP), 7)
-${info INFO: compiling with CoAP-08}
-CFLAGS += -DWITH_COAP=7
-CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
-APPS += er-coap-07
-else ifeq ($(WITH_COAP), 3)
-${info INFO: compiling with CoAP-03}
-CFLAGS += -DWITH_COAP=3
-CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
-APPS += er-coap-03
-else
-${info INFO: compiling with HTTP}
-CFLAGS += -DWITH_HTTP
-CFLAGS += -DREST=http_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=1
-APPS += er-http-engine
-endif
 
-APPS += erbium
-
-# optional rules to get assembly
-#CUSTOM_RULE_C_TO_OBJECTDIR_O = 1
-#CUSTOM_RULE_S_TO_OBJECTDIR_O = 1
+# REST Engine shall use Erbium CoAP implementation
+APPS += er-coap
+APPS += rest-engine
+APPS += arduino
 
 include $(CONTIKI)/Makefile.include
+include $(CONTIKI)/apps/arduino/Makefile.include
 
-# optional rules to get assembly
-#$(OBJECTDIR)/%.o: asmdir/%.S
-#	$(CC) $(CFLAGS) -MMD -c $< -o $@
-#	@$(FINALIZE_DEPENDENCY)
-#
-#asmdir/%.S: %.c
-#	$(CC) $(CFLAGS) -MMD -S $< -o $@
+avr-size: arduino-example.osd-merkur
+	avr-size -C --mcu=MCU=atmega128rfa1 arduino-example.osd-merkur
 
-# border router rules
-$(CONTIKI)/tools/tunslip6:	$(CONTIKI)/tools/tunslip6.c
+arduino-example.osd-merkur.hex: arduino-example.osd-merkur
+	avr-objcopy -j .text -j .data -O ihex arduino-example.osd-merkur \
+	    arduino-example.osd-merkur.hex
+
+arduino-example.osd-merkur.eep: arduino-example.osd-merkur
+	avr-objcopy -j .eeprom --set-section-flags=.eeprom="alloc,load" \
+	    --change-section-lma .eeprom=0 -O ihex                      \
+	    arduino-example.osd-merkur arduino-example.osd-merkur.eep
+
+flash: arduino-example.osd-merkur.hex arduino-example.osd-merkur.eep
+	avrdude -pm128rfa1 -c arduino -P/dev/ttyUSB0 -b57600 -e -U \
+	    flash:w:arduino-example.osd-merkur.hex:a -U \
+	    eeprom:w:arduino-example.osd-merkur.eep:a
+
+.PHONY: flash avr-size
+
+$(CONTIKI)/tools/tunslip6:      $(CONTIKI)/tools/tunslip6.c
 	(cd $(CONTIKI)/tools && $(MAKE) tunslip6)
 
-connect-router:	$(CONTIKI)/tools/tunslip6
+connect-router: $(CONTIKI)/tools/tunslip6
 	sudo $(CONTIKI)/tools/tunslip6 aaaa::1/64
 
-connect-router-cooja:	$(CONTIKI)/tools/tunslip6
+connect-router-cooja:   $(CONTIKI)/tools/tunslip6
 	sudo $(CONTIKI)/tools/tunslip6 -a 127.0.0.1 aaaa::1/64
 
 connect-minimal:
