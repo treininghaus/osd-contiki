@@ -18,8 +18,7 @@
 #include "time.h"
 #include "time_resource.h"
 #include "jsonparse.h"
-/* Only coap 13 for now */
-#include "er-coap-13.h"
+#include "er-coap.h"
 #include "generic_resource.h"
 
 void timestamp_from_string (const char *name, const char *s)
@@ -46,8 +45,6 @@ timestamp_to_string (const char *name, uint8_t is_json, char *buf, size_t bsize)
 
 GENERIC_RESOURCE
   ( timestamp
-  , METHOD_GET | METHOD_PUT
-  , "clock/timestamp"
   , Time
   , s
   , timestamp_from_string

@@ -1,17 +1,16 @@
-all: er-example-server \
-    er-example-server.osd-merkur.hex er-example-server.osd-merkur.eep
+ifeq ($(TARGET), osd-merkur)
+PLATFORM_FILES= avr-size er-example-server.osd-merkur.hex \
+    er-example-server.osd-merkur.eep
+endif
+
+all: er-example-server $(PLATFORM_FILES)
 # use this target explicitly if requried: er-plugtest-server
 
-# variable for this Makefile
-# configure CoAP implementation (3|7|12|13) (er-coap-07 also supports CoAP draft 08)
-WITH_COAP=13
-
-# for some platforms
-UIP_CONF_IPV6=1
-# IPv6 make config disappeared completely
-CFLAGS += -DUIP_CONF_IPV6=1
-
 CONTIKI=../../..
+
+# Contiki IPv6 configuration
+CONTIKI_WITH_IPV6 = 1
+
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 PROJECT_SOURCEFILES += resource_led_pwm.c
@@ -33,42 +32,15 @@ endif
 # linker optimizations
 SMALL=1
 
-# REST framework, requires WITH_COAP
-ifeq ($(WITH_COAP), 13)
-${info INFO: compiling with CoAP-13}
-CFLAGS += -DWITH_COAP=13
-CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
-APPS += er-coap-13
-else ifeq ($(WITH_COAP), 12)
-${info INFO: compiling with CoAP-12}
-CFLAGS += -DWITH_COAP=12
-CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
-APPS += er-coap-12
-else ifeq ($(WITH_COAP), 7)
-${info INFO: compiling with CoAP-08}
-CFLAGS += -DWITH_COAP=7
-CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
-APPS += er-coap-07
-else ifeq ($(WITH_COAP), 3)
-${info INFO: compiling with CoAP-03}
-CFLAGS += -DWITH_COAP=3
-CFLAGS += -DREST=coap_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=0
-APPS += er-coap-03
-else
-${info INFO: compiling with HTTP}
-CFLAGS += -DWITH_HTTP
-CFLAGS += -DREST=http_rest_implementation
-CFLAGS += -DUIP_CONF_TCP=1
-APPS += er-http-engine
-endif
-
-APPS += erbium json json-resource
+# REST Engine shall use Erbium CoAP implementation
+APPS += er-coap
+APPS += rest-engine
+APPS += json json-resource
 
 include $(CONTIKI)/Makefile.include
+
+avr-size: er-example-server.osd-merkur
+	avr-size -C --mcu=MCU=atmega128rfa1 er-example-server.osd-merkur
 
 er-example-server.osd-merkur.hex: er-example-server.osd-merkur
 	avr-objcopy -j .text -j .data -O ihex er-example-server.osd-merkur \
@@ -84,7 +56,7 @@ flash: er-example-server.osd-merkur.hex er-example-server.osd-merkur.eep
 	    flash:w:er-example-server.osd-merkur.hex:a -U \
 	    eeprom:w:er-example-server.osd-merkur.eep:a
 
-.PHONY: flash
+.PHONY: flash avr-size
 
 $(CONTIKI)/tools/tunslip6:      $(CONTIKI)/tools/tunslip6.c
 	(cd $(CONTIKI)/tools && $(MAKE) tunslip6)

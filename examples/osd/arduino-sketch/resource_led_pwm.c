@@ -13,8 +13,7 @@
 #include <string.h>
 #include "contiki.h"
 #include "jsonparse.h"
-/* Only coap 13 for now */
-#include "er-coap-13.h"
+#include "er-coap.h"
 #include "generic_resource.h"
 #include "led_pwm.h"
 
@@ -34,8 +33,7 @@ pwm_to_string (const char *name, uint8_t is_json, char *buf, size_t bufsize)
 }
 
 GENERIC_RESOURCE \
-    ( led_pwm, METHOD_GET | METHOD_PUT
-    , "led/pwm"
+    ( led_pwm
     , LED PWM
     , duty-cycle
     , pwm_from_string
@@ -61,8 +59,7 @@ period_to_string (const char *name, uint8_t is_json, char *buf, size_t bufsize)
 }
 
 GENERIC_RESOURCE \
-    ( led_period, METHOD_GET | METHOD_PUT
-    , "led/period"
+    ( led_period
     , LED Period
     , ms
     , period_from_string
@@ -77,8 +74,7 @@ analog2_v (const char *name, uint8_t is_json, char *buf, size_t bufsize)
 }
 
 GENERIC_RESOURCE \
-    ( analog2_voltage, METHOD_GET
-    , "analog/2"
+    ( analog2_voltage
     , Analog 2 voltage
     , V
     , NULL
@@ -93,8 +89,7 @@ analog5_v (const char *name, uint8_t is_json, char *buf, size_t bufsize)
 }
 
 GENERIC_RESOURCE \
-    ( analog5_voltage, METHOD_GET
-    , "analog/5"
+    ( analog5_voltage
     , Analog 5 voltage
     , V
     , NULL

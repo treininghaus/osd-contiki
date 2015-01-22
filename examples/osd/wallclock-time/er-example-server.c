@@ -122,7 +122,6 @@ PROCESS_THREAD(rest_server_example, ev, data)
   rest_init_engine();
 
   /* Activate the application-specific resources. */
-  rest_activate_resource(&res_info);
   rest_activate_resource(&res_leds, "s/leds");
 
 
@@ -131,9 +130,9 @@ PROCESS_THREAD(rest_server_example, ev, data)
   rest_activate_resource(&res_battery, "s/battery");
 #endif
 
-  rest_activate_resource(&res_timestamp, "s/timestamp");
-  rest_activate_resource(&res_localtime, "localtime");
-  rest_activate_resource(&res_utc, "utc");
+  rest_activate_resource(&res_timestamp, "clock/timestamp");
+  rest_activate_resource(&res_localtime, "clock/localtime");
+  rest_activate_resource(&res_utc, "clock/utc");
 
   /* Define application-specific events here. */
   while(1) {

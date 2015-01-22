@@ -19,9 +19,9 @@
 #include "contiki.h"
 #include "rest-engine.h"
 
-extern resource_t resource_timestamp;
-extern resource_t resource_localtime;
-extern resource_t resource_utc;
+extern resource_t res_timestamp;
+extern resource_t res_localtime;
+extern resource_t res_utc;
 
 #endif // time_resource_h
 /** @} */
