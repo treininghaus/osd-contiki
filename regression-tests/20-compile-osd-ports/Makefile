@@ -17,12 +17,10 @@ osd/embedd-vm-merkurboard/osd-merkur \
 osd/er-rest-example-merkurboard/osd-merkur \
 osd/light-actor/osd-merkur \
 osd/light-shutter-control/osd-merkur \
-osd/nativ-boarder-router/nativ \
 osd/pingtheplug/osd-merkur \
 osd/pir-sensor/osd-merkur \
 osd/powerbox/osd-merkur \
 osd/pwm-example/osd-merkur \
-osd/rpl-boarder-router/osd-merkur \
 osd/servo-sensor/osd-merkur \
 osd/slip-radio/osd-merkur \
 osd/wallclock-timer/osd-merkur \
