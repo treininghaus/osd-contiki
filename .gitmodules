@@ -4,3 +4,6 @@
 [submodule "tools/cc2538-bsl"]
 	path = tools/cc2538-bsl
 	url = https://github.com/JelmerT/cc2538-bsl.git
+[submodule "platform/osd-merkur/dev/LED_Strip_Suli"]
+	path = platform/osd-merkur/dev/LED_Strip_Suli
+	url = https://github.com/Seeed-Studio/LED_Strip_Suli
