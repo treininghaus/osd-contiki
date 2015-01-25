@@ -6,4 +6,4 @@
 	url = https://github.com/JelmerT/cc2538-bsl.git
 [submodule "platform/osd-merkur/dev/LED_Strip_Suli"]
 	path = platform/osd-merkur/dev/LED_Strip_Suli
-	url = https://github.com/osdomotics/osd-contiki.git
+	url = https://github.com/osdomotics/LED_Strip_Suli.git
