@@ -63,7 +63,7 @@ extern resource_t res_radio;
 
 #include "LED_Strip_Suli.h"
 
-int color_rgb [3] = {255, 0, 255};
+uint8_t color_rgb [3] = {0, 255, 0};
 
 static uint8_t name_to_offset (const char * name)
 {
@@ -83,12 +83,12 @@ color_to_string (const char *name, uint8_t is_json, char *buf, size_t bsize)
   if (is_json) {
     fmt = "\"%d\"";
   }
-  return snprintf (buf, bsize, fmt, 255 - color_rgb [name_to_offset (name)]);
+  return snprintf (buf, bsize, fmt, color_rgb [name_to_offset (name)]);
 }
 
 void color_from_string (const char *name, const char *s)
 {
-  color_rgb [name_to_offset (name)] = 255 - atoi (s);
+  color_rgb [name_to_offset (name)] = atoi (s);
   led_strip_begin ();
   led_strip_set_color (color_rgb [0], color_rgb [1], color_rgb [2]);
   led_strip_end ();
