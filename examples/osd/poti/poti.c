@@ -201,15 +201,21 @@ PROCESS_THREAD(poti, ev, data)
         val = (sum / 5) >> 2;
         if ((interval > 0 && count > interval) || (val != lastval)) {
             char buf [4];
+            coap_transaction_t *transaction;
+
             sprintf (buf, "%d", val);
             lastval = val;
             printf ("Sending Value: %d\n", val);
-            coap_init_message (request, COAP_TYPE_CON, COAP_PUT, 0);
+            coap_init_message (request, COAP_TYPE_NON, COAP_PUT, 0);
             coap_set_header_uri_path (request, server_resource);
             coap_set_header_content_format (request, REST.type.TEXT_PLAIN);
             coap_set_payload (request, buf, strlen (buf));
-            COAP_BLOCKING_REQUEST
-                (&server_ipaddr, REMOTE_PORT, request, chunk_handler);
+            request->mid = coap_get_mid ();
+            transaction = coap_new_transaction
+                (request->mid, &server_ipaddr, REMOTE_PORT);
+            transaction->packet_len = coap_serialize_message
+                (request, transaction->packet);
+            coap_send_transaction (transaction);
             count = 0;
         }
         etimer_reset (&loop_timer);
