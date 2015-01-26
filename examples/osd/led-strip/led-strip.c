@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-15, Ralf Schlatterbeck Open Source Consulting
+ * Copyright (c) 2015, Ralf Schlatterbeck Open Source Consulting
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
