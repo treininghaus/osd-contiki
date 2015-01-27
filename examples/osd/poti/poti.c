@@ -203,9 +203,20 @@ PROCESS_THREAD(poti, ev, data)
             char buf [4];
             coap_transaction_t *transaction;
 
-            sprintf (buf, "%d", val);
+            /*
+             * Note: A sending transaction may be still in progress when
+             * we call the following code. This means that the *new*
+             * value in the transaction buffer will overwrite the old
+             * value *but* the old length remains. This means if we
+             * first send 255 (and the transaction sending 255 is still
+             * in progress) and we now send 0, the resulting buffer is
+             * 055 (because only the 0 is copied but the old length
+             * stays). Therefore as a workaround we *always* send a
+             * 3-byte value.
+             */
+            sprintf (buf, "%03d", val);
             lastval = val;
-            printf ("Sending Value: %d\n", val);
+            printf ("Sending Value: %s\n", buf);
             coap_init_message (request, COAP_TYPE_NON, COAP_PUT, 0);
             coap_set_header_uri_path (request, server_resource);
             coap_set_header_content_format (request, REST.type.TEXT_PLAIN);
