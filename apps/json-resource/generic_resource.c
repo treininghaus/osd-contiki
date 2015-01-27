@@ -189,8 +189,10 @@ void generic_put_handler
 
   if (from_str && (len = coap_get_payload(request, &bytes))) {
     if (c_ctype == REST.type.TEXT_PLAIN) {
+      int l = MIN (len, sizeof (temp) - 1);
       temp [sizeof (temp) - 1] = 0;
-      strncpy (temp, (const char *)bytes, MIN (len, sizeof (temp) - 1));
+      strncpy (temp, (const char *)bytes, l);
+      temp [l] = 0;
     } else { // jSON Format
       if (json_parse_variable (bytes, len, name, temp, sizeof (temp)) < 0) {
         success = 0;
