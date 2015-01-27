@@ -65,6 +65,8 @@ extern resource_t res_radio;
 #endif
 
 #define REMOTE_PORT UIP_HTONS(COAP_DEFAULT_PORT)
+// should be the same :-)
+#define UIP_NTOHS(x) UIP_HTONS(x)
 #define SERVER_NODE(ip) \
     uip_ip6addr(ip,0xfe80,0,0,0,0x22e,0xffff,0x34,0xa600)
     /*uip_ip6addr(ip,0x2001,0xdb8,0xc001,0xf00d,0x22e,0xffff,0x34,0xa600)*/
@@ -77,13 +79,13 @@ int          interval = 10; /* Retransmit interval after no change in value */
 static size_t
 ip_to_string (const char *name, uint8_t is_json, char *buf, size_t bsize)
 {
-    #define IP(x) server_ipaddr.u16[x]
+    #define IP(x) UIP_NTOHS(server_ipaddr.u16[x])
     char *q = "\"";
     if (!is_json) {
         q = "";
     }
     return snprintf
-        ( buf, bsize, "%s%4x:%4x:%4x:%4x:%4x:%4x:%4x:%4x%s"
+        ( buf, bsize, "%s%x:%x:%x:%x:%x:%x:%x:%x%s"
         , q, IP(0), IP(1), IP(2), IP(3), IP(4), IP(5), IP(6), IP(7), q
         );
 }
