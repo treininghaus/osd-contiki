@@ -168,7 +168,6 @@ PROCESS_THREAD(poti, ev, data)
   rest_init_engine ();
   SERVER_NODE (&server_ipaddr);
   adc_init ();
-  coap_init_connection (0);
 
   /* Activate the application-specific resources. */
 #if PLATFORM_HAS_BATTERY
