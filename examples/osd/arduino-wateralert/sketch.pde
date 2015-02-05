@@ -16,8 +16,8 @@ extern "C" {
 extern resource_t res_moisture, res_battery;
 uint8_t moisture_pin = A5;
 uint16_t moisture_voltage = 0;
-
-#define LED_PIN 4
+#define BUZZER_PIN 3 /* sig pin of the buzzer */
+#define LED_PIN 4    /* LED Pin */
 }
 
 void setup (void)
@@ -25,6 +25,9 @@ void setup (void)
     // switch off the led
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH);
+    // setup Buzzer 
+    pinMode(BUZZER_PIN, OUTPUT);
+    digitalWrite(BUZZER_PIN, HIGH);
     // init coap resourcen
     rest_init_engine ();
     rest_activate_resource (&res_moisture, "s/moisture");
@@ -33,5 +36,10 @@ void setup (void)
 
 void loop (void)
 {
-
+  moisture_voltage = analogRead(moisture_pin);
+  if(moisture_voltage < 800){
+      digitalWrite(BUZZER_PIN, LOW);
+  }else{
+      digitalWrite(BUZZER_PIN, HIGH);
+  }
 }
