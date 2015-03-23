@@ -29,6 +29,7 @@
 #define udelay(u) clock_delay_usec(u)
 #define mdelay(u) clock_delay_msec(u)
 
+// todo: set DHT22 or DHT11 in project file
 // define for DHT11 else for DHT22, RHT03 
 //   #define DHT11	1
 
