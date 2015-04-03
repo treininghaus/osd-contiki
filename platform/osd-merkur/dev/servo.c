@@ -137,11 +137,17 @@ servo_set(unsigned i,unsigned int j)
 	j=SERVO_MAX;
 
   if(i==0)
+  {
     servoa=j;
     OCR1A = SERVO_OFFSET + servoa;
-  return 1;
+    return 1;
+  }
   if(i==1)
+  {
     servob=j;
     OCR1A = SERVO_OFFSET + servob;
-  return 1;
+    return 1;
+  }
+
+  return 0;
 }
