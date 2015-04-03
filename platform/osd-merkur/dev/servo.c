@@ -52,9 +52,9 @@
  * servo device
  */
 
-#define SERVO_OFFSET	1000
-#define SERVO_MAX	1000
-#define SERVO_INIT	 500
+#define SERVO_MIN   575
+#define SERVO_MAX  2425
+#define SERVO_INIT 1500
 
 unsigned int servoa=SERVO_INIT;
 unsigned int servob=SERVO_INIT;
@@ -97,10 +97,10 @@ servo_init(void)
   ICR3L=0x20;
 
   // OCR3A will govern the steering servo, OCR3B will govern throttle
-  OCR3A = 1500;  // set it to an initial position somewhere in the middle of the 1 to 2ms range
+  OCR3A = servoa;  // set it to an initial position somewhere in the middle of the 1 to 2ms range
 
   // OCR3A will govern the steering servo, OCR3B will govern throttle
-  OCR3B = 1500;  // set it to an initial position somewhere in the middle of the 1 to 2ms range
+  OCR3B = servob;  // set it to an initial position somewhere in the middle of the 1 to 2ms range
   // start with motor off - no duty cycle at all
   OCR3CH=0x00;
   OCR3CL=0x00;
@@ -135,18 +135,20 @@ unsigned int
 servo_set(unsigned i,unsigned int j)
 {
   if(j > SERVO_MAX)
-	j=SERVO_MAX;
+    j=SERVO_MAX;
+  if(j < SERVO_MIN)
+    j=SERVO_MIN;
 
   if(i==0)
   {
     servoa=j;
-    OCR3A = SERVO_OFFSET + servoa;
+    OCR3A = servoa;
     return 1;
   }
   if(i==1)
   {
     servob=j;
-    OCR3A = SERVO_OFFSET + servob;
+    OCR3B = servob;
     return 1;
   }
 
