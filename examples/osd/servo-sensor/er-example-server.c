@@ -46,7 +46,8 @@
 
 /* Define which resources to include to meet memory constraints. */
 #define REST_RES_INFO 1
-#define REST_RES_T4_SERVO 1
+#define REST_RES_SERVO 1
+#define REST_RES_T4_SERVO 0
 #define REST_RES_LEDS 0
 #define REST_RES_TOGGLE 0
 #define REST_RES_BATTERY 1
@@ -464,6 +465,10 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #if defined (PLATFORM_HAS_BATTERY) && REST_RES_BATTERY
   SENSORS_ACTIVATE(battery_sensor);
   rest_activate_resource(&resource_battery);
+#endif
+#if defined (PLATFORM_HAS_SERVO) && REST_RES_SERVO
+  SENSORS_ACTIVATE(servo_sensor);
+  rest_activate_resource(&res_servo);
 #endif
 #if defined (PLATFORM_HAS_T4_SERVO) && REST_RES_T4_SERVO
   SENSORS_ACTIVATE(t4_servo_sensor);
