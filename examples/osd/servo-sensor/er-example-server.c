@@ -173,7 +173,7 @@ servo_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred
     REST.set_response_status(response, REST.status.BAD_REQUEST);
   }
 }
-RESOURCE(res_servo, "title=\"Servo\";rt=\"servo\"", servo_handler, servo_handler, NULL, NULL );
+RESOURCE(res_servo, "title=\"Servo\";rt=\"servo\"", servo_handler, NULL, servo_handler, NULL );
 #endif
 
 #if defined (PLATFORM_HAS_T4_SERVO)
@@ -252,7 +252,7 @@ t4_servo_handler(void* request, void* response, uint8_t *buffer, uint16_t prefer
     REST.set_response_status(response, REST.status.BAD_REQUEST);
   }
 }
-RESOURCE(res_t4_servo,"title=\"Timer4Servo\";rt=\"t4_servo\"", t4_servo_handler, te4_servo_handler, NULL, NULL );
+RESOURCE(res_t4_servo,"title=\"Timer4Servo\";rt=\"t4_servo\"", t4_servo_handler, te4_servo_handler, te4_servo_handler, NULL );
 #endif
 
 
