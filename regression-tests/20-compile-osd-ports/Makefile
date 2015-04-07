@@ -1,3 +1,4 @@
+
 EXAMPLESDIR=../../examples
 TOOLSDIR=../../tools
 
@@ -13,6 +14,7 @@ osd/arduino-sketch/osd-merkur \
 osd/arduino-wateralert/osd-merkur \
 osd/climate/osd-merkur \
 osd/climate2/osd-merkur \
+osd/servo-sensor/osd-merkur \
 #osd/dual-rgbw-actor/osd-merkur \
 #osd/embedd-vm-merkurboard/osd-merkur \
 #osd/er-rest-example-merkurboard/osd-merkur \
@@ -22,7 +24,6 @@ osd/climate2/osd-merkur \
 #osd/pir-sensor/osd-merkur \
 #osd/powerbox/osd-merkur \
 #osd/pwm-example/osd-merkur \
-#osd/servo-sensor/osd-merkur \
 #osd/wirelessplug/osd-merkur \
 #osd/wallclock-timer/osd-merkur
 
