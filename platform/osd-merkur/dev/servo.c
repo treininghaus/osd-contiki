@@ -52,9 +52,9 @@
  * servo device
  */
 
-#define SERVO_OFFSET	1000
-#define SERVO_MAX	1000
-#define SERVO_INIT	 500
+#define SERVO_MIN   575
+#define SERVO_MAX  2425
+#define SERVO_INIT 1500
 
 unsigned int servoa=SERVO_INIT;
 unsigned int servob=SERVO_INIT;
@@ -62,47 +62,48 @@ unsigned int servob=SERVO_INIT;
 void
 servo_init(void)
 {
-// Port B initialization
-// Func7=Out Func6=Out Func5=Out Func4=In Func3=In Func2=In Func1=In Func0=In
-// State7=0 State6=0 State5=0 State4=T State3=T State2=T State1=T State0=T
-PORTB=0x00;
-DDRB=0xE0;
-// Timer/Counter 1 initialization
-// Clock source: System Clock
-// Clock value: 2000.000 kHz
-// Mode: Ph. & fr. cor. PWM top=ICR1
-// OC1A output: Connected
-// OC1B output: Connected
-// OC1C output: Connected
-// Noise Canceler: Off
-// Input Capture on Falling Edge
-// Timer1 Overflow Interrupt: Off
-// Input Capture Interrupt: Off
-// Compare A Match Interrupt: Off
-// Compare B Match Interrupt: Off
-// Compare C Match Interrupt: Off
-TCCR1A=0xA8;
-TCCR1B=0x12;
-TCNT1H=0x00;
-TCNT1L=0x00;
-// ICR1 has a computed value of 20,000 - see the ESawdust.com/blog article for how this
-// value was derived.
-// 20000 == 0x4e20 so that's what goes into the high and low byte of the ICR1 register
-// alternatively, Codevision would let you just do ICR1 = 20000;
-ICR1H=0x4E;
-ICR1L=0x20;
+  // Port E initialization
+  // Set Pin 3 and 4 to output mode for OCR1A and OCR2A
+  DDRE |= 1<<3 | 1<<4;
 
-/* OCR1AH=0x00;
-OCR1AL=0x00;
-*/
-// OCR1A will govern the steering servo, OCR1B will govern throttle
-OCR1A = 1500;  // set it to an initial position somewhere in the middle of the 1 to 2ms range
+  // Timer/Counter 3 initialization
+  // Clock source: System Clock
+  // Clock value: 2000.000 kHz
+  // Mode: Ph. & fr. cor. PWM top=ICR1
+  // OC3A output: Connected
+  // OC3B output: Connected
+  // OC3C output: Connected
+  // Noise Canceler: Off
+  // Input Capture on Falling Edge
+  // Timer3 Overflow Interrupt: Off
+  // Input Capture Interrupt: Off
+  // Compare A Match Interrupt: Off
+  // Compare B Match Interrupt: Off
+  // Compare C Match Interrupt: Off
 
-// OCR1A will govern the steering servo, OCR1B will govern throttle
-OCR1B = 1500;  // set it to an initial position somewhere in the middle of the 1 to 2ms range
-// start with motor off - no duty cycle at all
-OCR1CH=0x00;
-OCR1CL=0x00;
+  /* TCCR3A = [COM3A1|COM3A0|COM3B1|COM3B0||FOC3A|FOC3B|WGM31|WGM30] */
+  /*                1      0      1      0      1     0     0     0  */
+  TCCR3A=0xA8;
+  /* TCCR3B = [ ICNC3| ICES3|     -| WGM33||WGM32| CS32| CS31| CS30] */
+  /*                0      0      0      1      0     0     1     0  */
+  TCCR3B=0x12;
+  TCNT3H=0x00;
+  TCNT3L=0x00;
+  // ICR3 has a computed value of 20,000 - see the chip manual for how this
+  // value was derived.
+  // 20000 == 0x4e20 so that's what goes into the high and low byte of the ICR3 register
+  // alternatively, Codevision would let you just do ICR3 = 20000;
+  ICR3H=0x4E;
+  ICR3L=0x20;
+
+  // OCR3A will govern the steering servo, OCR3B will govern throttle
+  OCR3A = servoa;  // set it to an initial position somewhere in the middle of the 1 to 2ms range
+
+  // OCR3A will govern the steering servo, OCR3B will govern throttle
+  OCR3B = servob;  // set it to an initial position somewhere in the middle of the 1 to 2ms range
+  // start with motor off - no duty cycle at all
+  OCR3CH=0x00;
+  OCR3CL=0x00;
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -134,14 +135,22 @@ unsigned int
 servo_set(unsigned i,unsigned int j)
 {
   if(j > SERVO_MAX)
-	j=SERVO_MAX;
+    j=SERVO_MAX;
+  if(j < SERVO_MIN)
+    j=SERVO_MIN;
 
   if(i==0)
+  {
     servoa=j;
-    OCR1A = SERVO_OFFSET + servoa;
-  return 1;
+    OCR3A = servoa;
+    return 1;
+  }
   if(i==1)
+  {
     servob=j;
-    OCR1A = SERVO_OFFSET + servob;
-  return 1;
+    OCR3B = servob;
+    return 1;
+  }
+
+  return 0;
 }
