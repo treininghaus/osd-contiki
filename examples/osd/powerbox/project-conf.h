@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Matthias Kovatsch
+ * Copyright (c) 2010, Swedish Institute of Computer Science.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,13 +32,9 @@
 #ifndef PROJECT_ERBIUM_CONF_H_
 #define PROJECT_ERBIUM_CONF_H_
 
-#define PLATFORM_HAS_INFO 1
-#define PLATFORM_HAS_BATTERY 1
-#define PLATFORM_HAS_DS1820  1
-#define PLATFORM_HAS_DHT11HUM   1
-//#define PLATFORM_HAS_DHT11TEMP   1
 #define PLATFORM_HAS_LEDS    1
-
+#define PLATFORM_HAS_RELAY  1
+#define PLATFORM_HAS_BATTERY 1
 
 /* Some platforms have weird includes. */
 #undef IEEE802154_CONF_PANID
@@ -61,7 +57,7 @@
 /* The IP buffer size must fit all other hops, in particular the border router. */
 
 #undef UIP_CONF_BUFFER_SIZE
-#define UIP_CONF_BUFFER_SIZE    256
+#define UIP_CONF_BUFFER_SIZE    640
 
 
 /* Multiplies with chunk size, be aware of memory constraints. */
@@ -81,18 +77,18 @@
 */
 
 /* Save some memory for the sky platform. */
-/*
 #undef NBR_TABLE_CONF_MAX_NEIGHBORS
 #define NBR_TABLE_CONF_MAX_NEIGHBORS     10
+
 #undef UIP_CONF_MAX_ROUTES
 #define UIP_CONF_MAX_ROUTES   10
-*/
+
 
 /* Reduce 802.15.4 frame queue to save RAM. */
-/*
+
 #undef QUEUEBUF_CONF_NUM
 #define QUEUEBUF_CONF_NUM       4
-*/
+
 
 /*
 #undef SICSLOWPAN_CONF_FRAG
