@@ -75,18 +75,9 @@
 #include "net/ipv4/uip_arp.h"
 #include "net/ip/uip_arch.h"
 
-#if !NETSTACK_CONF_WITH_IPV6 /* If NETSTACK_CONF_WITH_IPV6 is defined, we compile the
-		      uip6.c file instead of this one. Therefore
-		      this #ifndef removes the entire compilation
-		      output of the uip.c file */
-
-
-#if NETSTACK_CONF_WITH_IPV6
 #include "net/ipv4/uip-neighbor.h"
-#endif /* NETSTACK_CONF_WITH_IPV6 */
 
 #include <string.h>
-
 /*---------------------------------------------------------------------------*/
 /* Variable definitions. */
 
@@ -395,7 +386,7 @@ uip_init(void)
 /*---------------------------------------------------------------------------*/
 #if UIP_ACTIVE_OPEN
 struct uip_conn *
-uip_connect(uip_ipaddr_t *ripaddr, uint16_t rport)
+uip_connect(const uip_ipaddr_t *ripaddr, uint16_t rport)
 {
   register struct uip_conn *conn, *cconn;
 
@@ -1973,6 +1964,4 @@ uip_send(const void *data, int len)
   }
 }
 /*---------------------------------------------------------------------------*/
-#endif /* NETSTACK_CONF_WITH_IPV6 */
-
 /** @}*/
