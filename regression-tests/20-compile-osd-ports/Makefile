@@ -19,8 +19,8 @@ osd/servo-sensor/osd-merkur \
 osd/pingtheplug/osd-merkur \
 osd/powerbox/osd-merkur \
 osd/embedd-vm-merkurboard/osd-merkur \
+osd/light-actor/osd-merkur \
 #osd/dual-rgbw-actor/osd-merkur \
-#osd/light-actor/osd-merkur \
 #osd/light-shutter-control/osd-merkur \
 #osd/pir-sensor/osd-merkur \
 #osd/pwm-example/osd-merkur \
