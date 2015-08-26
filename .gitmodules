@@ -7,7 +7,10 @@
 [submodule "platform/osd-merkur/dev/LED_Strip_Suli"]
 	path = platform/osd-merkur/dev/LED_Strip_Suli
 	url = https://github.com/osdomotics/LED_Strip_Suli.git
-[submodule "cpu/cc26xx/lib/cc26xxware"]
-	path = cpu/cc26xx/lib/cc26xxware
+[submodule "cpu/cc26xx-cc13xx/lib/cc26xxware"]
+	path = cpu/cc26xx-cc13xx/lib/cc26xxware
 	url = https://github.com/g-oikonomou/cc26xxware.git
+[submodule "cpu/cc26xx-cc13xx/lib/cc13xxware"]
+	path = cpu/cc26xx-cc13xx/lib/cc13xxware
+	url = https://github.com/g-oikonomou/cc13xxware.git
 
