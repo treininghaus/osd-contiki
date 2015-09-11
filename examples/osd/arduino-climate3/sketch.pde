@@ -10,9 +10,10 @@
  * of the contiki-specific files here, the sketch should just work.
  */
 
+#include <Wire.h>
+
 extern "C" {
 
-#include <Wire.h>
 #include "Adafruit_HTU21DF.h"
 #include "rest-engine.h"
 
