@@ -6,7 +6,7 @@ PLATFORM_FILES= avr-size arduino-example.osd-merkur.hex \
     arduino-example.osd-merkur.eep
 endif
 
-all: arduino-example $(PLATFORM_FILES)
+all: arduino-example $(PLATFORM_FILES) 
 
 CONTIKI=../../..
 
@@ -15,7 +15,7 @@ CONTIKI_WITH_IPV6 = 1
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
-PROJECT_SOURCEFILES += ${SKETCH}.cpp
+PROJECT_SOURCEFILES += ${SKETCH}.cpp Adafruit_HTU21DF.cpp Wire.cpp twi.c new.cpp WString.cpp Stream.cpp
 
 # automatically build RESTful resources
 REST_RESOURCES_DIR = ./resources

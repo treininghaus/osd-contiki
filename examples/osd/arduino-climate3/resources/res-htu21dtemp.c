@@ -45,40 +45,30 @@
 static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /* A simple getter example. Returns the reading from the sensor with a simple etag */
-RESOURCE(res_moisture,
+RESOURCE(res_htu21dtemp,
          "title=\"Moisture status\";rt=\"Moisture\"",
          res_get_handler,
          NULL,
          NULL,
          NULL);
 
-extern  uint8_t moisture_pin;
-extern  uint8_t moisture_vcc;
-extern  uint16_t moisture_voltage;
+extern  float htu21d_temp;
 
 static void
 res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  int a=0;
-  for(a=0;a<10;a++){
-   digitalWrite(moisture_vcc, HIGH);  
-   digitalWrite(moisture_vcc, LOW);
-  }
-  digitalWrite(moisture_vcc, HIGH);  
-  moisture_voltage = analogRead(moisture_pin);
-  digitalWrite(moisture_vcc, LOW);
   
   unsigned int accept = -1;
   REST.get_header_accept(request, &accept);
 
   if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d", moisture_voltage);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%f", htu21d_temp);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   } else if(accept == REST.type.APPLICATION_JSON) {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'moisture':%d}", moisture_voltage);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'moisture':%f}", htu21d_temp);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   } else {
