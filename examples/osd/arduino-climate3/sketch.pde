@@ -24,6 +24,8 @@ extern resource_t res_htu21dtemp, res_htu21dhum, res_battery;
 
 float htu21d_hum;
 float htu21d_temp;
+char  htu21d_hum_s[8];
+char  htu21d_temp_s[8];
 
 #define LED_PIN 4
 }
@@ -50,6 +52,8 @@ void loop (void)
 {
       htu21d_temp = htu.readTemperature();
       htu21d_hum = htu.readHumidity();
-	  printf("Temp: %f",htu21d_temp);
-      printf("\t\tHum: %f",htu21d_hum);
+      dtostrf(htu21d_temp , 6, 2, htu21d_temp_s );   
+      dtostrf(htu21d_hum , 6, 2, htu21d_hum_s );   
+	  printf("Temp: %s",htu21d_temp_s);
+      printf("\t\tHum: %s\n",htu21d_hum_s);
 }

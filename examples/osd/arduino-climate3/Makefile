@@ -14,6 +14,7 @@ CONTIKI=../../..
 CONTIKI_WITH_IPV6 = 1
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
+LFLAGS += -lm
 
 PROJECT_SOURCEFILES += ${SKETCH}.cpp Adafruit_HTU21DF.cpp Wire.cpp twi.c new.cpp WString.cpp Stream.cpp
 
