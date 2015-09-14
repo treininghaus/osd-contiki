@@ -54,6 +54,6 @@ void loop (void)
       htu21d_hum = htu.readHumidity();
       dtostrf(htu21d_temp , 6, 2, htu21d_temp_s );   
       dtostrf(htu21d_hum , 6, 2, htu21d_hum_s );   
-	  printf("Temp: %s",htu21d_temp_s);
-      printf("\t\tHum: %s\n",htu21d_hum_s);
+//	  printf("Temp: %s",htu21d_temp_s);
+//    printf("\t\tHum: %s\n",htu21d_hum_s);
 }

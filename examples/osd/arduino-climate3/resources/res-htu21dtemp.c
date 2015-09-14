@@ -52,7 +52,7 @@ RESOURCE(res_htu21dtemp,
          NULL,
          NULL);
 
-extern  float htu21d_temp;
+extern  char htu21d_temp_s[8];
 
 static void
 res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
@@ -63,12 +63,12 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
 
   if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%f", (double) htu21d_temp);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%s", htu21d_temp_s);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   } else if(accept == REST.type.APPLICATION_JSON) {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'moisture':%f}", (double) htu21d_temp);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'moisture':%s}", htu21d_temp_s);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   } else {
