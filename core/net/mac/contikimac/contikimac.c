@@ -333,6 +333,8 @@ powercycle_turn_radio_on(void)
   }
 }
 /*---------------------------------------------------------------------------*/
+volatile uint8_t mcusleepcycle=16;
+
 static char
 powercycle(struct rtimer *t, void *ptr)
 {
@@ -458,7 +460,7 @@ powercycle(struct rtimer *t, void *ptr)
 	 be blocked until a packet is detected */
 #if RDC_CONF_MCU_SLEEP
       static uint8_t sleepcycle;
-      if((sleepcycle++ < 16) && !we_are_sending && !radio_is_on) {
+      if((sleepcycle++ < mcusleepcycle) && !we_are_sending && !radio_is_on) {
         rtimer_arch_sleep(CYCLE_TIME - (RTIMER_NOW() - cycle_start));
       } else {
         sleepcycle = 0;

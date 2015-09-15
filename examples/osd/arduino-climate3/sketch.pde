@@ -18,10 +18,11 @@ extern "C" {
 
 #include "rest-engine.h"
 
+extern volatile uint8_t mcusleepcycle;  // default 16
+
 Adafruit_HTU21DF htu = Adafruit_HTU21DF();
 
 extern resource_t res_htu21dtemp, res_htu21dhum, res_battery;
-
 float htu21d_hum;
 float htu21d_temp;
 char  htu21d_hum_s[8];
@@ -50,10 +51,14 @@ void setup (void)
 // LOOP_INTERVAL		(10 * CLOCK_SECOND)
 void loop (void)
 {
+      mcusleepcycle=0;  // dont sleep
       htu21d_temp = htu.readTemperature();
       htu21d_hum = htu.readHumidity();
+      mcusleepcycle=32; // sleep, wakeup every 32 cycles
       dtostrf(htu21d_temp , 6, 2, htu21d_temp_s );   
-      dtostrf(htu21d_hum , 6, 2, htu21d_hum_s );   
+      dtostrf(htu21d_hum , 6, 2, htu21d_hum_s );
+      
+//  debug only   
 //	  printf("Temp: %s",htu21d_temp_s);
 //    printf("\t\tHum: %s\n",htu21d_hum_s);
 }
