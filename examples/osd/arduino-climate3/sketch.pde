@@ -57,6 +57,13 @@ void loop (void)
       mcusleepcycle=32; // sleep, wakeup every 32 cycles
       dtostrf(htu21d_temp , 6, 2, htu21d_temp_s );   
       dtostrf(htu21d_hum , 6, 2, htu21d_hum_s );
+      // remove space
+      if(htu21d_temp_s[0]==' '){
+        memcpy (htu21d_temp_s,htu21d_temp_s+1,strlen(htu21d_temp_s)+1);
+      }
+      if(htu21d_hum_s[0]==' '){
+        memcpy (htu21d_hum_s,htu21d_hum_s+1,strlen(htu21d_hum_s)+1);
+      }
       
 //  debug only   
 //	  printf("Temp: %s",htu21d_temp_s);
