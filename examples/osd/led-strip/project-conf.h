@@ -34,11 +34,12 @@
 
 #define PLATFORM_HAS_INFO 1
 #define PLATFORM_HAS_BATTERY 1
-#define PLATFORM_HAS_DS1820  1
-#define PLATFORM_HAS_DHT11HUM   1
 //#define PLATFORM_HAS_DHT11TEMP   1
 #define PLATFORM_HAS_LEDS    1
 
+/* For Debug: Dont allow MCU sleeping between channel checks */
+#undef RDC_CONF_MCU_SLEEP
+#define RDC_CONF_MCU_SLEEP       0
 
 /* Some platforms have weird includes. */
 #undef IEEE802154_CONF_PANID
