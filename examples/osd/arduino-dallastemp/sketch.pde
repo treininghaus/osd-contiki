@@ -33,10 +33,8 @@ DallasTemperature dsensors(&oneWire);
 // arrays to hold device addresses
 DeviceAddress insideThermometer, outsideThermometer;
 
-extern resource_t res_htu21dtemp, res_htu21dhum, res_battery;
-float htu21d_hum;
+extern resource_t res_dtemp, res_battery;
 float d_temp;
-char  htu21d_hum_s[8];
 char  d_temp_s[8];
 
 #define LED_PIN 4
@@ -147,8 +145,7 @@ void setup (void)
   printf("\n");
     // init coap resourcen
     rest_init_engine ();
-    rest_activate_resource (&res_htu21dtemp, "s/temp");
-    rest_activate_resource (&res_htu21dhum, "s/hum");
+    rest_activate_resource (&res_dtemp, "s/temp");
     rest_activate_resource (&res_battery, "s/batter");
 }
 

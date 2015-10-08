@@ -46,7 +46,7 @@ static void res_get_handler(void *request, void *response, uint8_t *buffer, uint
 
 /* A simple getter example. Returns the reading from the sensor with a simple etag */
 RESOURCE(res_htu21dtemp,
-         "title=\"Moisture status\";rt=\"Moisture\"",
+         "title=\"Temperature status\";rt=\"Temperatur\"",
          res_get_handler,
          NULL,
          NULL,
@@ -68,7 +68,7 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   } else if(accept == REST.type.APPLICATION_JSON) {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'moisture':%s}", htu21d_temp_s);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'temperature':%s}", htu21d_temp_s);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   } else {
