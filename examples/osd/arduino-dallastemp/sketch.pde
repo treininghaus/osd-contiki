@@ -17,6 +17,7 @@ extern "C" {
 
 
 #include "rest-engine.h"
+#include "sketch.h"
 
 extern volatile uint8_t mcusleepcycle;  // default 16
 
@@ -33,9 +34,12 @@ DallasTemperature dsensors(&oneWire);
 // arrays to hold device addresses
 DeviceAddress insideThermometer, outsideThermometer;
 
-extern resource_t res_dtemp, res_battery;
+extern resource_t res_dtemp1, res_dtemp2, res_battery;
 float d_temp;
 char  d_temp_s[8];
+
+// sketch.h
+struct dstemp ds1820[7];
 
 #define LED_PIN 4
 }
@@ -54,20 +58,23 @@ void printAddress(uint8_t* adress)
 }
 
 // function to print the temperature for a device
-void printTemperature(DeviceAddress deviceAddress)
+void printTemperature(DeviceAddress deviceAddress,int index)
 {
  d_temp = dsensors.getTempC(deviceAddress);
  dtostrf(d_temp , 6, 2, d_temp_s );
  printf("Temp C: ");
  printf("%s",d_temp_s);
+ // copy to structure
+ ds1820[index].ftemp=d_temp;
+ strcpy(ds1820[index].stemp, d_temp_s);
 }
 
-void printData(DeviceAddress deviceAddress)
+void printData(DeviceAddress deviceAddress, int index)
 {
  printf("Device Address: ");
  printAddress(deviceAddress);
  printf(" ");
- printTemperature(deviceAddress);
+ printTemperature(deviceAddress,index);
  printf("\n");
 }
 
@@ -145,7 +152,8 @@ void setup (void)
   printf("\n");
     // init coap resourcen
     rest_init_engine ();
-    rest_activate_resource (&res_dtemp, "s/temp");
+    rest_activate_resource (&res_dtemp1, "s/t1/temp");
+    rest_activate_resource (&res_dtemp2, "s/t2/temp");
     rest_activate_resource (&res_battery, "s/batter");
 }
 
@@ -161,8 +169,8 @@ void loop (void)
       printf("DONE\n");
 
       // print the device information
-      printData(insideThermometer);
-      printData(outsideThermometer);
+      printData(insideThermometer,0);
+      printData(outsideThermometer,1);
       mcusleepcycle=32; // sleep, wakeup every 32 cycles
    
 //  debug only 
