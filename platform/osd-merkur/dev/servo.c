@@ -52,10 +52,6 @@
  * servo device
  */
 
-#define SERVO_MIN   575
-#define SERVO_MAX  2425
-#define SERVO_INIT 1500
-
 unsigned int servoa=SERVO_INIT;
 unsigned int servob=SERVO_INIT;
 

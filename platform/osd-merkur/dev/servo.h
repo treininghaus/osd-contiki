@@ -31,6 +31,10 @@
 #ifndef SERVO_H
 #define SERVO_H
 
+#define SERVO_MIN   575
+#define SERVO_MAX  2425
+#define SERVO_INIT 1500
+
 void servo_init(void);
 void servo_off(void);
 
