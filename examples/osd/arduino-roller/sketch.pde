@@ -18,9 +18,8 @@ extern resource_t res_poti, res_battery;
 uint8_t poti_pin = A5;
 uint16_t poti_voltage = 0;
 
-uint16_t servo_min= 500;
-uint16_t servo_max= 1500;
-uint16_t servo_offset = -400;
+uint16_t servo_min= 1000;
+uint16_t servo_max= 2000;
 
 #define LED_PIN 4
 }
@@ -29,12 +28,12 @@ uint16_t servo_offset = -400;
 
   int scale (int in_min, int in_max, int out_min, int out_max, int wert)
   {
-  int abc;
-  abc = ((long)out_max - (long)out_min)* (long)wert / ( (long)in_max - 
-(long)in_min);
-  abc = abc + out_min;
+    int abc;
 
-  return (abc);
+    abc = ((long)out_max - (long)out_min)* ((long)wert-(long)in_min) / ( (long)in_max - (long)in_min);
+    abc = abc + out_min;
+
+    return (abc);
   }
   
 void setup (void)
@@ -52,7 +51,9 @@ void setup (void)
 
 void loop (void)
 {
+  int value;
   poti_voltage = analogRead(poti_pin);
-  servo_set(1,scale (330,1024,servo_min,servo_max,poti_voltage));
-  printf("%d/n",poti_voltage);
+  value=scale (345,868,servo_min,servo_max,poti_voltage);
+  servo_set(1,value);
+  printf("%d,%d\n",poti_voltage,value);
 }
