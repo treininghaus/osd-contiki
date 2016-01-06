@@ -75,12 +75,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
-#ifdef __GNUC__
-#define CC_ALIGN_ATTR(n) __attribute__ ((aligned(n)))
-#else
-#define CC_ALIGN_ATTR(n)
-#endif
-/*---------------------------------------------------------------------------*/
 #define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -202,7 +196,7 @@ const output_config_t *tx_power_current = &output_power[0];
  * A buffer to send a CMD_IEEE_RX and to subsequently monitor its status
  * Do not use this buffer for any commands other than CMD_IEEE_RX
  */
-static uint8_t cmd_ieee_rx_buf[RF_CMD_BUFFER_SIZE] CC_ALIGN_ATTR(4);
+static uint8_t cmd_ieee_rx_buf[RF_CMD_BUFFER_SIZE] CC_ALIGN(4);
 /*---------------------------------------------------------------------------*/
 #define DATA_ENTRY_LENSZ_NONE 0
 #define DATA_ENTRY_LENSZ_BYTE 1
@@ -210,10 +204,10 @@ static uint8_t cmd_ieee_rx_buf[RF_CMD_BUFFER_SIZE] CC_ALIGN_ATTR(4);
 
 #define RX_BUF_SIZE 140
 /* Four receive buffers entries with room for 1 IEEE802.15.4 frame in each */
-static uint8_t rx_buf_0[RX_BUF_SIZE] CC_ALIGN_ATTR(4);
-static uint8_t rx_buf_1[RX_BUF_SIZE] CC_ALIGN_ATTR(4);
-static uint8_t rx_buf_2[RX_BUF_SIZE] CC_ALIGN_ATTR(4);
-static uint8_t rx_buf_3[RX_BUF_SIZE] CC_ALIGN_ATTR(4);
+static uint8_t rx_buf_0[RX_BUF_SIZE] CC_ALIGN(4);
+static uint8_t rx_buf_1[RX_BUF_SIZE] CC_ALIGN(4);
+static uint8_t rx_buf_2[RX_BUF_SIZE] CC_ALIGN(4);
+static uint8_t rx_buf_3[RX_BUF_SIZE] CC_ALIGN(4);
 
 /* The RX Data Queue */
 static dataQueue_t rx_data_queue = { 0 };
@@ -225,7 +219,7 @@ volatile static uint8_t *rx_read_entry;
 #define TX_BUF_PAYLOAD_LEN 180
 #define TX_BUF_HDR_LEN       2
 
-static uint8_t tx_buf[TX_BUF_HDR_LEN + TX_BUF_PAYLOAD_LEN] CC_ALIGN_ATTR(4);
+static uint8_t tx_buf[TX_BUF_HDR_LEN + TX_BUF_PAYLOAD_LEN] CC_ALIGN(4);
 /*---------------------------------------------------------------------------*/
 /* Overrides for IEEE 802.15.4, differential mode */
 static uint32_t ieee_overrides[] = {
@@ -805,7 +799,7 @@ transmit(unsigned short transmit_len)
   cmd.pPayload = &tx_buf[TX_BUF_HDR_LEN];
 
   /* Enable the LAST_FG_COMMAND_DONE interrupt, which will wake us up */
-  rf_core_cmd_done_en();
+  rf_core_cmd_done_en(true);
 
   ret = rf_core_send_cmd((uint32_t)&cmd, &cmd_status);
 
@@ -852,6 +846,11 @@ transmit(unsigned short transmit_len)
    * except when we are transmitting
    */
   rf_core_cmd_done_dis();
+
+
+  if(was_off) {
+    off();
+  }
 
   return ret;
 }
@@ -1101,7 +1100,11 @@ off(void)
 
   while(transmitting());
 
+  /* stopping the rx explicitly results in lower sleep-mode power usage */
+  rx_off();
   rf_core_power_down();
+
+  ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
 
   /* Switch HF clock source to the RCOSC to preserve power */
   oscillators_switch_to_hf_rc();
@@ -1210,6 +1213,12 @@ set_value(radio_param_t param, radio_value_t value)
     if(value < IEEE_MODE_CHANNEL_MIN ||
        value > IEEE_MODE_CHANNEL_MAX) {
       return RADIO_RESULT_INVALID_VALUE;
+    }
+
+    if(cmd->channel == (uint8_t)value) {
+      /* We already have that very same channel configured.
+       * Nothing to do here. */
+      return RADIO_RESULT_OK;
     }
 
     cmd->channel = (uint8_t)value;

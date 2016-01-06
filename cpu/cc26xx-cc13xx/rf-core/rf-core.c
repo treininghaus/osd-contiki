@@ -40,6 +40,7 @@
 #include "dev/watchdog.h"
 #include "sys/process.h"
 #include "sys/energest.h"
+#include "sys/cc.h"
 #include "net/netstack.h"
 #include "net/packetbuf.h"
 #include "net/rime/rimestats.h"
@@ -71,12 +72,6 @@
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
 #define PRINTF(...)
-#endif
-/*---------------------------------------------------------------------------*/
-#ifdef __GNUC__
-#define CC_ALIGN_ATTR(n) __attribute__ ((aligned(n)))
-#else
-#define CC_ALIGN_ATTR(n)
 #endif
 /*---------------------------------------------------------------------------*/
 #ifdef RF_CORE_CONF_DEBUG_CRC
@@ -201,6 +196,28 @@ rf_core_wait_cmd_done(void *cmd)
          == RF_CORE_RADIO_OP_STATUS_DONE_OK;
 }
 /*---------------------------------------------------------------------------*/
+static int
+fs_powerdown(void)
+{
+  rfc_CMD_FS_POWERDOWN_t cmd;
+  uint32_t cmd_status;
+
+  rf_core_init_radio_op((rfc_radioOp_t *)&cmd, sizeof(cmd), CMD_FS_POWERDOWN);
+
+  if(rf_core_send_cmd((uint32_t)&cmd, &cmd_status) != RF_CORE_CMD_OK) {
+    PRINTF("fs_powerdown: CMDSTA=0x%08lx\n", cmd_status);
+    return RF_CORE_CMD_ERROR;
+  }
+
+  if(rf_core_wait_cmd_done(&cmd) != RF_CORE_CMD_OK) {
+    PRINTF("fs_powerdown: CMDSTA=0x%08lx, status=0x%04x\n",
+           cmd_status, cmd.status);
+    return RF_CORE_CMD_ERROR;
+  }
+
+  return RF_CORE_CMD_OK;
+}
+/*---------------------------------------------------------------------------*/
 int
 rf_core_power_up()
 {
@@ -256,6 +273,9 @@ rf_core_power_down()
   if(rf_core_is_accessible()) {
     HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = 0x0;
     HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIEN) = 0x0;
+
+    /* need to send FS_POWERDOWN or analog components will use power */
+    fs_powerdown();
   }
 
   /* Shut down the RFCORE clock domain in the MCU VD */
@@ -378,11 +398,12 @@ rf_core_setup_interrupts()
 }
 /*---------------------------------------------------------------------------*/
 void
-rf_core_cmd_done_en()
+rf_core_cmd_done_en(bool fg)
 {
+  uint32_t irq = fg ? IRQ_LAST_FG_COMMAND_DONE : IRQ_LAST_COMMAND_DONE;
+
   HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIFG) = ENABLED_IRQS;
-  HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIEN) = ENABLED_IRQS +
-    IRQ_LAST_COMMAND_DONE;
+  HWREG(RFC_DBELL_NONBUF_BASE + RFC_DBELL_O_RFCPEIEN) = ENABLED_IRQS | irq;
 }
 /*---------------------------------------------------------------------------*/
 void
