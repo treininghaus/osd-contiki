@@ -53,6 +53,8 @@ RESOURCE(res_dtemp1,
          NULL,
          NULL);
 
+extern char  d_temp_s[8];
+
 static void
 res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
@@ -62,12 +64,12 @@ res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferr
 
   if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%s", ds1820[0].stemp);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%s", d_temp_s);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   } else if(accept == REST.type.APPLICATION_JSON) {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'temperature':%s}", ds1820[0].stemp);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'temperature':%s}", d_temp_s);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   } else {

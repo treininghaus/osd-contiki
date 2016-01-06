@@ -127,21 +127,21 @@ void setup (void)
 }
 
 // at project-conf.h
-// LOOP_INTERVAL		(10 * CLOCK_SECOND)
+// LOOP_INTERVAL		(20 * CLOCK_SECOND)
 void loop (void)
 {
       mcusleepcycle=0;  // dont sleep
       // call sensors.requestTemperatures() to issue a global temperature 
       // request to all devices on the bus
-      printf("Requesting temperatures...");
+//      printf("Requesting temperatures...");
       dsensors.requestTemperatures();
-      printf("DONE\n");
+//      printf("DONE\n");
       // print the device information
       printData(outsideThermometer,0);
       
       htu21d_temp = htu.readTemperature();
       htu21d_hum = htu.readHumidity();
-      mcusleepcycle=32; // sleep, wakeup every 32 cycles
+     
       dtostrf(htu21d_temp , 6, 2, htu21d_temp_s );   
       dtostrf(htu21d_hum , 6, 2, htu21d_hum_s );
       // remove space
@@ -155,4 +155,6 @@ void loop (void)
 //  debug only   
 	printf("Temp: %s",htu21d_temp_s);
     printf("\t\tHum: %s\n",htu21d_hum_s);
+    
+    mcusleepcycle=32; // sleep, wakeup every 32 cycles
 }
