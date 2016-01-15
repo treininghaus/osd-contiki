@@ -13,6 +13,7 @@
 extern "C" {
 #include "rest-engine.h"
 
+extern volatile uint8_t mcusleepcycle;  // default 16
 extern resource_t res_moisture, res_battery;
 uint8_t moisture_pin = A5;
 uint16_t moisture_voltage = 0;
@@ -27,7 +28,7 @@ void setup (void)
     digitalWrite(LED_PIN, HIGH);
     // setup Buzzer 
     pinMode(BUZZER_PIN, OUTPUT);
-    digitalWrite(BUZZER_PIN, HIGH);
+    digitalWrite(BUZZER_PIN, LOW);
     // init coap resourcen
     rest_init_engine ();
     rest_activate_resource (&res_moisture, "s/moisture");
@@ -36,10 +37,12 @@ void setup (void)
 
 void loop (void)
 {
+  mcusleepcycle=0;  // dont sleep
   moisture_voltage = analogRead(moisture_pin);
   if(moisture_voltage < 800){
       digitalWrite(BUZZER_PIN, LOW);
   }else{
       digitalWrite(BUZZER_PIN, HIGH);
   }
+  mcusleepcycle=32; // sleep, wakeup every 32 cycles
 }
