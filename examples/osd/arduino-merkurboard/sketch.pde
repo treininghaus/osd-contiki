@@ -13,7 +13,7 @@
 extern "C" {
 #include "rest-engine.h"
 
-extern resource_t res_door, res_battery;
+extern resource_t res_leds, res_battery;
 uint8_t door_pin = 3;
 uint8_t door_status = 0;
 
@@ -27,7 +27,7 @@ void setup (void)
     digitalWrite(LED_PIN, HIGH);
     // init coap resourcen
     rest_init_engine ();
-    rest_activate_resource (&res_door, "s/door");
+    rest_activate_resource (&res_leds, "s/leds");
     rest_activate_resource (&res_battery, "s/battery");
 }
 
