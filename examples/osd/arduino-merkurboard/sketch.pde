@@ -12,6 +12,9 @@
 
 extern "C" {
 #include "rest-engine.h"
+#include "net/netstack.h"
+
+extern volatile uint8_t mcusleepcycle;  // default 16
 
 extern resource_t res_leds, res_battery;
 uint8_t door_pin = 3;
@@ -29,9 +32,13 @@ void setup (void)
     rest_init_engine ();
     rest_activate_resource (&res_leds, "s/leds");
     rest_activate_resource (&res_battery, "s/battery");
+    
+ //   NETSTACK_MAC.off(1);
 }
 
 void loop (void)
 {
-
+  mcusleepcycle=0;
+  
+  mcusleepcycle=16;
 }
