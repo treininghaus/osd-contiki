@@ -14,6 +14,7 @@
 //  Modified Record:
 /***************************************************************************/  
 #include "RGBdriver.h"
+
 RGBdriver::RGBdriver(uint8_t Clk, uint8_t Data)
 {
   Clkpin = Clk;
@@ -34,21 +35,26 @@ void RGBdriver::end(void)
 
 void RGBdriver::ClkRise(void)
 {
+  
   digitalWrite(Clkpin, LOW);
   delayMicroseconds(20); 
   digitalWrite(Clkpin, HIGH);
-  delayMicroseconds(20);   
+  delayMicroseconds(20);
+    
 }
  
 void RGBdriver::Send32Zero(void)
 {
   unsigned char i;
- 
+  uint8_t volatile sreg;
+  sreg = SREG;    /* Save status register before disabling interrupts. */
+  cli();          /* Disable interrupts. */
   for (i=0; i<32; i++)
   {
     digitalWrite(Datapin, LOW);
     ClkRise();
   }
+  SREG = sreg;    /* Enable interrupts. */ 
 }
  
 uint8_t RGBdriver::TakeAntiCode(uint8_t dat)
@@ -72,7 +78,9 @@ uint8_t RGBdriver::TakeAntiCode(uint8_t dat)
 void RGBdriver::DatSend(uint32_t dx)
 {
   uint8_t i;
- 
+  uint8_t volatile sreg;
+  sreg = SREG;    /* Save status register before disabling interrupts. */
+  cli();          /* Disable interrupts. */
   for (i=0; i<32; i++)
   {
     if ((dx & 0x80000000) != 0)
@@ -85,8 +93,9 @@ void RGBdriver::DatSend(uint32_t dx)
     }
  
     dx <<= 1;
-    ClkRise();
+    ClkRise(); 
   }
+  SREG = sreg;    /* Enable interrupts. */
 }
  
 // Set color

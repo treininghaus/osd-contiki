@@ -12,8 +12,8 @@
 
 #include "RGBdriver.h"
 
-#define CLK 2//pins definitions for the driver        
-#define DIO 3
+#define CLK 3//pins definitions for the driver        
+#define DIO 14
 RGBdriver Driver(CLK,DIO);
 
 extern "C" {
