@@ -13,7 +13,7 @@
 extern "C" {
 #include "rest-engine.h"
 #include "dev/servo.h"
-#include "klin.h" // linera values lookup table
+#include "kexp.h" // exponential values lookup table
 
 extern resource_t res_poti, res_battery;
 uint8_t poti_pin = A5;
@@ -53,9 +53,11 @@ void setup (void)
 void loop (void)
 {
   int value;
+  int vlookup;
   poti_voltage = analogRead(poti_pin);
   value=scale (345,868,servo_min,servo_max,poti_voltage);
-  uint16_t lookup_Daumengas(uint16_t i);
-  servo_set(1,lookup_Daumengas(value));
-  printf("%d,%d\n",poti_voltage,value);
+  vlookup=lookup_Daumengas(value-servo_min)+servo_min;
+  servo_set(1,vlookup);
+//  servo_set(1,value);
+  printf("%d,%d,%d\n",poti_voltage,value,vlookup);
 }
