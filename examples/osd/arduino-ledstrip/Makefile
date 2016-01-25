@@ -50,6 +50,7 @@ SMALL=1
 APPS += er-coap
 APPS += rest-engine
 APPS += arduino
+APPS += json json-resource
 
 include $(CONTIKI)/Makefile.include
 include $(CONTIKI)/apps/arduino/Makefile.include
@@ -84,3 +85,4 @@ connect-router-cooja:   $(CONTIKI)/tools/tunslip6
 
 connect-minimal:
 	sudo ip address add fdfd::1/64 dev tap0
+	

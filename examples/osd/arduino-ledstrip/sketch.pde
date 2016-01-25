@@ -17,16 +17,75 @@
 RGBdriver Driver(CLK,DIO);
 
 extern "C" {
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include "contiki.h"
+#include "contiki-net.h"
 #include "rest-engine.h"
+#include "generic_resource.h"
 #include "net/netstack.h"
 
 extern volatile uint8_t mcusleepcycle;  // default 16
-extern resource_t res_door, res_battery;
-uint8_t door_pin = 3;
-uint8_t door_status = 0;
 
 #define LED_PIN 4
 }
+
+uint8_t color_rgb [3] = {255, 255, 255};
+
+static uint8_t name_to_offset (const char * name)
+{
+  uint8_t offset = 0;
+  if (0 == strcmp (name, "green")) {
+    offset = 1;
+  } else if (0 == strcmp (name, "blue")) {
+    offset = 2;
+  }
+  return offset;
+}
+
+static size_t
+color_to_string (const char *name, uint8_t is_json, char *buf, size_t bsize)
+{
+  char *fmt = "%d";
+  if (is_json) {
+    fmt = "\"%d\"";
+  }
+  return snprintf (buf, bsize, fmt, color_rgb [name_to_offset (name)]);
+}
+
+void color_from_string (const char *name, const char *s)
+{
+    color_rgb [name_to_offset (name)] = atoi (s);
+    Driver.begin();
+    Driver.SetColor(color_rgb [0], color_rgb [1], color_rgb [2]);
+    Driver.end();
+}
+
+GENERIC_RESOURCE
+  ( red
+  , RED_LED
+  , s
+  , color_from_string
+  , color_to_string
+  );
+
+GENERIC_RESOURCE
+  ( green
+  , GREEN_LED
+  , s
+  , color_from_string
+  , color_to_string
+  );
+
+GENERIC_RESOURCE
+  ( blue
+  , BLUE_LED
+  , s
+  , color_from_string
+  , color_to_string
+  );
 
 void setup (void)
 {
@@ -35,38 +94,18 @@ void setup (void)
     digitalWrite(LED_PIN, HIGH);
     // init coap resourcen
     rest_init_engine ();
-    rest_activate_resource (&res_door, "s/door");
-    rest_activate_resource (&res_battery, "s/battery");
     
     NETSTACK_MAC.off(1);
+
+    rest_activate_resource (&res_red,   "led/R");
+    rest_activate_resource (&res_green, "led/G");
+    rest_activate_resource (&res_blue,  "led/B");
+
+    Driver.begin();
+    Driver.SetColor(color_rgb [0], color_rgb [1], color_rgb [2]);
+    Driver.end();
 }
 
 void loop (void)
 {
-  static int a=1;
- 
-  mcusleepcycle=0;
-
-  switch(a) {
-	case 1: printf("a ist eins\n");
-	  Driver.begin(); // begin
-      Driver.SetColor(255, 0, 0); //Red. first node data
-      Driver.end();
-      a++;
-	 break;
-	case 2: printf("a ist zwei\n");
-      Driver.begin(); // begin
-      Driver.SetColor(0, 255, 0); //Green. first node data
-      Driver.end();
-      a++;
-	 break;
-	case 3: printf("a ist drei\n");
-      Driver.begin(); // begin
-      Driver.SetColor(0, 0, 255);//Blue. first node data
-      Driver.end();
-      a=1;
-	 break;
-	default: printf("a ist irgendwas\n"); break;
-  }
-  mcusleepcycle=16;
 }
