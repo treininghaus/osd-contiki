@@ -1,5 +1,5 @@
-"#LowValue";12345
-"#HighValue";6666
+"#LowValue";0
+"#HighValue";1023
 "#DataType";"uint16_t"
 "#IndexType";"uint16_t"
 "#ArrayName";"Daumengas"
