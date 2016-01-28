@@ -32,7 +32,7 @@ extern volatile uint8_t mcusleepcycle;  // default 16
 #define LED_PIN 4
 }
 
-uint8_t color_rgb [3] = {255, 255, 255};
+uint8_t color_rgb [3] = {0, 0, 0};
 
 static uint8_t name_to_offset (const char * name)
 {
@@ -108,4 +108,31 @@ void setup (void)
 
 void loop (void)
 {
+    
+/*    // Test 
+
+	static int a=1;
+	
+	switch(a) {
+	case 1: printf("red\n");
+      Driver.begin();
+      Driver.SetColor(255, 0, 0);
+      Driver.end();
+      a++;
+	 break;
+	case 2: printf("green\n");
+      Driver.begin();
+      Driver.SetColor(0, 255, 0);
+      Driver.end();
+      a++;
+	 break;
+	case 3: printf("blue\n");
+      Driver.begin();
+      Driver.SetColor(0, 0, 255);
+      Driver.end();
+      a=1;
+	 break;
+	default: printf("a ist irgendwas\n"); break;
+	}
 }
+*/
