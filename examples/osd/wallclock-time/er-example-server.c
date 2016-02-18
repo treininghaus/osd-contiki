@@ -131,6 +131,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #endif
 
   rest_activate_resource(&res_timestamp, "clock/timestamp");
+  rest_activate_resource(&res_timezone, "clock/timezone");
   rest_activate_resource(&res_localtime, "clock/localtime");
   rest_activate_resource(&res_utc, "clock/utc");
 

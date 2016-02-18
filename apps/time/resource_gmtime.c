@@ -30,10 +30,11 @@ size_t time_to_string (const char *name, uint8_t is_json, char *buf, size_t bs)
     return snprintf
       ( buf
       , bs
-      , "%s%lu-%02u-%02u %02u:%02u:%02u%s"
+      , "%s%lu-%02u-%02u %02u:%02u:%02u %s%s"
       , is_json ? "\"" : ""
       , 1900 + tm.tm_year
       , tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec
+      , tm.tm_zone
       , is_json ? "\"" : ""
       );
 }
