@@ -1,4 +1,4 @@
-This code connects a 802.15.4 radio over TTY with the full uIPv6 stack of
+﻿This code connects a 802.15.4 radio over TTY with the full uIPv6 stack of
 Contiki including 6LoWPAN and 802.15.4 framing / parsing. The native border
 router also acts as a RPL Root and handles the routing and maintains the RPL
 network. Finally the native border router connects the full 6LoWPAN/RPL
@@ -29,4 +29,6 @@ Queries are prefixed by ?:
 Linux:
 apt-get install ncurses-dev
 make
+
+sudo ./border-router.native -B 38400 -s /dev/ttyUSB0 aaaa::/64
 
