@@ -58,18 +58,10 @@
  */
  /* Clock ticks per second */
 #define CLOCK_CONF_SECOND 128
-#if 1
-/* 16 bit counter overflows every ~10 minutes */
-typedef unsigned short clock_time_t;
-#define CLOCK_LT(a,b)  ((signed short)((a)-(b)) < 0)
-#define INFINITE_TIME 0xffff
-#define RIME_CONF_BROADCAST_ANNOUNCEMENT_MAX_TIME INFINITE_TIME/CLOCK_CONF_SECOND /* Default uses 600 */
-#define COLLECT_CONF_BROADCAST_ANNOUNCEMENT_MAX_TIME INFINITE_TIME/CLOCK_CONF_SECOND /* Default uses 600 */
-#else
-typedef unsigned long clock_time_t;
-#define CLOCK_LT(a,b)  ((signed long)((a)-(b)) < 0)
-#define INFINITE_TIME 0xffffffff
-#endif
+
+typedef uint32_t clock_time_t;
+#define CLOCK_LT(a,b)  ((int32_t)((a)-(b)) < 0)
+
 /* These routines are not part of the contiki core but can be enabled in cpu/avr/clock.c */
 void clock_delay_msec(uint16_t howlong);
 void clock_adjust_ticks(clock_time_t howmany);
@@ -242,7 +234,7 @@ typedef unsigned short uip_stats_t;
 /* So without the header this needed for RPL mesh to form */
 #define CONTIKIMAC_FRAMER_CONF_SHORTEST_PACKET_SIZE   43-18  //multicast RPL DIS length
 /* Not tested much yet */
-#define CONTIKIMAC_CONF_WITH_PHASE_OPTIMIZATION 0
+#define CONTIKIMAC_CONF_WITH_PHASE_OPTIMIZATION       0
 #define CONTIKIMAC_CONF_COMPOWER               1
 #define RIMESTATS_CONF_ENABLED                 0
 
@@ -278,6 +270,46 @@ typedef unsigned short uip_stats_t;
 #define UIP_CONF_DS6_ADDR_NBU     3
 #define UIP_CONF_DS6_MADDR_NBU    0
 #define UIP_CONF_DS6_AADDR_NBU    0
+
+
+#elif 1  /* cx-mac radio cycling */
+/* RF230 does clear-channel assessment in extended mode (autoretries>0) */
+/* These values are guesses */
+#define RF230_CONF_FRAME_RETRIES  10
+#define RF230_CONF_CSMA_RETRIES   2
+#if RF230_CONF_CSMA_RETRIES
+#define NETSTACK_CONF_MAC         nullmac_driver
+#else
+#define NETSTACK_CONF_MAC         csma_driver
+#endif
+#define NETSTACK_CONF_RDC         cxmac_driver
+#define NETSTACK_CONF_FRAMER      framer_802154
+#define NETSTACK_CONF_RADIO       rf230_driver
+#define CHANNEL_802_15_4          26
+#define RF230_CONF_AUTOACK        1
+#define SICSLOWPAN_CONF_FRAG      1
+#define SICSLOWPAN_CONF_MAXAGE    3
+#define CXMAC_CONF_ANNOUNCEMENTS  0
+#define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE 8
+/* 211 bytes per queue buffer. Burst mode will need 15 for a 1280 byte MTU */
+#define QUEUEBUF_CONF_NUM         15
+/* 54 bytes per queue ref buffer */
+#define QUEUEBUF_CONF_REF_NUM     2
+/* Allocate remaining RAM. Not much left due to queuebuf increase  */
+#define UIP_CONF_MAX_CONNECTIONS  2
+#define UIP_CONF_MAX_LISTENPORTS  4
+#define UIP_CONF_UDP_CONNS        5
+#define NBR_TABLE_CONF_MAX_NEIGHBORS      4
+#define UIP_CONF_DS6_DEFRT_NBU    2
+#define UIP_CONF_DS6_PREFIX_NBU   3
+#define UIP_CONF_MAX_ROUTES    4
+#define UIP_CONF_DS6_ADDR_NBU     3
+#define UIP_CONF_DS6_MADDR_NBU    0
+#define UIP_CONF_DS6_AADDR_NBU    0
+//Below gives 10% duty cycle, undef for default 5%
+//#define CXMAC_CONF_ON_TIME (RTIMER_ARCH_SECOND / 80)
+//Below gives 50% duty cycle
+//#define CXMAC_CONF_ON_TIME (RTIMER_ARCH_SECOND / 16)
 
 #else
 #error Network configuration not specified!
