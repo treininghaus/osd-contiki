@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, Matthias Kovatsch and other contributors.
+ * Copyright (C) 2016, Ralf Schlatterbeck and other contributors.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,8 +44,10 @@
 #include "contiki-net.h"
 #include "er-coap-engine.h"
 #include "time.h"
+#include "cron.h"
 #include "time_resource.h"
 #include "jsonparse.h"
+#include "Arduino.h"
 
 #if PLATFORM_HAS_BUTTON
 #include "dev/button-sensor.h"
@@ -82,7 +84,7 @@ extern resource_t res_radio;
 //******************************************************************************/
 
 void 
-hw_init()
+hw_init ()
 {
 #if defined (PLATFORM_HAS_LEDS)
  leds_off(LEDS_RED);
@@ -93,8 +95,22 @@ PROCESS(rest_server_example, "Erbium Example Server");
 
 AUTOSTART_PROCESSES(&rest_server_example, &sensors_process);
 
+#define LED_PIN 4
+#define LOOP_INTERVAL (30 * CLOCK_SECOND)
+
+/*
+ * Set led to on or off, we abuse the given pointer to simply carry the
+ * on/off flag.
+ */
+void led_set (void *onoff)
+{
+    int status = (int)onoff;
+    digitalWrite (LED_PIN, (status ? 0 : 1));
+}
+
 PROCESS_THREAD(rest_server_example, ev, data)
 {
+  static struct etimer loop_periodic_timer;
   PROCESS_BEGIN();
   PRINTF("Starting Erbium Example Server\n");
 
@@ -112,32 +128,47 @@ PROCESS_THREAD(rest_server_example, ev, data)
 
 /* if static routes are used rather than RPL */
 #if !UIP_CONF_IPV6_RPL && !defined (CONTIKI_TARGET_MINIMAL_NET) && !defined (CONTIKI_TARGET_NATIVE)
-  set_global_address();
-  configure_routing();
+  set_global_address ();
+  configure_routing ();
 #endif
 
   /* Initialize the OSD Hardware. */
-  hw_init();
+  hw_init ();
   /* Initialize the REST engine. */
-  rest_init_engine();
+  rest_init_engine ();
 
   /* Activate the application-specific resources. */
-  rest_activate_resource(&res_leds, "s/leds");
+  rest_activate_resource (&res_leds, "s/leds");
 
 
 #if defined (PLATFORM_HAS_BATTERY) && REST_RES_BATTERY
   SENSORS_ACTIVATE(battery_sensor);
-  rest_activate_resource(&res_battery, "s/battery");
+  rest_activate_resource (&res_battery, "s/battery");
 #endif
 
-  rest_activate_resource(&res_timestamp, "clock/timestamp");
-  rest_activate_resource(&res_timezone, "clock/timezone");
-  rest_activate_resource(&res_localtime, "clock/localtime");
-  rest_activate_resource(&res_utc, "clock/utc");
+  rest_activate_resource (&res_timestamp, "clock/timestamp");
+  rest_activate_resource (&res_timezone, "clock/timezone");
+  rest_activate_resource (&res_localtime, "clock/localtime");
+  rest_activate_resource (&res_utc, "clock/utc");
 
-  /* Define application-specific events here. */
-  while(1) {
+  /* Register callback function(s) */
+  cron_register_command ("led_on",  led_set, (void *)1);
+  cron_register_command ("led_off", led_set, (void *)0);
+
+  /* Allocate all cron entries and the necessary resources */
+  activate_cron_resources ();
+
+  /* Define application-specific events here.
+   * We need to call cron every 30 seconds or so (at least once a
+   * minute)
+   */
+  etimer_set (&loop_periodic_timer, LOOP_INTERVAL);
+  while (1) {
     PROCESS_WAIT_EVENT();
+    if (etimer_expired (&loop_periodic_timer)) {
+        cron ();
+        etimer_reset (&loop_periodic_timer);
+    }
   } /* while (1) */
 
   PROCESS_END();
