@@ -77,74 +77,73 @@ char         server_resource [20] = "led/G";
 int          interval = 10; /* Retransmit interval after no change in value */
 
 static size_t
-ip_to_string (const char *name, uint8_t is_json, char *buf, size_t bsize)
+ip_to_string (const char *name, const char *uri, char *buf, size_t bsize)
 {
     #define IP(x) UIP_NTOHS(server_ipaddr.u16[x])
-    char *q = "\"";
-    if (!is_json) {
-        q = "";
-    }
     return snprintf
-        ( buf, bsize, "%s%x:%x:%x:%x:%x:%x:%x:%x%s"
-        , q, IP(0), IP(1), IP(2), IP(3), IP(4), IP(5), IP(6), IP(7), q
+        ( buf, bsize, "%x:%x:%x:%x:%x:%x:%x:%x"
+        , IP(0), IP(1), IP(2), IP(3), IP(4), IP(5), IP(6), IP(7)
         );
 }
 
-void ip_from_string (const char *name, const char *s)
+int ip_from_string (const char *name, const char *uri, const char *s)
 {
     /* Returns 1 if successful, only copy valid address */
     if (uiplib_ip6addrconv (s, &tmp_addr)) {
         uip_ip6addr_copy (&server_ipaddr, &tmp_addr);
+        return 0;
     }
+    return -1;
 }
 
 GENERIC_RESOURCE
   ( server_ip
   , ip
   , ipv6_address
+  , 1
   , ip_from_string
   , ip_to_string
   );
 
 static size_t
-resource_to_string (const char *name, uint8_t is_json, char *buf, size_t bsize)
+resource_to_string (const char *name, const char *uri, char *buf, size_t bsize)
 {
-    char *q = "\"";
-    if (!is_json) {
-        q = "";
-    }
-    return snprintf (buf, bsize, "%s%s%s", q, server_resource, q);
+    return snprintf (buf, bsize, "%s", server_resource);
 }
 
-void resource_from_string (const char *name, const char *s)
+int resource_from_string (const char *name, const char *uri, const char *s)
 {
     strncpy (server_resource, s, sizeof (server_resource));
     server_resource [sizeof (server_resource) - 1] = 0;
+    return 0;
 }
 
 GENERIC_RESOURCE
   ( server_resource
   , led-resource
   , resource-name
+  , 1
   , resource_from_string
   , resource_to_string
   );
 
 static size_t
-interval_to_string (const char *name, uint8_t is_json, char *buf, size_t bsize)
+interval_to_string (const char *name, const char *uri, char *buf, size_t bsize)
 {
     return snprintf (buf, bsize, "%d", interval);
 }
 
-void interval_from_string (const char *name, const char *s)
+int interval_from_string (const char *name, const char *uri, const char *s)
 {
     interval = atoi (s);
+    return 0;
 }
 
 GENERIC_RESOURCE
   ( interval
   , interval
   , s
+  , 0
   , interval_from_string
   , interval_to_string
   );

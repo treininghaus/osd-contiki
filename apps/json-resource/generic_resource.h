@@ -50,6 +50,9 @@
 #define STR__(s) #s
 #define STR_(s) STR__(s)
 
+#define MAX_GET_STRING_LENGTH 100
+#define MAX_URI_STRING_LENGTH  30
+
 /*
  * A macro that extends the resource definition and also sets up the
  * necessary handler function that calls format/parse routines that
@@ -60,7 +63,7 @@
  * Yes, this *is* a hack. But I hate boilerplate code.
  */
 
-#define GENERIC_RESOURCE(name, title, unit, fs, ts)                        \
+#define GENERIC_RESOURCE(name, title, unit, is_str, fs, ts)                \
   static void name##_get_handler                                           \
     ( void *request                                                        \
     , void *response                                                       \
@@ -70,7 +73,7 @@
     )                                                                      \
   {                                                                        \
     generic_get_handler                                                    \
-      (request, response, buffer, ps, offset, STR_(name), ts);             \
+      (request, response, buffer, ps, offset, STR_(name), is_str, ts);     \
   }                                                                        \
   static void name##_put_handler                                           \
     ( void *request                                                        \
@@ -134,7 +137,8 @@ extern void generic_get_handler
   , uint16_t preferred_size
   , int32_t *offset
   , char *name
-  , size_t (*to_str)(const char *name, uint8_t is_json, char *buf, size_t bsize)
+  , int is_str
+  , size_t (*to_str)(const char *name, const char *uri, char *buf, size_t bsize)
   );
 
 /**
@@ -157,7 +161,7 @@ extern void generic_put_handler
   , uint16_t preferred_size
   , int32_t *offset
   , char *name
-  , void (*from_str)(const char *name, const char *s)
+  , int (*from_str)(const char *name, const char *uri, const char *s)
   );
 
 /*

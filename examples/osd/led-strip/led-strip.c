@@ -77,16 +77,12 @@ static uint8_t name_to_offset (const char * name)
 }
 
 static size_t
-color_to_string (const char *name, uint8_t is_json, char *buf, size_t bsize)
+color_to_string (const char *name, const char *uri, char *buf, size_t bsize)
 {
-  char *fmt = "%d";
-  if (is_json) {
-    fmt = "\"%d\"";
-  }
-  return snprintf (buf, bsize, fmt, color_rgb [name_to_offset (name)]);
+  return snprintf (buf, bsize, "%d", color_rgb [name_to_offset (name)]);
 }
 
-void color_from_string (const char *name, const char *s)
+int color_from_string (const char *name, const char *uri, const char *s)
 {
   color_rgb [name_to_offset (name)] = atoi (s);
   led_strip_begin ();
@@ -95,12 +91,14 @@ void color_from_string (const char *name, const char *s)
   printf ("Set to R:%d G:%d B:%d\n"
          , color_rgb [0], color_rgb [1], color_rgb [2])
          ;
+  return 0;
 }
 
 GENERIC_RESOURCE
   ( red
   , RED_LED
   , s
+  , 1
   , color_from_string
   , color_to_string
   );
@@ -109,6 +107,7 @@ GENERIC_RESOURCE
   ( green
   , GREEN_LED
   , s
+  , 1
   , color_from_string
   , color_to_string
   );
@@ -117,6 +116,7 @@ GENERIC_RESOURCE
   ( blue
   , BLUE_LED
   , s
+  , 1
   , color_from_string
   , color_to_string
   );

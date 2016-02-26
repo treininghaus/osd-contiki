@@ -105,6 +105,20 @@ json_parse_variable
   return 0;
 }
 
+static const char *get_uri (void *request)
+{
+  static char buf [MAX_URI_STRING_LENGTH];
+  const char *uri;
+  size_t len = coap_get_header_uri_path (request, &uri);
+  if (len > sizeof (buf) - 1) {
+    *buf = '\0';
+  } else {
+    strncpy (buf, uri, len);
+    buf [len] = '\0';
+  }
+  return buf;
+}
+
 void generic_get_handler
   ( void *request
   , void *response
@@ -112,13 +126,15 @@ void generic_get_handler
   , uint16_t preferred_size
   , int32_t *offset
   , char *name
-  , size_t (*to_str)(const char *name, uint8_t is_json, char *buf, size_t bsize)
+  , int is_str
+  , size_t (*to_str)(const char *name, const char *uri, char *buf, size_t bsize)
   )
 {
   int success = 1;
-  char temp [100];
+  char temp [MAX_GET_STRING_LENGTH];
   size_t len = 0;
   unsigned int accept = -1;
+  const char *uri = get_uri (request);
 
   REST.get_header_accept (request, &accept);
   if (  accept != -1
@@ -127,30 +143,40 @@ void generic_get_handler
      )
   {
     success = 0;
-    REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
+    REST.set_response_status (response, REST.status.NOT_ACCEPTABLE);
     return;
   }
 
   // TEXT format
   if (accept == REST.type.APPLICATION_JSON) {
     len += snprintf
-      (temp + len, sizeof (temp) - len, "{\n \"%s\" : ", name);
+      ( temp + len
+      , sizeof (temp) - len
+      , "{\n \"%s\" : %s"
+      , name
+      , is_str ? "\"" : ""
+      );
     if (len > sizeof (temp)) {
       success = 0;
       goto out;
     }
-    len += to_str (name, 1, temp + len, sizeof (temp) - len);
+    len += to_str (name, uri, temp + len, sizeof (temp) - len);
     if (len > sizeof (temp)) {
       success = 0;
       goto out;
     }
-    len += snprintf (temp + len, sizeof (temp) - len, "\n}\n");
+    len += snprintf 
+      ( temp + len
+      , sizeof (temp) - len
+      , "%s\n}\n"
+      , is_str ? "\"" : ""
+      );
     if (len > sizeof (temp)) {
       success = 0;
       goto out;
     }
   } else { // TEXT Format
-    len += to_str (name, 0, temp + len, sizeof (temp) - len);
+    len += to_str (name, uri, temp + len, sizeof (temp) - len);
     if (len > sizeof (temp)) {
       success = 0;
       goto out;
@@ -166,7 +192,7 @@ void generic_get_handler
   REST.set_response_payload (response, buffer, len);
 out :
   if (!success) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
+    REST.set_response_status (response, REST.status.BAD_REQUEST);
   }
 }
 
@@ -177,7 +203,7 @@ void generic_put_handler
   , uint16_t preferred_size
   , int32_t *offset
   , char *name
-  , void (*from_str)(const char *name, const char *s)
+  , int (*from_str)(const char *name, const char *uri, const char *s)
   )
 {
   int success = 1;
@@ -185,9 +211,10 @@ void generic_put_handler
   size_t len = 0;
   const uint8_t  *bytes  = NULL;
   uint16_t c_ctype;
+  const char *uri = get_uri (request);
   REST.get_header_content_type (request, &c_ctype);
 
-  if (from_str && (len = coap_get_payload(request, &bytes))) {
+  if (from_str && (len = coap_get_payload (request, &bytes))) {
     if (c_ctype == REST.type.TEXT_PLAIN) {
       int l = MIN (len, sizeof (temp) - 1);
       temp [sizeof (temp) - 1] = 0;
@@ -199,14 +226,17 @@ void generic_put_handler
         goto out;
       }
     }
-    from_str (name, temp);
-    REST.set_response_status(response, REST.status.CHANGED);
+    if (from_str (name, uri, temp) < 0) {
+      success = 0;
+    } else {
+      REST.set_response_status (response, REST.status.CHANGED);
+    }
   } else {
     success = 0;
   }
 out:
   if (!success) {
-    REST.set_response_status(response, REST.status.BAD_REQUEST);
+    REST.set_response_status (response, REST.status.BAD_REQUEST);
   }
 }
 

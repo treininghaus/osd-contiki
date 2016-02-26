@@ -17,13 +17,14 @@
 #include "er-coap.h"
 #include "generic_resource.h"
 
-void timezone_from_string (const char *name, const char *s)
+int timezone_from_string (const char *name, const char *uri, const char *s)
 {
   set_tz (s);
+  return 0;
 }
 
 size_t
-timezone_to_string (const char *name, uint8_t is_json, char *buf, size_t bsize)
+timezone_to_string (const char *name, const char *uri, char *buf, size_t bsize)
 {
   if (get_tz (buf, bsize) == NULL) {
     *buf = '\0';
@@ -35,6 +36,7 @@ GENERIC_RESOURCE
   ( timezone
   , TZ
   , s
+  , 1
   , timezone_from_string
   , timezone_to_string
   );

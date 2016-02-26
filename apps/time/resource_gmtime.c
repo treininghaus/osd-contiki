@@ -17,7 +17,7 @@
 #include "er-coap.h"
 #include "generic_resource.h"
 
-size_t time_to_string (const char *name, uint8_t is_json, char *buf, size_t bs)
+size_t time_to_string (const char *name, const char *uri, char *buf, size_t bs)
 {
     struct timeval tv;
     struct tm tm;
@@ -30,12 +30,10 @@ size_t time_to_string (const char *name, uint8_t is_json, char *buf, size_t bs)
     return snprintf
       ( buf
       , bs
-      , "%s%lu-%02u-%02u %02u:%02u:%02u %s%s"
-      , is_json ? "\"" : ""
+      , "%lu-%02u-%02u %02u:%02u:%02u %s"
       , 1900 + tm.tm_year
       , tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec
       , tm.tm_zone
-      , is_json ? "\"" : ""
       );
 }
 
@@ -43,6 +41,7 @@ GENERIC_RESOURCE \
     ( localtime
     , Local time
     , formatted time
+    , 1
     , NULL
     , time_to_string
     );
@@ -51,6 +50,7 @@ GENERIC_RESOURCE \
     ( utc
     , UTC
     , formatted time
+    , 1
     , NULL
     , time_to_string
     );
