@@ -1,4 +1,4 @@
-CONTIKI_TARGET_DIRS = . dev dev/LED_Strip_Suli apps net loader
+CONTIKI_TARGET_DIRS = . dev dev/LED_Strip_Suli apps net loader dev/arduino
 
 CONTIKI_CORE=contiki-main
 CONTIKI_TARGET_MAIN = ${CONTIKI_CORE}.o
@@ -8,7 +8,7 @@ CONTIKI_TARGET_SOURCEFILES += temperature-sensor.c adc.c led.c sensors.c slip_ua
 #Needed for Button
 CONTIKI_TARGET_SOURCEFILES += button-sensor.c
 # i2c Master
-CONTIKI_TARGET_SOURCEFILES += i2c.c
+#CONTIKI_TARGET_SOURCEFILES += i2c.c
 #Needed for DHT11 humidity sensor
 CONTIKI_TARGET_SOURCEFILES += dht11.c
 #Needed for DS18S20 temperature sensor
@@ -29,6 +29,8 @@ CONTIKI_TARGET_SOURCEFILES += relay.c relay-sensor.c
 # Arduino
 CONTIKI_TARGET_SOURCEFILES += wiring_digital.c
 CONTIKI_TARGET_SOURCEFILES += LED_Strip_Suli.c
+CONTIKI_TARGET_SOURCEFILES += new.cpp twi.c Wire.cpp WMath.cpp
+CONTIKI_TARGET_SOURCEFILES += Print.cpp Stream.cpp WString.cpp
 
 SULI_DIR=$(CONTIKI)/platform/$(TARGET)/dev/LED_Strip_Suli
 
