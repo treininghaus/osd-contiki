@@ -16,7 +16,7 @@ extern "C" {
 
 extern volatile uint8_t mcusleepcycle;  // default 16
 
-extern resource_t res_leds, res_battery;
+extern resource_t res_leds, res_battery, res_cputemp;
 uint8_t door_pin = 3;
 uint8_t door_status = 0;
 
@@ -32,6 +32,7 @@ void setup (void)
     rest_init_engine ();
     rest_activate_resource (&res_leds, "s/leds");
     rest_activate_resource (&res_battery, "s/battery");
+    rest_activate_resource (&res_cputemp, "s/cputemp");
     
  //   NETSTACK_MAC.off(1);
 }
