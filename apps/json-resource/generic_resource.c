@@ -210,7 +210,7 @@ void generic_put_handler
   char temp [100];
   size_t len = 0;
   const uint8_t  *bytes  = NULL;
-  uint16_t c_ctype;
+  unsigned int c_ctype;
   const char *uri = get_uri (request);
   REST.get_header_content_type (request, &c_ctype);
 
