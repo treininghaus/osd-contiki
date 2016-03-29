@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "contiki.h"
-#include "time.h"
+#include "xtime.h"
 #include "time_resource.h"
 #include "jsonparse.h"
 #include "er-coap.h"

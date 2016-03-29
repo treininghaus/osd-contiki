@@ -10,7 +10,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "contiki-lib.h"
-#include "time.h"
+#include "xtime.h"
 #include "tzparse.h"
 
 #define SECSPERMIN      60
@@ -37,7 +37,7 @@ static struct tzoffset_info localtime_tzoffset;
  * internal value may be overwritten "by subsequent calls to any of the
  * date  and  time  functions".
  */
-static struct tm tm;
+static struct xtm tm;
 
 /*
  * Internal variables to manage offset of utc from the contiki clock
@@ -48,21 +48,21 @@ static struct tm tm;
  * The last_seconds is used to check if we had a seconds overflow,
  * although this happens only every 136 years :-)
  */
-static time_t   clock_offset;
+static xtime_t  clock_offset;
 static uint32_t last_seconds;
 
-static time_t
-transtime (time_t janfirst, int year, const struct tzrule *rp, long offset);
+static xtime_t
+transtime (xtime_t janfirst, int year, const struct tzrule *rp, long offset);
 
 # define LEAP_YEAR(_year) \
     ((_year % 4) == 0 && (_year % 100 != 0 || _year % 400 == 0))
 # define YDAYS(_year) (LEAP_YEAR(year) ? 366 : 365)
 
-struct tm *gmtime_r (const time_t *timep, struct tm *ptm)
+struct xtm *xgmtime_r (const xtime_t *timep, struct xtm *ptm)
 {
     unsigned int year;
     int days, month, month_len;
-    time_t t = *timep;
+    xtime_t t = *timep;
     ptm->tm_sec = t % 60;
     t /= 60;
     ptm->tm_min = t % 60;
@@ -113,18 +113,18 @@ struct tm *gmtime_r (const time_t *timep, struct tm *ptm)
     return ptm;
 }
 
-struct tm *gmtime (const time_t *timep)
+struct xtm *xgmtime (const xtime_t *timep)
 {
-    return gmtime_r (timep, &tm);
+    return xgmtime_r (timep, &tm);
 }
 
 /*
  * Compute is_dst flag of given timestamp
  */
-static int is_dst (const time_t *timep, const struct tzoffset_info *tzo)
+static int is_dst (const xtime_t *timep, const struct tzoffset_info *tzo)
 {
-    time_t janfirst = 0;
-    time_t starttime, endtime;
+    xtime_t janfirst = 0;
+    xtime_t starttime, endtime;
     int year = 1970;
     int lastdst = 0;
     if (tzo->dstname == NULL) {
@@ -148,12 +148,12 @@ static int is_dst (const time_t *timep, const struct tzoffset_info *tzo)
     return lastdst;
 }
 
-struct tm *localtime_r (const time_t *timep, struct tm *ptm)
+struct xtm *xlocaltime_r (const xtime_t *timep, struct xtm *ptm)
 {
     const struct tzoffset_info *tzo = &localtime_tzoffset;
     int isdst = 0;
     long offset = 0;
-    time_t t = *timep;
+    xtime_t t = *timep;
 
     if (tzo->stdname == NULL) {
         set_tz (DEFAULT_TIMEZONE);
@@ -161,28 +161,28 @@ struct tm *localtime_r (const time_t *timep, struct tm *ptm)
     isdst  = is_dst (timep, tzo);
     offset = isdst ? tzo->dstoffset : tzo->stdoffset;
     t -= offset;
-    gmtime_r (&t, ptm);
+    xgmtime_r (&t, ptm);
     ptm->tm_isdst  = isdst;
     ptm->tm_gmtoff = -offset;
     ptm->tm_zone   = isdst ? tzo->dstname : tzo->stdname;
     return ptm;
 }
 
-struct tm *localtime (const time_t *timep)
+struct xtm *xlocaltime (const xtime_t *timep)
 {
-    return localtime_r (timep, &tm);
+    return xlocaltime_r (timep, &tm);
 }
 
 /**
  * \brief Get time in seconds and microseconds
- * gettimeofday will return the clock time as the microseconds part
- * while settimeofday will *ignore* the microseconds part (for now).
+ * xgettimeofday will return the clock time as the microseconds part
+ * while xsettimeofday will *ignore* the microseconds part (for now).
  * Note that the contiki clock interface is broken anyway, we can't read
  * seconds and sub-seconds atomically. We try to work around this by
  * repeatedly reading seconds, sub-seconds, seconds until first and
  * second read of seconds match.
  */
-int gettimeofday (struct timeval *tv, struct timezone *tz)
+int xgettimeofday (struct xtimeval *tv, struct timezone *tz)
 {
     uint32_t cs;
     if (tv) {
@@ -196,7 +196,7 @@ int gettimeofday (struct timeval *tv, struct timezone *tz)
             }
             last_seconds = cs;
             tv->tv_sec = cs + clock_offset;
-            tv->tv_usec = ((time_t)(clock_time () % CLOCK_SECOND))
+            tv->tv_usec = ((xtime_t)(clock_time () % CLOCK_SECOND))
                         * 1000000L / CLOCK_SECOND;
             if (cs == clock_seconds ()) {
                 break;
@@ -218,7 +218,7 @@ int gettimeofday (struct timeval *tv, struct timezone *tz)
 /**
  * \brief Set time in seconds, microseconds ignored for now
  */
-int settimeofday (const struct timeval *tv, const struct timezone *tz)
+int xsettimeofday (const struct xtimeval *tv, const struct timezone *tz)
 {
     /* Don't allow setting timezone */
     if (tz) {
@@ -290,11 +290,11 @@ static int save_tznames
  * calculate the Epoch-relative time that rule takes effect.
  */
 
-static time_t
-transtime(time_t janfirst, int year, const struct tzrule *rulep, long offset)
+static xtime_t
+transtime(xtime_t janfirst, int year, const struct tzrule *rulep, long offset)
 {
     int     leapyear;
-    time_t  value;
+    xtime_t value;
     int     i;
     int     d, m1, yy0, yy1, yy2, dow;
 

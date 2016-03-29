@@ -43,7 +43,7 @@
 #include "contiki.h"
 #include "contiki-net.h"
 #include "er-coap-engine.h"
-#include "time.h"
+#include "xtime.h"
 #include "cron.h"
 #include "time_resource.h"
 #include "jsonparse.h"

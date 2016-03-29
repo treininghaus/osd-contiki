@@ -38,7 +38,7 @@
 #include <assert.h>
 #include "contiki.h"
 #include "cron.h"
-#include "time.h"
+#include "xtime.h"
 
 #undef DEBUG
 
@@ -50,7 +50,7 @@ static struct cron_entry *entry_freelist = NULL;
 static struct cron_entry *entry_list     = NULL;
 
 typedef int64_t minute_t;
-static time_t start_time;
+static xtime_t start_time;
 static minute_t cron_clock_time;
 
 /* Register a new cron command
@@ -313,19 +313,19 @@ int parse_crontab_line
 
 static void set_time (void)
 {
-    struct tm *tm;
-    struct timeval tv;
-    gettimeofday (&tv, NULL);
+    struct xtm *tm;
+    struct xtimeval tv;
+    xgettimeofday (&tv, NULL);
     start_time = tv.tv_sec;
-    tm = localtime (&start_time);
+    tm = xlocaltime (&start_time);
     /* We adjust the time to GMT so we can catch DST changes */
-    cron_clock_time = (start_time + tm->tm_gmtoff) / (time_t)SECONDS_PER_MINUTE;
+    cron_clock_time = (start_time + tm->tm_gmtoff) / (xtime_t)SECONDS_PER_MINUTE;
 }
 
 static void find_jobs (minute_t vtime, int do_wild, int do_nonwild)
 {
-    time_t virtual_second = vtime * SECONDS_PER_MINUTE;
-    struct tm *tm = gmtime (&virtual_second);
+    xtime_t virtual_second = vtime * SECONDS_PER_MINUTE;
+    struct xtm *tm = xgmtime (&virtual_second);
     int minute, hour, dom, month, dow;
     struct cron_entry *e;
 

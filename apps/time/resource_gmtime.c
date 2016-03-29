@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "contiki.h"
-#include "time.h"
+#include "xtime.h"
 #include "time_resource.h"
 #include "jsonparse.h"
 #include "er-coap.h"
@@ -19,13 +19,13 @@
 
 size_t time_to_string (const char *name, const char *uri, char *buf, size_t bs)
 {
-    struct timeval tv;
-    struct tm tm;
-    struct tm *(*method)(const time_t *, struct tm *) = gmtime_r;
+    struct xtimeval tv;
+    struct xtm tm;
+    struct xtm *(*method)(const xtime_t *, struct xtm *) = xgmtime_r;
     if (0 == strcmp (name, "localtime")) {
-        method = localtime_r;
+        method = xlocaltime_r;
     }
-    gettimeofday (&tv, NULL);
+    xgettimeofday (&tv, NULL);
     method (&tv.tv_sec, &tm);
     return snprintf
       ( buf

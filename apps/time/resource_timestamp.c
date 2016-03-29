@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "contiki.h"
-#include "time.h"
+#include "xtime.h"
 #include "time_resource.h"
 #include "jsonparse.h"
 #include "er-coap.h"
@@ -23,18 +23,18 @@
 
 int timestamp_from_string (const char *name, const char *uri, const char *s)
 {
-  struct timeval tv;
+  struct xtimeval tv;
   // FIXME: Platform has no strtoll (long long)?
   tv.tv_sec = strtol (s, NULL, 10);
-  settimeofday (&tv, NULL);
+  xsettimeofday (&tv, NULL);
   return 0;
 }
 
 size_t
 timestamp_to_string (const char *name, const char *uri, char *buf, size_t bsize)
 {
-  struct timeval tv;
-  gettimeofday (&tv, NULL);
+  struct xtimeval tv;
+  xgettimeofday (&tv, NULL);
   // FIXME: Platform doesn't seem to support long long printing
   // We get empty string
   return snprintf (buf, bsize, "%ld", (long)tv.tv_sec);
