@@ -1,0 +1,77 @@
+CONTIKI_CPU_DIRS = . dev
+
+### Define the CPU directory of the AVR port
+CONTIKI_CPU=$(CONTIKI)/cpu/pico-rv32
+
+PICORV32_SOURCES = mtarch.c rtimer-arch.c clock.c watchdog.c
+CONTIKI_TARGET_SOURCEFILES += $(PICORV32_SOURCES) $(SENSORS) $(SYSAPPS) \
+    nullsec.c
+
+CONTIKI_SOURCEFILES += $(CONTIKI_TARGET_SOURCEFILES)
+
+### Compiler definitions
+CC       = riscv32-unknown-elf-gcc
+CXX      = riscv32-unknown-elf-g++
+LD       = riscv32-unknown-elf-gcc
+AS       = riscv32-unknown-elf-as
+AR       = riscv32-unknown-elf-ar
+ELF_SIZE = riscv32-unknown-elf-size
+NM       = riscv32-unknown-elf-nm
+OBJCOPY  = riscv32-unknown-elf-objcopy
+STRIP    = riscv32-unknown-elf-strip
+ifdef WERROR
+CFLAGSWERROR=-Werror
+endif
+CFLAGSNO = -Wall -g \
+    -I$(CONTIKI)/platform/$(TARGET) \
+    -I. -I$(CONTIKI)/core -I$(CONTIKI_CPU)
+CFLAGS  += $(CFLAGSNO) -Os
+
+ifeq ($(HOST_OS),Darwin)
+AROPTS = -r
+LDFLAGS += -Wl,-flat_namespace
+CFLAGS += -DHAVE_SNPRINTF=1 -U__ASSERT_USE_STDERR
+else
+ifeq ($(HOST_OS),Linux)
+LDFLAGS += -Wl,-Map=contiki-$(TARGET).map,-export-dynamic
+endif
+endif
+
+### Setup directory search path for source files
+
+CONTIKI_TARGET_DIRS_CONCAT = ${addprefix $(CONTIKI)/platform/$(TARGET)/, \
+                               $(CONTIKI_TARGET_DIRS)}
+
+### Compilation rules
+# Vertical bar | symbol denotes an order-only dependency: Timestamp is
+# ignored on the directory (otherwise everything would be rebuilt
+# everytime)
+
+$(OBJECTDIR)/%.o: %.c | $(OBJECTDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJECTDIR)/%.o: %.cpp | $(OBJECTDIR)
+	$(CXX) $(CFLAGS) -c $< -o $@
+
+%.o: %.cpp
+	$(CXX) $(CFLAGS) -c $< -o $@
+
+%.ko: %.o
+	$(STRIP) -K _init -K _fini --strip-unneeded -g -x $< -o $@
+
+%.elf:  %.co $(PROJECT_OBJECTFILES) contiki-$(TARGET).a symbols.o
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(filter-out %.a,$^) \
+	    $(filter %.a,$^) $(LDLIBS)
+
+%.hex: %.$(TARGET)
+	$(OBJCOPY) $^ -j .text -j .data -O ihex $@
+
+%.ihex: %.$(TARGET)
+	$(OBJCOPY) $^ -O ihex $@
+
+%-stripped.o: %.o
+	$(STRIP) --strip-unneeded -g -x -o $@ $<
+

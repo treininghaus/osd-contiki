@@ -1,0 +1,16 @@
+CONTIKI_TARGET_DIRS = . apps net loader
+
+CONTIKI_CORE=contiki-main
+CONTIKI_TARGET_MAIN = ${CONTIKI_CORE}.o
+CONTIKI_TARGET_SOURCEFILES += contiki-main.c params.c
+
+CONTIKIPICORV32=$(CONTIKI)/cpu/pico-rv32
+CONTIKIBOARD=.
+
+CONTIKI_PLAT_DEFS = -DF_CPU=8000000UL -DAUTO_CRC_PADDING=2
+
+MCU=pico-rv32
+
+include $(CONTIKIPICORV32)/Makefile.pico-rv32
+#include $(CONTIKIPICORV32)/radio/Makefile.radio
+MODULES += core/net/mac core/net core/net/mac/sicslowmac core/net/mac/contikimac
