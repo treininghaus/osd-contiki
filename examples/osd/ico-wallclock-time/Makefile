@@ -17,13 +17,14 @@ CONTIKI=../../..
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
-PROJECTDIRS += $(REST_RESOURCES_DIR) $(REST_RESOURCES_DIR_COMMON)
-PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
+#FIXME PROJECTDIRS += $(REST_RESOURCES_DIR) $(REST_RESOURCES_DIR_COMMON)
+#FIXME PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
+PROJECT_SOURCEFILES += icosoc.c
 
 # REST Engine shall use Erbium CoAP implementation
-APPS += er-coap
-APPS += rest-engine
-APPS += json json-resource time
+#FIXME APPS += er-coap
+#FIXME APPS += rest-engine
+#FIXME APPS += json json-resource time
 
 CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
