@@ -11,10 +11,9 @@
  */
 
 extern "C" {
+#include "arduino-process.h"
 #include "rest-engine.h"
 #include "net/netstack.h"
-
-extern volatile uint8_t mcusleepcycle;  // default 16
 
 extern resource_t res_leds, res_battery, res_cputemp;
 uint8_t door_pin = 3;
@@ -39,7 +38,7 @@ void setup (void)
 
 void loop (void)
 {
-  mcusleepcycle=0;
-  
-  mcusleepcycle=16;
+	mcu_sleep_off();
+	
+	mcu_sleep_on();
 }

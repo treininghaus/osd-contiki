@@ -11,6 +11,7 @@
  */
 
 extern "C" {
+#include "arduino-process.h"
 #include "rest-engine.h"
 
 extern resource_t res_door, res_battery;
@@ -29,9 +30,12 @@ void setup (void)
     rest_init_engine ();
     rest_activate_resource (&res_door, "s/door");
     rest_activate_resource (&res_battery, "s/battery");
+ //   NETSTACK_MAC.off(1);
 }
 
 void loop (void)
 {
-
+	mcu_sleep_off();
+	
+	mcu_sleep_on();
 }

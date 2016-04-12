@@ -54,6 +54,34 @@
 #include "adc.h"
 #include "hw-arduino.h"
 
+extern volatile uint8_t mcusleepcycle;
+volatile uint8_t mcusleepcycleval; 
+
+/*-------------- enabled sleep mode ----------------------------------------*/
+void
+mcu_sleep_init(void)
+{
+	mcusleepcycleval=mcusleepcycle; 
+}
+void
+mcu_sleep_on(void)
+{
+	mcusleepcycle= mcusleepcycleval;
+}
+/*--------------- disable sleep mode ---------------------------------------*/
+void
+mcu_sleep_off(void)
+{
+	mcusleepcycle=0;
+}
+/*---------------- set duty cycle value ------------------------------------*/
+void
+mcu_sleep_set(uint8_t value)
+{
+	mcusleepcycleval= value;
+	mcusleepcycle = mcusleepcycleval;
+}
+
 PROCESS(arduino_sketch, "Arduino Sketch Wrapper");
 
 #ifndef LOOP_INTERVAL
@@ -65,8 +93,8 @@ PROCESS_THREAD(arduino_sketch, ev, data)
   static struct etimer loop_periodic_timer;
   
   PROCESS_BEGIN();
-
   adc_init ();
+  mcu_sleep_init ();
   setup ();
   /* Define application-specific events here. */
   etimer_set(&loop_periodic_timer, LOOP_INTERVAL);
