@@ -68,7 +68,7 @@
 #include <stdio.h> // FIXME
 
 static volatile clock_time_t count;
-volatile unsigned long seconds;
+unsigned long offset;
 long sleepseconds;
 
 /*---------------------------------------------------------------------------*/
@@ -84,69 +84,28 @@ clock_init(void)
  * Return the tick counter. We use the full 64bit counter which makes
  * computation of seconds etc. easier later.
  */
-#define MAX_MEASURE 40
-static clock_time_t measure [MAX_MEASURE];
-static volatile int counter = 0;
-
-void print_clocks (void)
-{
-    static int done = 0;
-    int i;
-    clock_time_t big = 0x1234567890098765LL;
-    if (done || counter < MAX_MEASURE) {
-        return;
-    }
-    for (i=0; i<counter; i++) {
-        clock_time_t tmp = measure [i];
-        uint32_t *p = (uint32_t *)(measure + i);
-        printf (">%016llx< ", tmp);
-        printf (">>%08lx%08lx<< ", (uint32_t)(tmp>>32), (uint32_t)tmp);
-        printf (">>>%08lx%08lx<<<\n", p [1], p [0]); /* little endian */
-    }
-    printf ("counter: %d\n", counter);
-    printf ("Sizes: %u %u\n", sizeof (uint32_t), sizeof (clock_time_t));
-    printf ("Test: %016llx\n", big);
-    printf ("Test: %08lx%08lx\n", (uint32_t)(big>>32), (uint32_t)big);
-    if (counter == MAX_MEASURE) {
-        done = 1;
-    }
-}
-
     clock_time_t
 clock_time(void)
 {
-    clock_time_t tmp;
-    int i = counter;
-    asm ("1: rdcycleh t1\n"
-            "rdcycle  t0\n"
-            "rdcycleh t2\n"
-            "bne      t1,t2,1b\n"
-            "sw       t0,0(%1)\n"
-            "sw       t0,4(%1)\n"
-            : "=r" (tmp)
-            : "r" (&tmp)
-            : "t0", "t1", "t2"
+    uint32_t low, high;
+    asm ("1: rdcycleh %1\n"
+            "rdcycle  %0\n"
+            "rdcycleh t0\n"
+            "bne      %1,t0,1b\n"
+            : "=r" (low), "=r" (high)
+            :
+            : "t0"
         );
-    if (i < MAX_MEASURE) {
-        measure [i++] = tmp;
-        counter = i;
-    }
-    return tmp;
+    return ((clock_time_t)high) << 32 | low;
 }
 /*---------------------------------------------------------------------------*/
 /**
  * Return seconds, default is time since startup.
- * The comparison avoids the need to disable clock interrupts for an atomic
- * read of the four-byte variable.
  */
     unsigned long
 clock_seconds(void)
 {
-    unsigned long tmp;
-    do {
-        tmp = seconds;
-    } while(tmp != seconds);
-    return tmp;
+    return (unsigned long)(clock_time () / CLOCK_CONF_SECOND) + offset;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -155,7 +114,7 @@ clock_seconds(void)
     void
 clock_set_seconds(unsigned long sec)
 {
-    seconds = sec;
+    offset = sec - (unsigned long)(clock_time () / CLOCK_CONF_SECOND);
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -172,35 +131,7 @@ clock_wait(clock_time_t t)
     void
 clock_delay_usec(uint16_t dt)
 {
-}
-/*---------------------------------------------------------------------------*/
-/**
- * Delay up to 65535 milliseconds.
- * \param howlong   How many milliseconds to delay.
- *
- * Neither interrupts nor the watchdog timer is disabled over the delay.
- * Platforms are not required to implement this call.
- * \note This will break for CPUs clocked above 260 MHz.
- */
-    void
-clock_delay_msec(uint16_t howlong)
-{
-
-#if F_CPU>=16000000
-    while(howlong--) clock_delay_usec(1000);
-#elif F_CPU>=8000000
-    uint16_t i=996;
-    while(howlong--) {clock_delay_usec(i);i=999;}
-#elif F_CPU>=4000000
-    uint16_t i=992;
-    while(howlong--) {clock_delay_usec(i);i=999;}
-#elif F_CPU>=2000000
-    uint16_t i=989;
-    while(howlong--) {clock_delay_usec(i);i=999;}
-#else
-    uint16_t i=983;
-    while(howlong--) {clock_delay_usec(i);i=999;}
-#endif
+    clock_wait (CLOCK_SECOND * dt / 1000000ULL);
 }
 /*---------------------------------------------------------------------------*/
 /**

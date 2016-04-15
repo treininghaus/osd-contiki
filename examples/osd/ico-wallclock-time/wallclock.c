@@ -72,7 +72,11 @@ PROCESS (wallclock, "Wallclock Example Server");
 
 AUTOSTART_PROCESSES(&wallclock);
 
-#define LOOP_INTERVAL (30 * CLOCK_SECOND)
+//#define LOOP_INTERVAL (30 * CLOCK_SECOND)
+//#define LOOP_INTERVAL (3 * CLOCK_SECOND)
+// one more than this will currently hang, probably due to
+// non-implemented etimer callback.
+#define LOOP_INTERVAL (25461)
 
 /*
  * Set led to on or off, we abuse the given pointer to simply carry the
@@ -84,7 +88,15 @@ void led_set (void *onoff)
     icosoc_leds_set (0xFF * status);
 }
 
-extern void print_clocks (void);
+#if 0
+/* long long printing not working */
+void test_print (void)
+{
+    clock_time_t big = 0x1234567890098765LL;
+    printf ("Test: %016llx\n", big);
+    printf ("Test: %08lx%08lx\n", (uint32_t)(big>>32), (uint32_t)big);
+}
+#endif
 
 PROCESS_THREAD(wallclock, ev, data)
 {
@@ -125,10 +137,11 @@ PROCESS_THREAD(wallclock, ev, data)
    * We need to call cron every 30 seconds or so (at least once a
    * minute)
    */
+  printf ("Loop-interval: %ld\n", (uint32_t)LOOP_INTERVAL);
   etimer_set (&loop_periodic_timer, LOOP_INTERVAL);
   while (1) {
-    printf ("In while loop\n");
-    print_clocks ();
+    clock_time_t cl = clock_time ();
+    printf ("In while loop: %08lx%08lx\n", (uint32_t)(cl>>32), (uint32_t)cl);
     PROCESS_WAIT_EVENT();
     if (etimer_expired (&loop_periodic_timer)) {
         //cron ();

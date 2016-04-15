@@ -47,8 +47,11 @@
 #define PLATFORM_NAME  "PicoRV32-icoboard"
 #define PLATFORM_TYPE  PICORV32
 #ifndef F_CPU
-#define F_CPU          8000000UL
+#define F_CPU          2000000ULL
 #endif
+
+ /* Clock ticks per second, our timer runs with cpu freq */
+#define CLOCK_CONF_SECOND F_CPU
 
 typedef uint64_t clock_time_t;
 #define CLOCK_LT(a,b)  ((a)<(b))
