@@ -52,6 +52,7 @@ mtarch_start(struct mtarch_thread *t,
    * measuring stack usage */
   uint8_t i;
 
+  printf ("mtarch_start called\n");
   for(i = 0; i < MTARCH_STACKSIZE; ++i) {
     t->stack[i] = i;
   }
@@ -60,7 +61,7 @@ mtarch_start(struct mtarch_thread *t,
    * Push pointer to mt_exit and the thread onto our stack:
    * Caveats:
    *  - The stack is defined as an array of bytes, but pointers are 32 bit wide
-   *  - Function pointers are 32-bit addresses in flash ROM
+   *  - Function pointers are 32-bit addresses
    */
 
   /* Initialize stack. This is done in reverse order ("pushing") the
@@ -84,31 +85,45 @@ mtarch_start(struct mtarch_thread *t,
 }
 
 /*--------------------------------------------------------------------------*/
-static unsigned char *sptmp;
 static struct mtarch_thread *running;
 
 static void
 sw(void)
 {
-  /* Disable interrupts while we perform the context switch */
-  //cli ();
+  printf ("sw called\n");
+  /* FIXME: Disable interrupts while we perform the context switch */
+  /* Needs to be in separate asm statement, we don't want to be
+   * interrupted while the C-Compiler-generated wrapper-code pushes
+   * registers on the stack.
+   */
 
-  /* Push 32 general purpuse registers */
+  /*
+   * Need to save ra, s0/fp, s1-s11, we make the C-compiler do it by
+   * specifying these registers as clobber.
+   * For now we leave MT threads alone -- the stack management is too
+   * unstable in the currently-used gcc port, in our example for storing
+   * 13 4-byte variables on the stack the compiler allocates 64 bytes on
+   * the stack (52 would be ok, 64 is not even explained if the stack is
+   * kept 8-byte aligned (maybe 16?)). Also the normal function wrapper
+   * code is not called if we have a single asm statement in a function
+   * (the normal wrapper code already saves ra, s0/fp on the stack).
+   */
 
   /* Switch stack pointer */
-  sptmp = running->sp;
-  //running->sp = (unsigned char*)SP;
-  //SP = (unsigned short)sptmp;
-
-  /* Pop 32 general purpose registers */
-
-  /* Renable interrupts */
-  //sei ();
+  asm (
+       "mv t0, sp\n"
+       "mv sp, %0\n"
+       "mv %0, t0\n"
+      : "+r" (running->sp)
+      :
+      : "t0","ra","s0","s1","s2","s3","s4","s5","s6","s7","s8","s9","s10","s11"
+      );
 }
 /*--------------------------------------------------------------------------*/
 void
 mtarch_exec(struct mtarch_thread *t)
 {
+  printf ("mtarch_exec called\n");
   running = t;
   sw();
   running = NULL;

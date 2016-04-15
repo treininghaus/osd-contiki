@@ -50,15 +50,8 @@
 #define F_CPU          8000000UL
 #endif
 
-/* The AVR tick interrupt usually is done with an 8 bit counter around 128 Hz.
- * 125 Hz needs slightly more overhead during the interrupt, as does a 32 bit
- * clock_time_t.
- */
- /* Clock ticks per second */
-#define CLOCK_CONF_SECOND 128
-
-typedef uint32_t clock_time_t;
-#define CLOCK_LT(a,b)  ((int32_t)((a)-(b)) < 0)
+typedef uint64_t clock_time_t;
+#define CLOCK_LT(a,b)  ((a)<(b))
 
 /* RADIOSTATS is used in rf230bb, clock.c and the webserver cgi to report radio usage */
 /* It has less overhead than ENERGEST */

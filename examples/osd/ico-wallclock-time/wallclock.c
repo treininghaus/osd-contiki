@@ -43,7 +43,7 @@
 #include "contiki.h"
 #include "contiki-net.h"
 //FIXME#include "er-coap-engine.h"
-//FIXME#include "time.h"
+//FIXME#include "xtime.h"
 //FIXME#include "cron.h"
 //FIXME#include "time_resource.h"
 //FIXME#include "jsonparse.h"
@@ -83,6 +83,8 @@ void led_set (void *onoff)
     int status = (int)onoff;
     icosoc_leds_set (0xFF * status);
 }
+
+extern void print_clocks (void);
 
 PROCESS_THREAD(wallclock, ev, data)
 {
@@ -126,6 +128,7 @@ PROCESS_THREAD(wallclock, ev, data)
   etimer_set (&loop_periodic_timer, LOOP_INTERVAL);
   while (1) {
     printf ("In while loop\n");
+    print_clocks ();
     PROCESS_WAIT_EVENT();
     if (etimer_expired (&loop_periodic_timer)) {
         //cron ();

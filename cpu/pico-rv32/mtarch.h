@@ -45,7 +45,7 @@
 #ifdef MTARCH_CONF_STACKSIZE
 #define MTARCH_STACKSIZE MTARCH_CONF_STACKSIZE
 #else
-#define MTARCH_STACKSIZE 512
+#define MTARCH_STACKSIZE 1024
 #endif
 
 struct mtarch_thread {

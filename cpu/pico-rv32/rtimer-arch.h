@@ -35,8 +35,7 @@
 
 #include <sys/clock.h>
 
-// FIXME
-#define RTIMER_ARCH_SECOND 23
+#define RTIMER_ARCH_SECOND F_CPU
 
 #define rtimer_arch_now() (clock_time ())
 

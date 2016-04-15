@@ -29,17 +29,17 @@
  * This file is part of the Contiki operating system.
  *
  */
- /**
+/**
  *  \brief This module contains PicoRV32-specific code to implement
  *  the Contiki core clock functions.
  *  
  *  \author Ralf Schlatterbeck <rsc@runtux.com>.
  *
-*/
+ */
 /** \addtogroup picorv32
  * @{
  */
- /**
+/**
  *  \defgroup picorv32clock PicoRV32 clock implementation
  * @{
  */
@@ -65,32 +65,73 @@
 #include "sys/clock.h"
 #include "sys/etimer.h"
 
+#include <stdio.h> // FIXME
+
 static volatile clock_time_t count;
 volatile unsigned long seconds;
 long sleepseconds;
 
 /*---------------------------------------------------------------------------*/
 /**
- * Start the clock by enabling the timer comparison interrupts. 
+ * No need to init
  */
-void
+    void
 clock_init(void)
 {
-  //cli ();
-  //OCRSetup();
-  //sei ();
 }
 /*---------------------------------------------------------------------------*/
 /**
- * Return the tick counter. When 16 bit it typically wraps every 10 minutes.
- * The comparison avoids the need to disable clock interrupts for an atomic
- * read of the multi-byte variable.
+ * Return the tick counter. We use the full 64bit counter which makes
+ * computation of seconds etc. easier later.
  */
-clock_time_t
+#define MAX_MEASURE 40
+static clock_time_t measure [MAX_MEASURE];
+static volatile int counter = 0;
+
+void print_clocks (void)
+{
+    static int done = 0;
+    int i;
+    clock_time_t big = 0x1234567890098765LL;
+    if (done || counter < MAX_MEASURE) {
+        return;
+    }
+    for (i=0; i<counter; i++) {
+        clock_time_t tmp = measure [i];
+        uint32_t *p = (uint32_t *)(measure + i);
+        printf (">%016llx< ", tmp);
+        printf (">>%08lx%08lx<< ", (uint32_t)(tmp>>32), (uint32_t)tmp);
+        printf (">>>%08lx%08lx<<<\n", p [1], p [0]); /* little endian */
+    }
+    printf ("counter: %d\n", counter);
+    printf ("Sizes: %u %u\n", sizeof (uint32_t), sizeof (clock_time_t));
+    printf ("Test: %016llx\n", big);
+    printf ("Test: %08lx%08lx\n", (uint32_t)(big>>32), (uint32_t)big);
+    if (counter == MAX_MEASURE) {
+        done = 1;
+    }
+}
+
+    clock_time_t
 clock_time(void)
 {
-  static clock_time_t counter = 0;
-  return counter++;
+    clock_time_t tmp;
+    int i = counter;
+    asm ("1: rdcycleh t1\n"
+            "rdcycle  t0\n"
+            "rdcycleh t2\n"
+            "bne      t1,t2,1b\n"
+            "sw       t0,0(%1)\n"
+            "sw       t0,4(%1)\n"
+            : "=r" (tmp)
+            : "r" (&tmp)
+            : "t0", "t1", "t2"
+        );
+    if (i < MAX_MEASURE) {
+        measure [i++] = tmp;
+        counter = i;
+    }
+    return tmp;
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -98,42 +139,37 @@ clock_time(void)
  * The comparison avoids the need to disable clock interrupts for an atomic
  * read of the four-byte variable.
  */
-unsigned long
+    unsigned long
 clock_seconds(void)
 {
-  unsigned long tmp;
-  do {
-    tmp = seconds;
-  } while(tmp != seconds);
-  return tmp;
+    unsigned long tmp;
+    do {
+        tmp = seconds;
+    } while(tmp != seconds);
+    return tmp;
 }
 /*---------------------------------------------------------------------------*/
 /**
  * Set seconds, e.g. to a standard epoch for an absolute date/time.
  */
-void
+    void
 clock_set_seconds(unsigned long sec)
 {
-  seconds = sec;
+    seconds = sec;
 }
 /*---------------------------------------------------------------------------*/
 /*
  * Wait for a number of clock ticks.
  */
-void
+    void
 clock_wait(clock_time_t t)
 {
-  clock_time_t endticks = clock_time() + t;
-  if (sizeof(clock_time_t) == 1) {
-    while ((signed char )(clock_time() - endticks) < 0) {;}
-  } else if (sizeof(clock_time_t) == 2) {
-    while ((signed short)(clock_time() - endticks) < 0) {;}
-  } else {
-    while ((signed long )(clock_time() - endticks) < 0) {;}
-  }
+    clock_time_t endticks = clock_time() + t;
+    while (clock_time () < endticks)
+    {;}
 }
 /*---------------------------------------------------------------------------*/
-void
+    void
 clock_delay_usec(uint16_t dt)
 {
 }
@@ -146,24 +182,24 @@ clock_delay_usec(uint16_t dt)
  * Platforms are not required to implement this call.
  * \note This will break for CPUs clocked above 260 MHz.
  */
-void
+    void
 clock_delay_msec(uint16_t howlong)
 {
 
 #if F_CPU>=16000000
-  while(howlong--) clock_delay_usec(1000);
+    while(howlong--) clock_delay_usec(1000);
 #elif F_CPU>=8000000
-  uint16_t i=996;
-  while(howlong--) {clock_delay_usec(i);i=999;}
+    uint16_t i=996;
+    while(howlong--) {clock_delay_usec(i);i=999;}
 #elif F_CPU>=4000000
-  uint16_t i=992;
-  while(howlong--) {clock_delay_usec(i);i=999;}
+    uint16_t i=992;
+    while(howlong--) {clock_delay_usec(i);i=999;}
 #elif F_CPU>=2000000
-  uint16_t i=989;
-  while(howlong--) {clock_delay_usec(i);i=999;}
+    uint16_t i=989;
+    while(howlong--) {clock_delay_usec(i);i=999;}
 #else
-  uint16_t i=983;
-  while(howlong--) {clock_delay_usec(i);i=999;}
+    uint16_t i=983;
+    while(howlong--) {clock_delay_usec(i);i=999;}
 #endif
 }
 /*---------------------------------------------------------------------------*/
@@ -173,12 +209,12 @@ clock_delay_msec(uint16_t howlong)
  *
  * Typically used to add ticks after an MCU sleep
  * clock_seconds will increment if necessary to reflect the tick addition.
-  * Leap ticks or seconds can (rarely) be introduced if the ISR is not blocked.
+ * Leap ticks or seconds can (rarely) be introduced if the ISR is not blocked.
  */
-void
+    void
 clock_adjust_ticks(clock_time_t howmany)
 {
 }
- 
+
 /** @} */
 /** @} */
