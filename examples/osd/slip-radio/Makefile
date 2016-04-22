@@ -1,5 +1,5 @@
-CONTIKI_PROJECT=slip-radio
-all: $(CONTIKI_PROJECT)
+EXE=slip-radio
+all: $(EXE)
 APPS = slip-cmd
 
 ifeq ($(TARGET),)
@@ -26,3 +26,10 @@ endif
 CONTIKI_WITH_RPL = 0
 CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
+
+avr-size: $(EXE).$(TARGET).sz
+
+flash: $(EXE).$(TARGET).u $(EXE).$(TARGET).eu
+
+.PHONY: flash avr-size
+.PRECIOUS: $(EXE).$(TARGET).hex $(EXE).$(TARGET).eep

@@ -1,13 +1,6 @@
-ifeq ($(TARGET), osd-merkur)
-PLATFORM_FILES= avr-size-server er-example-server.osd-merkur.hex \
-    er-example-server.osd-merkur.eep                             \
-    avr-size-client er-example-client.osd-merkur.hex             \
-    er-example-client.osd-merkur.eep
-endif
+EXE=er-example-server er-example-client
 
-all: er-example-server er-example-client $(PLATFORM_FILES)
-
-# use target "er-plugtest-server" explicitly when requried 
+all: $(EXE)
 
 CONTIKI=../../..
 
@@ -72,38 +65,15 @@ connect-router-native:	$(CONTIKI)/examples/ipv6/native-border-router/border-rout
 connect-minimal:
 	sudo ip address add fdfd::1/64 dev tap0 
 
-avr-size-server: er-example-server.osd-merkur
-	avr-size -C --mcu=MCU=atmega128rfa1 er-example-server.osd-merkur
+avr-size-server: er-example-server.$(TARGET).sz
 
-er-example-server.osd-merkur.hex: er-example-server.osd-merkur
-	avr-objcopy -j .text -j .data -O ihex er-example-server.osd-merkur \
-	    er-example-server.osd-merkur.hex
+avr-size-client: er-example-server.$(TARGET).sz
 
-er-example-server.osd-merkur.eep: er-example-server.osd-merkur
-	avr-objcopy -j .eeprom --set-section-flags=.eeprom="alloc,load" \
-	    --change-section-lma .eeprom=0 -O ihex                      \
-	    er-example-server.osd-merkur er-example-server.osd-merkur.eep
+flash-server: er-example-server.$(TARGET).u er-example-server.$(TARGET).eu
 
-flash-server: er-example-server.osd-merkur.hex er-example-server.osd-merkur.eep
-	avrdude -pm128rfa1 -c arduino -P/dev/ttyUSB0 -b57600 -e -U \
-	    flash:w:er-example-server.osd-merkur.hex:a -U \
-	    eeprom:w:er-example-server.osd-merkur.eep:a
-
-avr-size-client: er-example-client.osd-merkur
-	avr-size -C --mcu=MCU=atmega128rfa1 er-example-client.osd-merkur
-
-er-example-client.osd-merkur.hex: er-example-client.osd-merkur
-	avr-objcopy -j .text -j .data -O ihex er-example-client.osd-merkur \
-	    er-example-client.osd-merkur.hex
-
-er-example-client.osd-merkur.eep: er-example-client.osd-merkur
-	avr-objcopy -j .eeprom --set-section-flags=.eeprom="alloc,load" \
-	    --change-section-lma .eeprom=0 -O ihex                      \
-	    er-example-client.osd-merkur er-example-client.osd-merkur.eep
-
-flash-client: er-example-client.osd-merkur.hex er-example-client.osd-merkur.eep
-	avrdude -pm128rfa1 -c arduino -P/dev/ttyUSB0 -b57600 -e -U \
-	    flash:w:er-example-client.osd-merkur.hex:a -U \
-	    eeprom:w:er-example-client.osd-merkur.eep:a
+flash-client: er-example-client.$(TARGET).u er-example-client.$(TARGET).eu
 
 .PHONY: flash-client avr-size-client flash-server avr-size-server
+.PRECIOUS: er-example-server.$(TARGET).hex er-example-server.$(TARGET).eep \
+           er-example-client.$(TARGET).hex er-example-client.$(TARGET).eep
+

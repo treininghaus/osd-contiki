@@ -1,10 +1,6 @@
-ifeq ($(TARGET), osd-merkur)
-PLATFORM_FILES= avr-size er-example-server.osd-merkur.hex \
-    er-example-server.osd-merkur.eep
-endif
+EXE=er-example-server
 
-all: er-example-server $(PLATFORM_FILES)
-# use this target explicitly if requried: er-plugtest-server
+all: $(EXE)
 
 CONTIKI=../../..
 
@@ -39,25 +35,6 @@ APPS += json json-resource
 
 include $(CONTIKI)/Makefile.include
 
-avr-size: er-example-server.osd-merkur
-	avr-size -C --mcu=MCU=atmega128rfa1 er-example-server.osd-merkur
-
-er-example-server.osd-merkur.hex: er-example-server.osd-merkur
-	avr-objcopy -j .text -j .data -O ihex er-example-server.osd-merkur \
-	    er-example-server.osd-merkur.hex
-
-er-example-server.osd-merkur.eep: er-example-server.osd-merkur
-	avr-objcopy -j .eeprom --set-section-flags=.eeprom="alloc,load" \
-	    --change-section-lma .eeprom=0 -O ihex                      \
-	    er-example-server.osd-merkur er-example-server.osd-merkur.eep
-
-flash: er-example-server.osd-merkur.hex er-example-server.osd-merkur.eep
-	avrdude -pm128rfa1 -c arduino -P/dev/ttyUSB0 -b57600 -e -U \
-	    flash:w:er-example-server.osd-merkur.hex:a -U \
-	    eeprom:w:er-example-server.osd-merkur.eep:a
-
-.PHONY: flash avr-size
-
 $(CONTIKI)/tools/tunslip6:      $(CONTIKI)/tools/tunslip6.c
 	(cd $(CONTIKI)/tools && $(MAKE) tunslip6)
 
@@ -69,3 +46,10 @@ connect-router-cooja:   $(CONTIKI)/tools/tunslip6
 
 connect-minimal:
 	sudo ip address add fdfd::1/64 dev tap0
+
+avr-size: $(EXE).$(TARGET).sz
+
+flash: $(EXE).$(TARGET).u $(EXE).$(TARGET).eu
+
+.PHONY: flash avr-size
+.PRECIOUS: $(EXE).$(TARGET).hex $(EXE).$(TARGET).eep

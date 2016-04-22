@@ -1,2 +1,2 @@
 #!/bin/bash
-sudo make flash-server
+make TARGET=osd-merkur-128 flash-server

@@ -1,5 +1,5 @@
-CONTIKI_PROJECT=border-router
-all: $(CONTIKI_PROJECT) 
+EXE=border-router
+all: $(EXE) 
 
 CONTIKI=../../..
 
@@ -47,3 +47,10 @@ connect-router:	$(CONTIKI)/tools/tunslip6
 
 connect-router-cooja:	$(CONTIKI)/tools/tunslip6
 	sudo $(CONTIKI)/tools/tunslip6 -a 127.0.0.1 $(PREFIX)
+
+avr-size: $(EXE).$(TARGET).sz
+
+flash: $(EXE).$(TARGET).u $(EXE).$(TARGET).eu
+
+.PHONY: flash avr-size
+.PRECIOUS: $(EXE).$(TARGET).hex $(EXE).$(TARGET).eep

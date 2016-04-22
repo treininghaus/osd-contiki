@@ -1,2 +1,2 @@
 #!/bin/bash
-make flash TARGET=osd-merkur
+make TARGET=osd-merkur-128 flash

@@ -678,7 +678,7 @@ AUTOSTART_PROCESSES(&rest_server_example, &sensors_process);
 PROCESS_THREAD(rest_server_example, ev, data)
 {
   static struct etimer ds_periodic_timer;
-  static int ext4=0;
+//  static int ext4=0;
   static int ext5=0;
   static int ext6=0;
 //  ext4 = is_button_ext4();

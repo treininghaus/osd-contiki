@@ -1,12 +1,8 @@
 # Set this to the name of your sketch (without extension .pde)
 SKETCH=sketch
+EXE=arduino-example
 
-ifeq ($(TARGET), osd-merkur)
-PLATFORM_FILES= avr-size arduino-example.osd-merkur.hex \
-    arduino-example.osd-merkur.eep
-endif
-
-all: arduino-example $(PLATFORM_FILES)
+all: $(EXE)
 
 CONTIKI=../../..
 
@@ -55,25 +51,6 @@ APPS += arduino
 include $(CONTIKI)/Makefile.include
 include $(CONTIKI)/apps/arduino/Makefile.include
 
-avr-size: arduino-example.osd-merkur
-	avr-size -C --mcu=MCU=atmega128rfa1 arduino-example.osd-merkur
-
-arduino-example.osd-merkur.hex: arduino-example.osd-merkur
-	avr-objcopy -j .text -j .data -O ihex arduino-example.osd-merkur \
-	    arduino-example.osd-merkur.hex
-
-arduino-example.osd-merkur.eep: arduino-example.osd-merkur
-	avr-objcopy -j .eeprom --set-section-flags=.eeprom="alloc,load" \
-	    --change-section-lma .eeprom=0 -O ihex                      \
-	    arduino-example.osd-merkur arduino-example.osd-merkur.eep
-
-flash: arduino-example.osd-merkur.hex arduino-example.osd-merkur.eep
-	avrdude -pm128rfa1 -c arduino -P/dev/ttyUSB0 -b57600 -e -U \
-	    flash:w:arduino-example.osd-merkur.hex:a -U \
-	    eeprom:w:arduino-example.osd-merkur.eep:a
-
-.PHONY: flash avr-size
-
 $(CONTIKI)/tools/tunslip6:      $(CONTIKI)/tools/tunslip6.c
 	(cd $(CONTIKI)/tools && $(MAKE) tunslip6)
 
@@ -85,3 +62,10 @@ connect-router-cooja:   $(CONTIKI)/tools/tunslip6
 
 connect-minimal:
 	sudo ip address add fdfd::1/64 dev tap0
+
+avr-size: $(EXE).$(TARGET).sz
+
+flash: $(EXE).$(TARGET).u $(EXE).$(TARGET).eu
+
+.PHONY: flash avr-size
+.PRECIOUS: $(EXE).$(TARGET).hex $(EXE).$(TARGET).eep
