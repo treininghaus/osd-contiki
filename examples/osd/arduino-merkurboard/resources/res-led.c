@@ -43,40 +43,62 @@
 #include "Arduino.h"
 
 static void res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
+static void res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset);
 
 /* A simple getter example. Returns the reading from the sensor with a simple etag */
-RESOURCE(res_door,
-         "title=\"Moisture status\";rt=\"Moisture\"",
+RESOURCE(res_led,
+         "title=\"LED: , POST/PUT mode=on|off\";rt=\"Control\"",
          res_get_handler,
-         NULL,
-         NULL,
+         res_post_put_handler,
+         res_post_put_handler,
          NULL);
 
-extern  uint8_t door_pin;
-extern  uint8_t door_status;
+extern  uint8_t led_pin;
+extern  uint8_t led_status;
 
 static void
 res_get_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
 {
-  
-  door_status = digitalRead(door_pin);
-  
   unsigned int accept = -1;
   REST.get_header_accept(request, &accept);
 
   if(accept == -1 || accept == REST.type.TEXT_PLAIN) {
     REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d", door_status);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "%d", led_status);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   } else if(accept == REST.type.APPLICATION_JSON) {
     REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
-    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'door':%d}", door_status);
+    snprintf((char *)buffer, REST_MAX_CHUNK_SIZE, "{'led':%d}", led_status);
 
     REST.set_response_payload(response, buffer, strlen((char *)buffer));
   } else {
     REST.set_response_status(response, REST.status.NOT_ACCEPTABLE);
     const char *msg = "Supporting content-types text/plain and application/json";
     REST.set_response_payload(response, msg, strlen(msg));
+  }
+}
+
+static void
+res_post_put_handler(void *request, void *response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)
+{
+  size_t len = 0;
+  const char *mode = NULL;
+  int success = 1;
+
+  if(success && (len = REST.get_post_variable(request, "mode", &mode))) {
+    if(strncmp(mode, "on", len) == 0) {
+      digitalWrite(led_pin, LOW);
+      led_status=1;
+    } else if(strncmp(mode, "off", len) == 0) {
+      digitalWrite(led_pin, HIGH);
+      led_status=0;
+    } else {
+      success = 0;
+    }
+  } else {
+    success = 0;
+  } if(!success) {
+    REST.set_response_status(response, REST.status.BAD_REQUEST);
   }
 }
