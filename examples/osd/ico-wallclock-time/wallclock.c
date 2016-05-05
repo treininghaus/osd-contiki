@@ -73,10 +73,7 @@ PROCESS (wallclock, "Wallclock Example Server");
 AUTOSTART_PROCESSES(&wallclock);
 
 //#define LOOP_INTERVAL (30 * CLOCK_SECOND)
-//#define LOOP_INTERVAL (3 * CLOCK_SECOND)
-// one more than this will currently hang, probably due to
-// non-implemented etimer callback.
-#define LOOP_INTERVAL (25461)
+#define LOOP_INTERVAL (5 * CLOCK_SECOND)
 
 /*
  * Set led to on or off, we abuse the given pointer to simply carry the

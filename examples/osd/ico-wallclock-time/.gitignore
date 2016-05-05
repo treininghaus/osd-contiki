@@ -4,7 +4,9 @@ icosoc.mk
 icosoc.pcf
 icosoc.v
 icosoc.ys
+icosoc.rpt
 wallclock.co
 wallclock.pico-rv32-icoboard
 icosoc.c
 icosoc.h
+testbench.v

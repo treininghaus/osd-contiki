@@ -22,7 +22,7 @@ STRIP    = riscv32-unknown-elf-strip
 ifdef WERROR
 CFLAGSWERROR=-Werror
 endif
-CFLAGSNO = -Wall -g \
+CFLAGSNO = -Wall -march=RV32IXcustom -g \
     -I$(CONTIKI)/platform/$(TARGET) \
     -I. -I$(CONTIKI)/core -I$(CONTIKI_CPU)
 CFLAGS  += $(CFLAGSNO) -Os

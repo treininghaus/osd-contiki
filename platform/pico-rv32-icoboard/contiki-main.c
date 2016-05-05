@@ -114,6 +114,7 @@ uint16_t *p=&__bss_end;
     } while (p<SP-10); //don't overwrite our own stack
 }
 #endif
+  clock_init();
 
   PRINTA("\n*******Booting %s*******\n",CONTIKI_VERSION_STRING);
 

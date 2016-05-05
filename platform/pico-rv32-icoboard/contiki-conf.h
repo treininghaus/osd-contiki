@@ -42,12 +42,13 @@
 #define CONTIKI_CONF_H_
 
 #include "rv32def.h"
+#include "icosoc.h"
 
 /* Platform name, type, and MCU clock rate */
 #define PLATFORM_NAME  "PicoRV32-icoboard"
 #define PLATFORM_TYPE  PICORV32
 #ifndef F_CPU
-#define F_CPU          2000000ULL
+#define F_CPU          (ICOSOC_CLOCK_FREQ_HZ)
 #endif
 
  /* Clock ticks per second, our timer runs with cpu freq */

@@ -38,6 +38,4 @@
 #define RTIMER_ARCH_SECOND F_CPU
 
 #define rtimer_arch_now() (clock_time ())
-
-void rtimer_arch_sleep(rtimer_clock_t howlong);
 #endif /* RTIMER_ARCH_H_ */

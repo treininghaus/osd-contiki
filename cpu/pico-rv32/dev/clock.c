@@ -55,29 +55,40 @@
  * It is defined through CONF_CLOCK_SECOND in the contiki-conf.h for
  * each platform.
  * The usual AVR defaults are 128 or 125 ticks per second, counting a
- * prescaled CPU clock using the 8 bit timer0.
+ * prescaled CPU clock using the 8 bit timer0. We use the same in the
+ * timer interrupt: 1/128 second ticks, this can be changed by modifying
+ * CLOCK_TIMER_PERIOD below.
  * 
  * clock_time_t is usually declared by the platform as an unsigned 16
  * bit data type, thus intervals up to 512 or 524 seconds can be
  * measured with ~8 millisecond precision.
  * For longer intervals the 32 bit clock_seconds() is available.
+ * We directly use the 64-bit cycle counter provided by the CPU.
  */
 #include "sys/clock.h"
 #include "sys/etimer.h"
+#include "icosoc.h"
 
 #include <stdio.h> // FIXME
 
+// 1/128 second ticks
+#define CLOCK_TIMER_PERIOD (F_CPU >> 7)
+
 static volatile clock_time_t count;
 unsigned long offset;
-long sleepseconds;
+
+void irq_handler(uint32_t irq_mask, uint32_t *regs);
 
 /*---------------------------------------------------------------------------*/
 /**
- * No need to init
+ * Initialize interrupt handler
  */
     void
 clock_init(void)
 {
+    icosoc_irq(irq_handler);
+    icosoc_maskirq(0);
+    icosoc_timer(CLOCK_TIMER_PERIOD);
 }
 /*---------------------------------------------------------------------------*/
 /**
@@ -147,5 +158,29 @@ clock_adjust_ticks(clock_time_t howmany)
 {
 }
 
+/** \brief irq handler
+ * for running interrupts every 1/128 second.
+ */
+
+void
+irq_handler(uint32_t irq_mask, uint32_t *regs)
+{
+    // timer interrupt
+    if (irq_mask & 1) {
+        // FIXME: Want to call rtimer_run_next();
+        icosoc_timer(CLOCK_TIMER_PERIOD);
+        if(etimer_pending()) {
+            etimer_request_poll();
+        }
+    }
+    // SBREAK, ILLINS or BUSERROR
+    if (irq_mask & 4) {
+        printf("Bus Error!\n");
+    }
+    // Can we distinguish ILLINS and SBREAK?
+    if (irq_mask & 2) {
+        icosoc_sbreak();
+    }
+}
 /** @} */
 /** @} */

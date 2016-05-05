@@ -45,9 +45,11 @@
 void
 rtimer_arch_init(void)
 {
+    printf ("rtimer_arch_init called\n");
 }
 /*---------------------------------------------------------------------------*/
 void
 rtimer_arch_schedule(rtimer_clock_t t)
 {
+    printf ("Scheduling timer: %d\n", t);
 }
