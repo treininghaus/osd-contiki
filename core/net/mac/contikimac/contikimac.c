@@ -544,7 +544,9 @@ send_packet(mac_callback_t mac_callback, void *mac_callback_ptr,
   int strobes;
   uint8_t got_strobe_ack = 0;
   uint8_t is_broadcast = 0;
+#if WITH_PHASE_OPTIMIZATION
   uint8_t is_known_receiver = 0;
+#endif
   uint8_t collisions;
   int transmit_len;
   int ret;
@@ -1067,7 +1069,7 @@ turn_off(int keep_radio_on)
   }
 }
 /*---------------------------------------------------------------------------*/
-static unsigned short
+static clock_time_t
 duty_cycle(void)
 {
   return (1ul * CLOCK_SECOND * CYCLE_TIME) / RTIMER_ARCH_SECOND;

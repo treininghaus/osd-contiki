@@ -918,7 +918,7 @@ turn_off(int keep_radio_on)
   }
 }
 /*---------------------------------------------------------------------------*/
-static unsigned short
+static clock_time_t
 channel_check_interval(void)
 {
   return (1ul * CLOCK_SECOND * DEFAULT_PERIOD) / RTIMER_ARCH_SECOND;

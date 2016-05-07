@@ -86,7 +86,7 @@ struct rdc_driver {
   int (* off)(int keep_radio_on);
 
   /** Returns the channel check interval, expressed in clock_time_t ticks. */
-  unsigned short (* channel_check_interval)(void);
+  clock_time_t (* channel_check_interval)(void);
 };
 
 #endif /* RDC_H_ */

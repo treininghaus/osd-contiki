@@ -72,7 +72,7 @@ off(int keep_radio_on)
   return keep_radio_on;
 }
 /*---------------------------------------------------------------------------*/
-static unsigned short
+static clock_time_t
 cca(void)
 {
   return 0;

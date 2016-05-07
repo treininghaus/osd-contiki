@@ -251,7 +251,7 @@ init(void)
   NETSTACK_RADIO.on();
 }
 /*---------------------------------------------------------------------------*/
-static unsigned short
+static clock_time_t
 channel_check_interval(void)
 {
   return 0;

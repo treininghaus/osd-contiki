@@ -70,7 +70,7 @@ off(int keep_radio_on)
   return 0;
 }
 /*---------------------------------------------------------------------------*/
-static unsigned short
+static clock_time_t
 channel_check_interval(void)
 {
   return 0;
