@@ -752,7 +752,17 @@ cc2520_read(void *buf, unsigned short bufsize)
   }
 
   if(CC2520_FIFOP_IS_1) {
+/* Some implementations don't have enough pins for CC2520_FIFO_IS_1
+ * So if this is not defined we need to explicitly check for RX FIFO
+ * overflow, this is bit 6 in EXCFLAG0, see p.112 of spec.
+ */
+#ifdef CC2520_FIFO_IS_1
     if(!CC2520_FIFO_IS_1) {
+#else
+    uint8_t data;
+    CC2520_READ_REG(CC2520_EXCFLAG0,data);
+    if(data & BV(6)) {
+#endif
       /* Clean up in case of FIFO overflow!  This happens for every
        * full length frame and is signaled by FIFOP = 1 and FIFO =
        * 0. */
