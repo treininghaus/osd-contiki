@@ -41,6 +41,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "contiki.h"
+#include "params.h"
 #include "contiki-net.h"
 //FIXME#include "er-coap-engine.h"
 //FIXME#include "xtime.h"
@@ -49,7 +50,7 @@
 //FIXME#include "jsonparse.h"
 #include "icosoc.h"
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -64,8 +65,8 @@
 void 
 hw_init ()
 {
-  icosoc_leds_dir (0xFFFF);
-  icosoc_leds_set (0);
+  //icosoc_leds_dir (0xFFFF);
+  //icosoc_leds_set (0);
 }
 
 PROCESS (wallclock, "Wallclock Example Server");
@@ -81,19 +82,9 @@ AUTOSTART_PROCESSES(&wallclock);
  */
 void led_set (void *onoff)
 {
-    int status = (int)onoff;
-    icosoc_leds_set (0xFF * status);
+    //int status = (int)onoff;
+    //icosoc_leds_set (0xFF * status);
 }
-
-#if 0
-/* long long printing not working */
-void test_print (void)
-{
-    clock_time_t big = 0x1234567890098765LL;
-    printf ("Test: %016llx\n", big);
-    printf ("Test: %08lx%08lx\n", (uint32_t)(big>>32), (uint32_t)big);
-}
-#endif
 
 PROCESS_THREAD(wallclock, ev, data)
 {
@@ -101,8 +92,8 @@ PROCESS_THREAD(wallclock, ev, data)
   PROCESS_BEGIN();
   PRINTF("Starting Wallclock Example\n");
 
-#ifdef RF_CHANNEL
-  PRINTF("RF channel: %u\n", RF_CHANNEL);
+#ifdef CHANNEL_802_15_4
+  PRINTF("RF channel: %u\n", CHANNEL_802_15_4);
 #endif
 #ifdef IEEE802154_PANID
   PRINTF("PAN ID: 0x%04X\n", IEEE802154_PANID);

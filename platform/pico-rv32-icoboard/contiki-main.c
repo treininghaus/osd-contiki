@@ -52,7 +52,6 @@
 #include <string.h>
 
 #include "params.h"
-//#include "radio/rf230bb/rf230bb.h"
 #include "net/mac/frame802154.h"
 #include "net/mac/framer-802154.h"
 #include "net/ipv6/sicslowpan.h"
@@ -114,6 +113,7 @@ uint16_t *p=&__bss_end;
     } while (p<SP-10); //don't overwrite our own stack
 }
 #endif
+  irq_init();
   clock_init();
 
   PRINTA("\n*******Booting %s*******\n",CONTIKI_VERSION_STRING);
@@ -247,7 +247,6 @@ ipaddr_add(const uip_ipaddr_t *addr)
 int
 main(void)
 {
-  puts ("Hello world!\n");
   printf ("Hello world!\n");
 #if NETSTACK_CONF_WITH_IPV6
   uip_ds6_nbr_t *nbr;
@@ -282,7 +281,7 @@ if ((clocktime%ROUTES)==2) {
       
 extern uip_ds6_netif_t uip_ds6_if;
 
-  uint8_t i,j;
+  uint8_t i = 0, j = 1;
   PRINTF("\nAddresses [%u max]\n",UIP_DS6_ADDR_NB);
   for (i=0;i<UIP_DS6_ADDR_NB;i++) {
     if (uip_ds6_if.addr_list[i].isused) {

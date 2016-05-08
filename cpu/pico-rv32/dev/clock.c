@@ -69,15 +69,26 @@
 #include "sys/etimer.h"
 #include "icosoc.h"
 
-#include <stdio.h> // FIXME
+#include <stdio.h>
 
 // 1/128 second ticks
 #define CLOCK_TIMER_PERIOD (F_CPU >> 7)
 
-static volatile clock_time_t count;
 unsigned long offset;
 
-void irq_handler(uint32_t irq_mask, uint32_t *regs);
+/** \brief irq handler
+ * for running interrupts every 1/128 second.
+ */
+
+void
+clock_irq_handler (void)
+{
+    // FIXME: Want to call rtimer_run_next();
+    icosoc_timer(CLOCK_TIMER_PERIOD);
+    if(etimer_pending()) {
+        etimer_request_poll();
+    }
+}
 
 /*---------------------------------------------------------------------------*/
 /**
@@ -86,8 +97,8 @@ void irq_handler(uint32_t irq_mask, uint32_t *regs);
     void
 clock_init(void)
 {
-    icosoc_irq(irq_handler);
-    icosoc_maskirq(0);
+    register_irq (TIMER_IRQ, clock_irq_handler);
+    enable_irq (TIMER_IRQ);
     icosoc_timer(CLOCK_TIMER_PERIOD);
 }
 /*---------------------------------------------------------------------------*/
@@ -98,7 +109,7 @@ clock_init(void)
     clock_time_t
 clock_time(void)
 {
-    uint32_t low, high;
+    volatile uint32_t low, high;
     asm ("1: rdcycleh %1\n"
             "rdcycle  %0\n"
             "rdcycleh t0\n"
@@ -146,6 +157,17 @@ clock_delay_usec(uint16_t dt)
 }
 /*---------------------------------------------------------------------------*/
 /**
+ * Legacy delay. The original clock_delay for the msp430 used a granularity
+ * of 2.83 usec. This approximates that delay for values up to 1456 usec.
+ * (The largest core call in leds.c uses 400).
+ */
+void
+clock_delay(unsigned int howlong)
+{
+  clock_delay_usec((45*howlong)>>4);
+}
+/*---------------------------------------------------------------------------*/
+/**
  * Adjust the system current clock time.
  * \param howmany   How many ticks to add
  *
@@ -158,29 +180,5 @@ clock_adjust_ticks(clock_time_t howmany)
 {
 }
 
-/** \brief irq handler
- * for running interrupts every 1/128 second.
- */
-
-void
-irq_handler(uint32_t irq_mask, uint32_t *regs)
-{
-    // timer interrupt
-    if (irq_mask & 1) {
-        // FIXME: Want to call rtimer_run_next();
-        icosoc_timer(CLOCK_TIMER_PERIOD);
-        if(etimer_pending()) {
-            etimer_request_poll();
-        }
-    }
-    // SBREAK, ILLINS or BUSERROR
-    if (irq_mask & 4) {
-        printf("Bus Error!\n");
-    }
-    // Can we distinguish ILLINS and SBREAK?
-    if (irq_mask & 2) {
-        icosoc_sbreak();
-    }
-}
 /** @} */
 /** @} */

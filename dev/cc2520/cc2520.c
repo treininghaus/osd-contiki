@@ -342,6 +342,12 @@ cc2520_init(void)
   setreg(CC2520_TXCTRL,      0x94);
   setreg(CC2520_TXPOWER,     0x13);    // Output power 1 dBm
 
+  /* write test data to memory */
+  setreg(0x200, 0x47);
+  setreg(0x201, 0x11);
+  printf ("getreg: %x\n", getreg(0x200));
+  printf ("getreg: %x\n", getreg(0x201));
+
   /*
 
 	valeurs de TXPOWER

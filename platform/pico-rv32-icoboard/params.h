@@ -9,6 +9,8 @@
 #define settings_add_uint16(...) 0
 #endif
 
+#define CHANNEL_802_15_4          25     // default frequency (11-26)
+
 #ifdef SERVER_NAME
 #define PARAMS_SERVERNAME SERVER_NAME
 #else

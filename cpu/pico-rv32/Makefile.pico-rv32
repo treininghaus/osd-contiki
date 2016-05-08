@@ -3,7 +3,7 @@ CONTIKI_CPU_DIRS = . dev
 ### Define the CPU directory of the AVR port
 CONTIKI_CPU=$(CONTIKI)/cpu/pico-rv32
 
-PICORV32_SOURCES = mtarch.c rtimer-arch.c clock.c watchdog.c
+PICORV32_SOURCES = mtarch.c rtimer-arch.c clock.c watchdog.c irq.c spi.c
 CONTIKI_TARGET_SOURCEFILES += $(PICORV32_SOURCES) $(SENSORS) $(SYSAPPS) \
     nullsec.c
 
@@ -24,7 +24,7 @@ CFLAGSWERROR=-Werror
 endif
 CFLAGSNO = -Wall -march=RV32IXcustom -g \
     -I$(CONTIKI)/platform/$(TARGET) \
-    -I. -I$(CONTIKI)/core -I$(CONTIKI_CPU)
+    -I. -I$(CONTIKI_CPU) -I$(CONTIKI)/core -fno-strict-aliasing
 CFLAGS  += $(CFLAGSNO) -Os
 
 ifeq ($(HOST_OS),Darwin)

@@ -43,6 +43,8 @@
 
 #include "rv32def.h"
 #include "icosoc.h"
+#include "irq.h"
+#include "cc2520-arch.h"
 
 /* Platform name, type, and MCU clock rate */
 #define PLATFORM_NAME  "PicoRV32-icoboard"
@@ -52,12 +54,12 @@
 #endif
 
  /* Clock ticks per second, our timer runs with cpu freq */
-#define CLOCK_CONF_SECOND F_CPU
+#define CLOCK_CONF_SECOND ((long long)F_CPU)
 
 typedef uint64_t clock_time_t;
 #define CLOCK_LT(a,b)  ((a)<(b))
 
-/* RADIOSTATS is used in rf230bb, clock.c and the webserver cgi to report radio usage */
+/* RADIOSTATS is used in clock.c and the webserver cgi to report radio usage */
 /* It has less overhead than ENERGEST */
 #define RADIOSTATS                1
 
@@ -121,8 +123,6 @@ typedef unsigned short uip_stats_t;
 #define NETSTACK_CONF_MAC         nullmac_driver
 #define NETSTACK_CONF_RDC         sicslowmac_driver
 #define NETSTACK_CONF_FRAMER      framer_802154
-//#define NETSTACK_CONF_RADIO       rf230_driver
-#define CHANNEL_802_15_4          26
 /* AUTOACK receive mode gives better rssi measurements, even if ACK is never requested */
 #define RF230_CONF_AUTOACK        1
 /* 1 + Number of auto retry attempts 0-15 (0 implies don't use extended TX_ARET_ON mode) */
