@@ -215,12 +215,17 @@ static void
 flushrx(void)
 {
   uint8_t dummy;
+  uint8_t tmp [2] = {0, 0};
 
+  /* This read may cause an RX-fifo underflow which is cleared below */
   CC2520_READ_FIFO_BYTE(dummy);
   /* read and discard dummy to avoid "variable set but not used" warning */
   (void)dummy;
+  /* Read twice, see errata */
   CC2520_STROBE(CC2520_INS_SFLUSHRX);
   CC2520_STROBE(CC2520_INS_SFLUSHRX);
+  /* Reset exception flags for next round incl RX-fifo underflow */
+  CC2520_WRITE_RAM(&tmp, CC2520_EXCFLAG0, 2);
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -342,12 +347,6 @@ cc2520_init(void)
   setreg(CC2520_TXCTRL,      0x94);
   setreg(CC2520_TXPOWER,     0x13);    // Output power 1 dBm
 
-  /* write test data to memory */
-  setreg(0x200, 0x47);
-  setreg(0x201, 0x11);
-  printf ("getreg: %x\n", getreg(0x200));
-  printf ("getreg: %x\n", getreg(0x201));
-
   /*
 
 	valeurs de TXPOWER
@@ -435,7 +434,16 @@ cc2520_transmit(unsigned short payload_len)
 #endif
 
 #if WITH_SEND_CCA
-  strobe(CC2520_INS_SRXON);
+  /* Errata says to flush after SRXON to prevent erroneous reception
+   * We turn receiver on only if RXENMASK[15] (RXENABLE1 & 0x80) is
+   * *not* set.
+   */
+  if (!(getreg (CC2520_RXENABLE1) & 0x80)) {
+    strobe(CC2520_INS_SRXON);
+    printf ("send: enabling receiver\n");
+    flushrx();
+  }
+  /* Wait for valid RSSI to get correct CCA */
   BUSYWAIT_UNTIL(status() & BV(CC2520_RSSI_VALID) , RTIMER_SECOND / 10);
   strobe(CC2520_INS_STXONCCA);
 #else /* WITH_SEND_CCA */
@@ -758,20 +766,11 @@ cc2520_read(void *buf, unsigned short bufsize)
   }
 
   if(CC2520_FIFOP_IS_1) {
-/* Some implementations don't have enough pins for CC2520_FIFO_IS_1
- * So if this is not defined we need to explicitly check for RX FIFO
- * overflow, this is bit 6 in EXCFLAG0, see p.112 of spec.
- */
-#ifdef CC2520_FIFO_IS_1
     if(!CC2520_FIFO_IS_1) {
-#else
-    uint8_t data;
-    CC2520_READ_REG(CC2520_EXCFLAG0,data);
-    if(data & BV(6)) {
-#endif
       /* Clean up in case of FIFO overflow!  This happens for every
        * full length frame and is signaled by FIFOP = 1 and FIFO =
        * 0. */
+      printf ("ovl\n");
       flushrx();
     } else {
       /* Another packet has been received and needs attention. */

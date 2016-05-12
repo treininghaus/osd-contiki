@@ -52,6 +52,13 @@ void icosoc_cc2520_fifop_irq (void)
 {
   ENERGEST_ON(ENERGEST_TYPE_IRQ);
 
+  /* See Errata 1.2.2 */
+  if (!CC2520_FIFOP_IS_1) {
+    return;
+  }
+  if (!CC2520_FIFOP_IS_1) {
+    return;
+  }
   cc2520_interrupt();
 
   ENERGEST_OFF(ENERGEST_TYPE_IRQ);

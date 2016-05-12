@@ -35,7 +35,7 @@
 
 #include <sys/clock.h>
 
-#define RTIMER_ARCH_SECOND F_CPU
+#define RTIMER_ARCH_SECOND 65536L
 
-#define rtimer_arch_now() (clock_time ())
+#define rtimer_arch_now() ((rtimer_clock_t)(clock_time () * 65536 / F_CPU))
 #endif /* RTIMER_ARCH_H_ */

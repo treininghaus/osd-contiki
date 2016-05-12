@@ -72,9 +72,6 @@ irq_handler(uint32_t irq_mask, uint32_t *regs)
         int i;
         for (i=0; i<=MAXIRQ; i++) {
             if (irq_mask & (1<<i)) {
-                if (i>0) {
-                    printf ("irq: %d\n", i);
-                }
                 if (irq_callback_functions [i] == NULL) {
                     printf ("Ooops: IRQ without callback: %d\n", i);
                 } else {
@@ -112,14 +109,12 @@ void irq_init(void)
 
 void register_irq (int irq, void (*callback)(void))
 {
-    printf ("register: %d\n", irq);
     assert (irq <= MAXIRQ);
     irq_callback_functions [irq] = callback;
 }
 
 void enable_irq (int irq)
 {
-    printf ("enable: %d\n", irq);
     assert (irq <= MAXIRQ);
     if (irq_callback_functions [irq] != NULL) {
         irqmask &= (~(1<<irq));

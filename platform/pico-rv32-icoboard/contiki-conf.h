@@ -123,14 +123,7 @@ typedef unsigned short uip_stats_t;
 #define NETSTACK_CONF_MAC         nullmac_driver
 #define NETSTACK_CONF_RDC         sicslowmac_driver
 #define NETSTACK_CONF_FRAMER      framer_802154
-/* AUTOACK receive mode gives better rssi measurements, even if ACK is never requested */
-#define RF230_CONF_AUTOACK        1
-/* 1 + Number of auto retry attempts 0-15 (0 implies don't use extended TX_ARET_ON mode) */
-#define RF230_CONF_FRAME_RETRIES    2
-/* Number of csma retry attempts 0-5 in extended tx mode (7 does immediate tx with no csma) */
-#define RF230_CONF_CSMA_RETRIES   5
-/* Default is one RAM buffer for received packets. More than one may benefit multiple TCP connections or ports */
-#define RF230_CONF_RX_BUFFERS     3
+#define CC2520_CONF_AUTOACK        1
 #define SICSLOWPAN_CONF_FRAG      1
 /* Most browsers reissue GETs after 3 seconds which stops fragment reassembly so a longer MAXAGE does no good */
 #define SICSLOWPAN_CONF_MAXAGE    3

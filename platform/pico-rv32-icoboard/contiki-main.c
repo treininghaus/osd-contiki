@@ -60,6 +60,8 @@
 #include "contiki-net.h"
 #include "contiki-lib.h"
 
+#include "dev/cc2520/cc2520.h"
+
 //#include "dev/rs232.h"
 //#include "dev/serial-line.h"
 //#include "dev/slip.h"
@@ -155,10 +157,10 @@ uint16_t *p=&__bss_end;
 #endif  
   linkaddr_set_node_addr(&addr); 
 
-  // FIXME undefined
-  //rf230_set_pan_addr(params_get_panid(),params_get_panaddr(),(uint8_t *)&addr.u8);
-  //rf230_set_channel(params_get_channel());
-  //rf230_set_txpower(params_get_txpower());
+  cc2520_set_pan_addr(params_get_panid(),params_get_panaddr(),(uint8_t *)&addr.u8);
+  cc2520_set_channel(params_get_channel());
+  // set in init to 1dBm, needs special encoding!
+  //cc2520_set_txpower(params_get_txpower());
 
 #if NETSTACK_CONF_WITH_IPV6
   PRINTA("EUI-64 MAC: %x-%x-%x-%x-%x-%x-%x-%x\n",addr.u8[0],addr.u8[1],addr.u8[2],addr.u8[3],addr.u8[4],addr.u8[5],addr.u8[6],addr.u8[7]);
@@ -178,10 +180,18 @@ uint16_t *p=&__bss_end;
   NETSTACK_NETWORK.init();
 
 #if ANNOUNCE_BOOT
-  //FIXME: undefined
-  //PRINTA("%s %s, channel %u , check rate %u Hz tx power %u\n",NETSTACK_MAC.name, NETSTACK_RDC.name, rf230_get_channel(),
-  //  CLOCK_SECOND / (NETSTACK_RDC.channel_check_interval() == 0 ? 1:NETSTACK_RDC.channel_check_interval()),
-  //  rf230_get_txpower());	  
+  PRINTA ( "%s %s, channel %u , check rate %u Hz tx power %u\n"
+         , NETSTACK_MAC.name
+         , NETSTACK_RDC.name
+         , cc2520_get_channel()
+         , (uint16_t)(CLOCK_SECOND
+                     / (NETSTACK_RDC.channel_check_interval() == 0
+                       ? 1
+                       : NETSTACK_RDC.channel_check_interval()
+                       )
+                     )
+         , cc2520_get_txpower()
+         );
 #if UIP_CONF_IPV6_RPL
   PRINTA("RPL Enabled\n");
 #endif
@@ -193,10 +203,6 @@ uint16_t *p=&__bss_end;
 
 #if NETSTACK_CONF_WITH_IPV6 || NETSTACK_CONF_WITH_IPV4
   process_start(&tcpip_process, NULL);
-#endif
-
-#ifdef RAVEN_LCD_INTERFACE
-  process_start(&raven_lcd_process, NULL);
 #endif
 
   /* Autostart other processes */

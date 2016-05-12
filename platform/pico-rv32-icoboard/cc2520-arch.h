@@ -54,7 +54,13 @@ extern void icosoc_cc2520_fifop_irq (void);
 #define CC2520_CCA_SHIFT   1
 
 /* Pin status.CC2520 */
+/* This implementation doesn't have enough pins for CC2520_FIFO_IS_1
+ * on a separate pin. So we need to explicitly check for FIFO in
+ * register with a SPI command, this is bit 7 in FSMSTAT1, see p.119 of
+ * spec.
+ */
 #define CC2520_FIFOP_IS_1 (!!(icosoc_cc2520_fifop_read()))
+#define CC2520_FIFO_IS_1  (!!(getreg(CC2520_FSMSTAT1) & BV(7)))
 #define CC2520_SFD_IS_1   (!!(icosoc_cc2520_sfd_read()))
 #define CC2520_CCA_IS_1   (!!(icosoc_cc2520_io_get() & (1<<CC2520_CCA_SHIFT)))
 
@@ -92,5 +98,10 @@ extern void icosoc_cc2520_fifop_irq (void);
 // DISABLE CSn (active low)
 #define CC2520_SPI_DISABLE()    icosoc_cc2520_spi_cs(1)
 #define CC2520_SPI_IS_ENABLED() icosoc_cc2520_spi_getcs()
+
+#if TIMESYNCH_CONF_ENABLED
+#undef CC2520_CONF_SFD_TIMESTAMPS
+#define CC2520_CONF_SFD_TIMESTAMPS       1
+#endif /* TIMESYNCH_CONF_ENABLED */
 
 #endif /* RADIO_CONF_H_ */
