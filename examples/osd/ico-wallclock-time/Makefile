@@ -16,15 +16,16 @@ all: wallclock.$(TARGET) $(PLATFORM_FILES)
 CONTIKI=../../..
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
+LDFLAGS += -T riscv_flash.ld
 
-#FIXME PROJECTDIRS += $(REST_RESOURCES_DIR) $(REST_RESOURCES_DIR_COMMON)
-#FIXME PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
+PROJECTDIRS += $(REST_RESOURCES_DIR) $(REST_RESOURCES_DIR_COMMON)
+PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
 PROJECT_SOURCEFILES += icosoc.c
 
 # REST Engine shall use Erbium CoAP implementation
-#FIXME APPS += er-coap
-#FIXME APPS += rest-engine
-#FIXME APPS += json json-resource time
+APPS += er-coap
+APPS += rest-engine
+APPS += json json-resource time
 
 CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
@@ -39,3 +40,7 @@ icosoc.mk: icosoc.cfg
 include icosoc.mk
 CLEAN += appimage.hex wallclock.$(TARGET)
 -include *.d
+
+flash-run: reset_boot
+
+flash: prog_flash

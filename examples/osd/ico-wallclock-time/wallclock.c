@@ -43,11 +43,11 @@
 #include "contiki.h"
 #include "params.h"
 #include "contiki-net.h"
-//FIXME#include "er-coap-engine.h"
-//FIXME#include "xtime.h"
-//FIXME#include "cron.h"
-//FIXME#include "time_resource.h"
-//FIXME#include "jsonparse.h"
+#include "er-coap-engine.h"
+#include "xtime.h"
+#include "cron.h"
+#include "time_resource.h"
+#include "jsonparse.h"
 #include "icosoc.h"
 
 #define DEBUG 1
@@ -107,19 +107,19 @@ PROCESS_THREAD(wallclock, ev, data)
   /* Initialize the Hardware. */
   hw_init ();
   /* Initialize the REST engine. */
-  //FIXME rest_init_engine ();
+  rest_init_engine ();
 
-  //FIXME rest_activate_resource (&res_timestamp, "clock/timestamp");
-  //FIXME rest_activate_resource (&res_timezone, "clock/timezone");
-  //FIXME rest_activate_resource (&res_localtime, "clock/localtime");
-  //FIXME rest_activate_resource (&res_utc, "clock/utc");
+  rest_activate_resource (&res_timestamp, "clock/timestamp");
+  rest_activate_resource (&res_timezone, "clock/timezone");
+  rest_activate_resource (&res_localtime, "clock/localtime");
+  rest_activate_resource (&res_utc, "clock/utc");
 
   /* Register callback function(s) */
-  //FIXME cron_register_command ("led_on",  led_set, (void *)1);
-  //FIXME cron_register_command ("led_off", led_set, (void *)0);
+  cron_register_command ("led_on",  led_set, (void *)1);
+  cron_register_command ("led_off", led_set, (void *)0);
 
   /* Allocate all cron entries and the necessary resources */
-  //FIXME activate_cron_resources ();
+  activate_cron_resources ();
 
   /* Define application-specific events here.
    * We need to call cron every 30 seconds or so (at least once a
@@ -132,7 +132,7 @@ PROCESS_THREAD(wallclock, ev, data)
     printf ("In while loop: %08lx%08lx\n", (uint32_t)(cl>>32), (uint32_t)cl);
     PROCESS_WAIT_EVENT();
     if (etimer_expired (&loop_periodic_timer)) {
-        //cron ();
+        cron ();
         etimer_reset (&loop_periodic_timer);
     }
   } /* while (1) */
