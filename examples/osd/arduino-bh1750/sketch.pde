@@ -31,6 +31,7 @@ void setup (void)
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH);
     // BH1750 sensor
+    Wire.begin();
     lightMeter.begin();
     // init coap resourcen
     rest_init_engine ();
@@ -44,6 +45,6 @@ void loop (void)
 {
 	mcu_sleep_off();
     lux = lightMeter.getLightLevel();
+	printf("Lux: %d\n",lux);
   	mcu_sleep_on();    
-	printf("Lux: %d",lux);
 }
