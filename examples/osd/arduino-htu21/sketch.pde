@@ -53,7 +53,7 @@ void loop (void)
     htu21d_hum = htu.readHumidity();
   	mcu_sleep_on();    
     dtostrf(htu21d_temp , 6, 2, htu21d_temp_s );   
-	tostrf(htu21d_hum , 6, 2, htu21d_hum_s );
+	dtostrf(htu21d_hum , 6, 2, htu21d_hum_s );
     // remove space
     if(htu21d_temp_s[0]==' '){
       memcpy (htu21d_temp_s,htu21d_temp_s+1,strlen(htu21d_temp_s)+1);
