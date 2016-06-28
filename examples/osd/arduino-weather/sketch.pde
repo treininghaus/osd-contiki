@@ -115,14 +115,14 @@ void loop (void)
     lux = lightMeter.getLightLevel();     
     
 // Debug Print
-	printf("BMP085");
-    printf("\t\tPress: %s\n",bmp085press_s);
-    printf("\t\tAltitude: %s\n",bmp085alt_s);
-    printf("\t\tatm: %s\n",bmp085atm_s);
-    printf("\t\tHTU21d");
-    printf("\t\tTemp: %s",htu21d_temp_s);
-    printf("\t\tHum: %s\n",htu21d_hum_s);
-    printf("\t\tBH1750");    
+	printf("BMP085\n");
+    printf("Press: %s\n",bmp085press_s);
+    printf("Altitude: %s\n",bmp085alt_s);
+    printf("atm: %s\n",bmp085atm_s);
+    printf("HTU21d\n");
+    printf("Temp: %s\n",htu21d_temp_s);
+    printf("Hum: %s\n",htu21d_hum_s);
+    printf("BH1750\n");    
     printf("Lux: %d\n",lux);
   	mcu_sleep_on();    
 }
