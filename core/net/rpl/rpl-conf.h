@@ -287,6 +287,8 @@
 #else
 #define RPL_PROBING_INTERVAL (120 * CLOCK_SECOND)
 #endif
+
+/*
  * Function used to select the next parent to be probed.
  */
 #ifdef RPL_CONF_PROBING_SELECT_FUNC
