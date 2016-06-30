@@ -540,6 +540,7 @@ send_packet(mac_callback_t mac_callback, void *mac_callback_ptr,
   rtimer_clock_t t0;
 #if WITH_PHASE_OPTIMIZATION
   rtimer_clock_t encounter_time = 0;
+  uint8_t is_known_receiver = 0;
 #endif
   int strobes;
   uint8_t got_strobe_ack = 0;

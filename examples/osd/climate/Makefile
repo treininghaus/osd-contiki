@@ -1,10 +1,5 @@
-ifeq ($(TARGET), osd-merkur)
-PLATFORM_FILES= avr-size er-example-server.osd-merkur.hex \
-    er-example-server.osd-merkur.eep
-endif
-
-all: er-example-server $(PLATFORM_FILES)
-# use target "er-plugtest-server" explicitly when requried 
+EXE=er-example-server
+all: $(EXE)
 
 CONTIKI=../../..
 
@@ -74,21 +69,9 @@ connect-router-native:	$(CONTIKI)/examples/ipv6/native-border-router/border-rout
 connect-minimal:
 	sudo ip address add fdfd::1/64 dev tap0 
 
-avr-size: er-example-server.osd-merkur
-	avr-size -C --mcu=MCU=atmega128rfa1 er-example-server.osd-merkur
+avr-size: $(EXE).$(TARGET).sz
 
-er-example-server.osd-merkur.hex: er-example-server.osd-merkur
-	avr-objcopy -j .text -j .data -O ihex er-example-server.osd-merkur \
-	    er-example-server.osd-merkur.hex
-
-er-example-server.osd-merkur.eep: er-example-server.osd-merkur
-	avr-objcopy -j .eeprom --set-section-flags=.eeprom="alloc,load" \
-	    --change-section-lma .eeprom=0 -O ihex                      \
-	    er-example-server.osd-merkur er-example-server.osd-merkur.eep
-
-flash: er-example-server.osd-merkur.hex er-example-server.osd-merkur.eep
-	avrdude -pm128rfa1 -c arduino -P/dev/ttyUSB0 -b57600 -e -U \
-	    flash:w:er-example-server.osd-merkur.hex:a -U \
-	    eeprom:w:er-example-server.osd-merkur.eep:a
+flash: $(EXE).$(TARGET).u $(EXE).$(TARGET).eu
 
 .PHONY: flash avr-size
+.PRECIOUS: $(EXE).$(TARGET).hex $(EXE).$(TARGET).eep

@@ -11,26 +11,25 @@
  */
 
 extern "C" {
+#include "arduino-process.h"
 #include "rest-engine.h"
 #include "net/netstack.h"
 
-extern volatile uint8_t mcusleepcycle;  // default 16
+extern resource_t res_led, res_battery, res_cputemp;
 
-extern resource_t res_leds, res_battery, res_cputemp;
-uint8_t door_pin = 3;
-uint8_t door_status = 0;
-
-#define LED_PIN 4
+uint8_t led_pin=4;
+uint8_t led_status;
 }
 
 void setup (void)
 {
     // switch off the led
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, HIGH);
+    pinMode(led_pin, OUTPUT);
+    digitalWrite(led_pin, HIGH);
+    led_status=0;
     // init coap resourcen
     rest_init_engine ();
-    rest_activate_resource (&res_leds, "s/leds");
+    rest_activate_resource (&res_led, "s/led");
     rest_activate_resource (&res_battery, "s/battery");
     rest_activate_resource (&res_cputemp, "s/cputemp");
     
@@ -39,7 +38,7 @@ void setup (void)
 
 void loop (void)
 {
-  mcusleepcycle=0;
-  
-  mcusleepcycle=16;
+	mcu_sleep_off();
+	
+	mcu_sleep_on();
 }

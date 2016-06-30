@@ -11,11 +11,11 @@
  */
 
 extern "C" {
+#include "arduino-process.h"
 #include "sketch.h"
 #include "rest-engine.h"
 #include "net/netstack.h"
 
-extern volatile uint8_t mcusleepcycle;  // default 16
 extern resource_t res_battery, res_distance;
 #define LED_PIN 4    /* LED Pin */
 
@@ -39,8 +39,8 @@ void setup (void)
 
 void loop (void)
 {
-    mcusleepcycle=0;  // dont sleep
-
-    mcusleepcycle=16; // sleep, wakeup every 32 cycles
+	mcu_sleep_off();
+	
+	mcu_sleep_on();
 }
 

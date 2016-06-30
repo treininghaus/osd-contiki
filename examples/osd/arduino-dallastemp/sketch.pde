@@ -15,7 +15,7 @@
 
 extern "C" {
 
-
+#include "arduino-process.h"
 #include "rest-engine.h"
 #include "sketch.h"
 
@@ -161,7 +161,7 @@ void setup (void)
 // LOOP_INTERVAL		(10 * CLOCK_SECOND)
 void loop (void)
 {
-      mcusleepcycle=0;  // dont sleep
+      mcu_sleep_off();
       // call sensors.requestTemperatures() to issue a global temperature 
       // request to all devices on the bus
       printf("Requesting temperatures...");
@@ -171,7 +171,7 @@ void loop (void)
       // print the device information
       printData(insideThermometer,0);
       printData(outsideThermometer,1);
-      mcusleepcycle=32; // sleep, wakeup every 32 cycles
+      mcu_sleep_on();
    
 //  debug only 
 }

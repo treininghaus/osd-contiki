@@ -1,10 +1,6 @@
-SERIAL=/dev/ttyUSB0
-ifeq ($(TARGET), osd-merkur)
-PLATFORM_FILES= avr-size poti.osd-merkur.hex \
-    poti.osd-merkur.eep
-endif
+EXE=poti
 
-all: poti $(PLATFORM_FILES)
+all: $(EXE)
 
 CONTIKI=../../..
 
@@ -74,21 +70,9 @@ connect-router-native:	$(CONTIKI)/examples/ipv6/native-border-router/border-rout
 connect-minimal:
 	sudo ip address add fdfd::1/64 dev tap0 
 
-avr-size: poti.osd-merkur
-	avr-size -C --mcu=MCU=atmega128rfa1 poti.osd-merkur
+avr-size: $(EXE).$(TARGET).sz
 
-poti.osd-merkur.hex: poti.osd-merkur
-	avr-objcopy -j .text -j .data -O ihex poti.osd-merkur \
-	    poti.osd-merkur.hex
-
-poti.osd-merkur.eep: poti.osd-merkur
-	avr-objcopy -j .eeprom --set-section-flags=.eeprom="alloc,load" \
-	    --change-section-lma .eeprom=0 -O ihex                      \
-	    poti.osd-merkur poti.osd-merkur.eep
-
-flash: poti.osd-merkur.hex poti.osd-merkur.eep
-	avrdude -pm128rfa1 -c arduino -P$(SERIAL) -b57600 -e -U \
-	    flash:w:poti.osd-merkur.hex:a -U \
-	    eeprom:w:poti.osd-merkur.eep:a
+flash: $(EXE).$(TARGET).u $(EXE).$(TARGET).eu
 
 .PHONY: flash avr-size
+.PRECIOUS: $(EXE).$(TARGET).hex $(EXE).$(TARGET).eep

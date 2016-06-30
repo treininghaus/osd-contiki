@@ -212,7 +212,7 @@ static unsigned long total_time_for_transmission, total_transmission_len;
 static int num_transmissions;
 #endif
 
-#if defined(__AVR_ATmega128RFA1__)
+#if defined(__AVR_ATmega128RFA1__) || defined(__AVR_ATmega128RFR2__) || defined(__AVR_ATmega256RFR2__)
 volatile uint8_t rf230_wakewait, rf230_txendwait, rf230_ccawait;
 #endif
 
@@ -433,7 +433,21 @@ rf230_waitidle(void)
   }
 }
 
-/*----------------------------------------------------------------------------*/
+/* Set reduced power consumption for AtMegaXXXRFR2 MCU's. See AT02594 */
+
+static uint8_t rpc = 0xFF; /* Default max power save */
+void 
+rf230_set_rpc(uint8_t data)
+{
+  rpc = data;
+}
+
+uint8_t
+rf230_get_rpc(void)
+{
+  return rpc;
+}
+
 /** \brief  This function will change the current state of the radio
  *          transceiver's internal state machine.
  *
@@ -507,6 +521,10 @@ radio_set_trx_state(uint8_t new_state)
         /* When the PLL is active most states can be reached in 1us. However, from */
         /* TRX_OFF the PLL needs time to activate. */
         if (current_state == TRX_OFF){
+
+#if defined(__AVR_ATmega128RFR2__) || defined(__AVR_ATmega256RFR2__)  
+	  hal_subregister_write(SR_TRX_RPC, rpc);    /* Enable RPC features */
+#endif
             delay_us(TIME_TRX_OFF_TO_PLL_ACTIVE);
         } else {
             delay_us(TIME_STATE_TRANSITION_PLL_ACTIVE);
@@ -535,7 +553,7 @@ rf230_set_promiscuous_mode(bool isPromiscuous) {
 #if RF230_CONF_AUTOACK
     is_promiscuous = isPromiscuous;
 /* TODO: Figure out when to pass promisc state to 802.15.4 */
-//    radio_set_trx_state(is_promiscuous?RX_ON:RX_AACK_ON);
+    radio_set_trx_state(is_promiscuous?RX_ON:RX_AACK_ON);
 #endif
 }
 
@@ -585,7 +603,7 @@ radio_on(void)
 #if RF230BB_CONF_LEDONPORTE1
     PORTE|=(1<<PE1); //ledon
 #endif
-#if defined(__AVR_ATmega128RFA1__)
+#if defined(__AVR_ATmega128RFA1__) || defined(__AVR_ATmega128RFR2__) || defined(__AVR_ATmega256RFR2__)
     /* Use the poweron interrupt for delay */
     rf230_wakewait=1;
     {
@@ -908,6 +926,25 @@ void rf230_warm_reset(void) {
   hal_subregister_write(SR_CCA_ED_THRES,(RF230_CONF_CCA_THRES+91)/2);  
 #endif
 #endif
+    
+
+    /*set external PA in on state, used for Dresden Elektronik m12 modules*/
+    /*needed for guhRF Modules and RaspBee Boarder Router*/
+#if defined( _EXT_PA_ )
+    hal_subregister_write(SR_PA_EXT_EN, 1);
+    hal_subregister_write(SR_IRQ_2_EXT_EN, 0); //Must be disabled for antenna diversity
+    hal_subregister_write(SR_ANT_EXT_SW_EN, 1);
+    //   hal_subregister_write(SR_ANT_DIV_EN, 1);
+    
+    /* Registers for fixed Antenna out - Diversity disabled */
+    // hal_subregister_write(SR_ANT_DIV_EN, 0);
+    // hal_subregister_write(SR_SET_OUT_ANT1, 1); //Set Antenna 1 RFOUT1-deRFmega256-23M12
+    hal_subregister_write(SR_SET_OUT_ANT0, 1); //Set Antenna 0 RFOUT2-deRFmega256-23M12
+    DDRD  |= (1<<PD6); // PIND6 High to wake amplifier
+    PORTD |= (1<<PD6);
+    
+#endif
+
 
   /* Use automatic CRC unless manual is specified */
 #if RF230_CONF_CHECKSUM
@@ -937,7 +974,7 @@ rf230_transmit(unsigned short payload_len)
   /* If radio is sleeping we have to turn it on first */
   /* This automatically does the PLL calibrations */
   if (hal_get_slptr()) {
-#if defined(__AVR_ATmega128RFA1__)
+#if defined(__AVR_ATmega128RFA1__) || defined(__AVR_ATmega128RFR2__) || defined(__AVR_ATmega256RFR2__)
 	ENERGEST_ON(ENERGEST_TYPE_LED_RED);
 #if RF230BB_CONF_LEDONPORTE1
     PORTE|=(1<<PE1); //ledon
@@ -1383,6 +1420,25 @@ PROCESS_THREAD(rf230_process, ev, data)
     /* Restore interrupts. */
     HAL_LEAVE_CRITICAL_REGION();
     PRINTF("rf230_read: %u bytes lqi %u\n",len,rf230_last_correlation);
+
+    if(is_promiscuous) {
+      uint8_t i;
+      unsigned const char * rxdata = packetbuf_dataptr();
+      /* Print magic */
+      putchar(0xC1);
+      putchar(0x1F);
+      putchar(0xFE);
+      putchar(0x72);
+      /* Print version */
+      putchar(0x01);
+      /* Print CMD == frame */
+      putchar(0x00);
+      putchar(len+3);
+
+      for (i=0;i<len;i++)  putchar(rxdata[i]);
+      printf("\n");
+    }
+
 #if DEBUG>1
      {
         uint8_t i;
@@ -1658,7 +1714,7 @@ rf230_cca(void)
 
   /* Start the CCA, wait till done, return result */
   /* Note reading the TRX_STATUS register clears both CCA_STATUS and CCA_DONE bits */
-#if defined(__AVR_ATmega128RFA1__)
+#if defined(__AVR_ATmega128RFA1__) || defined(__AVR_ATmega128RFR2__) || defined(__AVR_ATmega256RFR2__)
 #if 1  //interrupt method
     /* Disable rx transitions to busy (RX_PDT_BIT) */
     /* Note: for speed this resets rx threshold to the compiled default */

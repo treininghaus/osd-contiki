@@ -17,11 +17,9 @@
 
 extern "C" {
 
-
+#include "arduino-process.h"
 #include "rest-engine.h"
 #include "sketch.h"
-
-extern volatile uint8_t mcusleepcycle;  // default 16
 
 // Data wire is plugged into port 2 on the Arduino
 #define ONE_WIRE_BUS 3
@@ -130,7 +128,7 @@ void setup (void)
 // LOOP_INTERVAL		(20 * CLOCK_SECOND)
 void loop (void)
 {
-      mcusleepcycle=0;  // dont sleep
+	  mcu_sleep_off();  
       // call sensors.requestTemperatures() to issue a global temperature 
       // request to all devices on the bus
 //      printf("Requesting temperatures...");
@@ -156,5 +154,5 @@ void loop (void)
 	printf("Temp: %s",htu21d_temp_s);
     printf("\t\tHum: %s\n",htu21d_hum_s);
     
-    mcusleepcycle=32; // sleep, wakeup every 32 cycles
+    mcu_sleep_on();
 }

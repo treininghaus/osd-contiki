@@ -11,6 +11,7 @@
  */
 
 extern "C" {
+#include "arduino-process.h"
 #include "rest-engine.h"
 
 extern volatile uint8_t mcusleepcycle;  // default 16
@@ -37,12 +38,12 @@ void setup (void)
 
 void loop (void)
 {
-  mcusleepcycle=0;  // dont sleep
+  mcu_sleep_off();
   moisture_voltage = analogRead(moisture_pin);
   if(moisture_voltage < 800){
       digitalWrite(BUZZER_PIN, LOW);
   }else{
       digitalWrite(BUZZER_PIN, HIGH);
   }
-  mcusleepcycle=32; // sleep, wakeup every 32 cycles
+  mcu_sleep_on();
 }
