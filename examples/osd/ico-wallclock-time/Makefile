@@ -16,7 +16,8 @@ all: wallclock.$(TARGET) $(PLATFORM_FILES)
 CONTIKI=../../..
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
-LDFLAGS += -T riscv_flash.ld
+# Use this if running from flash, this needs flashpmem in icosoc.cfg
+#LDFLAGS += -T riscv_flash.ld
 
 PROJECTDIRS += $(REST_RESOURCES_DIR) $(REST_RESOURCES_DIR_COMMON)
 PROJECT_SOURCEFILES += $(REST_RESOURCES_FILES)
