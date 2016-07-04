@@ -64,7 +64,7 @@ RESOURCE(res_dht11temp,
          NULL,
          NULL);
 
-uint16_t dht11_temp=0;
+extern uint16_t dht11_temp;
 
 static void
 res_get_dht11temp_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)

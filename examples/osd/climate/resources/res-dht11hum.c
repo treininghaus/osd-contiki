@@ -61,7 +61,7 @@ RESOURCE(res_dht11hum,
          NULL,
          NULL);
          
-uint16_t dht11_hum=0;
+extern uint16_t dht11_hum;
 
 static void
 res_get_dht11hum_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_size, int32_t *offset)

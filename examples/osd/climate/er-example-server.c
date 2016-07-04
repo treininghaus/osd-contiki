@@ -64,6 +64,11 @@
 extern resource_t res_info;
 #endif
 
+#if PLATFORM_HAS_DHT11
+uint16_t dht11_hum=0;
+uint16_t dht11_temp=0;
+#endif
+
 #if PLATFORM_HAS_DHT11HUM
 #include "dev/dht11.h"
 extern resource_t res_dht11hum;
@@ -107,6 +112,7 @@ hw_init()
   //DHT_INIT();
   DHT_Read_Data(&dht11_temp, &dht11_hum);
 #endif
+    NETSTACK_MAC.off(1);
 }
 #define MESURE_INTERVAL		(20 * CLOCK_SECOND)
 #define READ_TIME		( 2 * CLOCK_SECOND)
@@ -153,7 +159,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #if PLATFORM_HAS_DS1820
   rest_activate_resource(&res_ds1820,"s/temp");
 #endif
-#if PLATFORM_HAS_DHT11
+#if PLATFORM_HAS_DHT11HUM
   rest_activate_resource(&res_dht11hum,"s/hum");
 #endif
 #if PLATFORM_HAS_DHT11TEMP
