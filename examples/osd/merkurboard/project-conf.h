@@ -29,8 +29,23 @@
  *
  */
 
+/*
+ * \file
+ *      OSD-irrigation example application
+ * \author
+ *      Thomas Reininghaus <thomas.reininghaus@iot-austria.at>
+ */
+
 #ifndef PROJECT_ERBIUM_CONF_H_
 #define PROJECT_ERBIUM_CONF_H_
+
+/* <OSD-irigation> */
+#define PLATFORM_HAS_RELAY 1
+/* For Debug: Dont allow MCU sleeping between channel checks */
+/* auf 0 setzen damit beim debuggen im screen keine Unterbrechungen auftreten */
+#undef RDC_CONF_MCU_SLEEP
+#define RDC_CONF_MCU_SLEEP       0
+/* </OSD-irigation> */
 
 #define PLATFORM_HAS_LED     1
 #define PLATFORM_HAS_BUTTON  1
