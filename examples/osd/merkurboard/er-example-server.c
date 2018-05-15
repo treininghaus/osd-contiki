@@ -168,7 +168,7 @@ Appendix A.  Profile example
 #define P_WAT_TODS_MAX 6
 
 int i_wat_dur = 0;
-char s_wat_tods[6]=P_WAT_TODS;
+char s_wat_tods[6] = P_WAT_TODS;
 
 /******************************************************************************/
 #if REST_RES_WATERING
@@ -203,21 +203,25 @@ wat_tods_handler(void* request, void* response, uint8_t *buffer, uint16_t prefer
       cli();
       eeprom_read_block (eebuffer, &eemem_p_wat_tods, sizeof(eemem_p_wat_tods));
       sei();
+
+      length = sizeof(eemem_p_wat_tods);
+      memcpy(&s_wat_tods, eebuffer, length);
+      PRINTF("Getting Watering Time of Day %s\n", s_wat_tods);
+
       /* Some data that has the length up to REST_MAX_CHUNK_SIZE. For more, see the chunk resource. */
       // jSON Format
       index += sprintf(message + index,"{\n \"wat_tods\" : \"%s\"\n", eebuffer);
       index += sprintf(message + index,"}\n");
 
       length = strlen(message);
-      memcpy(buffer, message,length );
-      
+      memcpy(buffer, message, length);
+
       REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
       REST.set_response_payload(response, buffer, length);
       break;
 
     case METHOD_POST:
       if (success && (length=REST.get_post_variable(request, "tods", &wat_tods))) {
-        PRINTF("wat_tods %s\n", wat_tods);
         if (length < P_WAT_TODS_MAX) {
           memcpy(&eebuffer, wat_tods, length);
           eebuffer[length]=0;
@@ -226,6 +230,7 @@ wat_tods_handler(void* request, void* response, uint8_t *buffer, uint16_t prefer
           sei();
 
           memcpy(&s_wat_tods, wat_tods, length);
+          PRINTF("Setting Watering Time of Day %s\n", s_wat_tods);
 
         } else {
           success = 0;
@@ -241,7 +246,6 @@ wat_tods_handler(void* request, void* response, uint8_t *buffer, uint16_t prefer
     REST.set_response_status(response, REST.status.BAD_REQUEST);
   }
 }
-
 
 RESOURCE(wat_dur, METHOD_POST | METHOD_GET, "a/wat_dur", "title=\"Watering duration sec., POST time=XXX\";rt=\"Control\"");
 /* eeprom space */
@@ -277,15 +281,16 @@ wat_dur_handler(void* request, void* response, uint8_t *buffer, uint16_t preferr
       index += sprintf(message + index,"}\n");
 
       length = strlen(message);
-      memcpy(buffer, message,length );
-      
+      memcpy(buffer, message, length);
+      PRINTF("Getting Watering Duration %s\n", buffer);
+
       REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
       REST.set_response_payload(response, buffer, length);
       break;
 
     case METHOD_POST:
       if (success && (length=REST.get_post_variable(request, "time", &wat_dur))) {
-        PRINTF("wat_dur %s\n", wat_dur);
+        PRINTF("Setting Watering Duration %s\n", wat_dur);
         if (length < P_WAT_DUR_MAX) {
           memcpy(&eebuffer, wat_dur, length);
           eebuffer[length]=0;
@@ -520,7 +525,7 @@ sw_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_si
  * Signature: resource name, the RESTful methods it handles, and its URI path (omitting the leading slash).
  */
 RESOURCE(name,  METHOD_POST | METHOD_GET, "p/name", "title=\"name\";rt=\"simple.dev.n\"");
-/* eeprom space */ 
+/* eeprom space */
 #define P_NAME "OSD-irrigation"
 #define P_NAME_MAX 17
 uint8_t eemem_p_name[P_NAME_MAX] EEMEM = P_NAME;
@@ -557,8 +562,8 @@ name_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
      REST.set_header_content_type(response, REST.type.APPLICATION_JSON);
      REST.set_response_payload(response, buffer, length);
      break;
-     
-   case METHOD_POST:     
+
+   case METHOD_POST:
      if (success &&  (length=REST.get_post_variable(request, "name", &name))) {
        PRINTF("name %s\n", name);
        if (length < P_NAME_MAX) {
@@ -569,7 +574,7 @@ name_handler(void* request, void* response, uint8_t *buffer, uint16_t preferred_
          sei();
        } else {
          success = 0;
-       }		   
+       }
      } else {
        success = 0;
      }
@@ -603,7 +608,7 @@ button_event_handler(void* request, void* response, uint8_t *buffer, uint16_t pr
   index += sprintf(message + index,"%d",button);
   length = strlen(message);
   memcpy(buffer, message,length );
-    
+
   REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
   REST.set_response_payload(response, buffer, length);
 
@@ -652,11 +657,11 @@ remote_button_event_handler(void* request, void* response, uint8_t *buffer, uint
      index += sprintf(message + index,"%d", remote_button);
      length = strlen(message);
      memcpy(buffer, message, length);
-    
+
      REST.set_header_content_type(response, REST.type.TEXT_PLAIN);
      REST.set_response_payload(response, buffer, length);
      break;
-   case METHOD_POST:     
+   case METHOD_POST:
      if (success) {
          // METHOD_POST sets the button...
          remote_button = 1;
@@ -831,7 +836,7 @@ struct tm tm;
 struct tm *(*method)(const time_t *, struct tm *) = gmtime_r;
 char tmpstr[2];
 
-void 
+void
 hw_init()
 {
   // uint8_t response[12];
@@ -848,7 +853,7 @@ hw_init()
 #define BUTTON_READ_INTERVAL		(CLOCK_SECOND / SEC_DIVIDER)
 #define CHECK_INTERVALTIMER_INTERVAL	(CLOCK_SECOND * 60.0)
 
-PROCESS(rest_server_example, "IoT Austria Irrigation Server");
+PROCESS(rest_server_example, "OSD Merkurboard Irrigation Server");
 AUTOSTART_PROCESSES(&rest_server_example);
 
 PROCESS_THREAD(rest_server_example, ev, data)
@@ -857,7 +862,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
   static struct etimer ds_periodic_min;
   PROCESS_BEGIN();
 
-  PRINTF("Starting IoT Austria Irrigation Server\n");
+  PRINTF("Starting OSD Merkurboard Irrigation Server\n");
 
 #ifdef RF_CHANNEL
   PRINTF("RF channel: %u\n", RF_CHANNEL);
@@ -878,8 +883,31 @@ PROCESS_THREAD(rest_server_example, ev, data)
 
 /* Activate the application-specific resources. */
 #if REST_RES_WATERING
+  uint8_t eebuffer[32];
+  int length = 0;
+  char wat_dur[6];
+
   rest_activate_resource(&resource_wat_dur);
+  cli();
+  eeprom_read_block (eebuffer, &eemem_p_wat_dur, sizeof(eemem_p_wat_dur));
+  sei();
+
+  length = sizeof(eemem_p_wat_dur);
+  memcpy(wat_dur, &eebuffer, length);
+  wat_dur[length] = 0;
+  PRINTF("Initializing Watering Duration from EEPROM %s\n", wat_dur);
+  if ( wat_dur[0] > 30 && wat_dur[0] < 40)
+    i_wat_dur = atoi( wat_dur);
+
   rest_activate_resource(&resource_wat_tods);
+  cli();
+  eeprom_read_block (eebuffer, &eemem_p_wat_tods, sizeof(eemem_p_wat_tods));
+  sei();
+
+  length = sizeof(eemem_p_wat_tods);
+  memcpy(&s_wat_tods, eebuffer, length);
+  PRINTF("Initializing Watering Time of Day from EEPROM %s\n", s_wat_tods);
+
 #endif
 #if REST_RES_INFO
   rest_activate_resource(&resource_info);
@@ -939,7 +967,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
           // if watering timer was initialized, start counting
           if (wat_dursec != -1) {
              wat_dursec++;
-             PRINTF("Periodic event timer: %d.\n", wat_dursec); 
+             PRINTF("Periodic event timer: %d.\n", wat_dursec);
              leds_toggle(LEDS_ALL);
           }
        }
@@ -948,7 +976,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
           // PRINTF("EEPROM value time out %d seconds.\n", i_wat_dur);
           PRINTF("Watering timer timed out after %d seconds.\n", wat_dursec);
           // clear timer
-	  wat_dursec = -1;
+	        wat_dursec = -1;
           // close the relay
           relaystate = 0;
           leds_off(LEDS_ALL);
@@ -957,7 +985,7 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #endif
        }
        else if (wat_dursec > -1) {  // check if timer is running...
-          if (!relaystate) {         // ... but watering is stopped then it was manually stopped 
+          if (!relaystate) {         // ... but watering is stopped then it was manually stopped
              PRINTF("Watering was stopped manually.\n");
              // clear timer
              wat_dursec = -1;
@@ -969,8 +997,9 @@ PROCESS_THREAD(rest_server_example, ev, data)
     if (etimer_expired(&ds_periodic_min)) {
        gettimeofday(&tv, &tz);
        localtime_r (&tv.tv_sec, &tm);
-       PRINTF("Current time %02u:%02u:%02u.\n", tm.tm_hour + 2, tm.tm_min, tm.tm_sec);
-       PRINTF("Start time watering: %s.\n", s_wat_tods);
+       PRINTF("Current Time %02u:%02u:%02u.\n", tm.tm_hour + 2, tm.tm_min, tm.tm_sec);
+       PRINTF("Watering Time of Day: %s.\n", s_wat_tods);
+       PRINTF("Watering Duration: %d.\n", i_wat_dur);
        strncpy(tmpstr, s_wat_tods, 2);
        if (atoi(tmpstr) == tm.tm_hour + 2) {
           PRINTF("Hours equal %02u.\n", tm.tm_hour + 2);
