@@ -66,9 +66,9 @@ endif
 
 APPS += erbium
 
-# <OSD-irigation>
+# <OSD-irrigation>
 APPS += json json-resource time
-# </OSD-irigation>
+# </OSD-irrigation>
 
 # optional rules to get assembly
 #CUSTOM_RULE_C_TO_OBJECTDIR_O = 1

@@ -164,11 +164,6 @@ Appendix A.  Profile example
 #endif
 
 /* <OSD-irrigation> */
-#define P_WAT_TODS "12:00"
-#define P_WAT_TODS_MAX 6
-
-int i_wat_dur = 0;
-char s_wat_tods[6] = P_WAT_TODS;
 
 /******************************************************************************/
 #if REST_RES_WATERING
@@ -178,6 +173,11 @@ char s_wat_tods[6] = P_WAT_TODS;
 */
 
 RESOURCE(wat_tods, METHOD_POST | METHOD_GET, "a/wat_tods", "title=\"Watering start time of day, POST tods=hh:mm\";rt=\"Control\"");
+
+#define P_WAT_TODS "13:00"
+#define P_WAT_TODS_MAX 6
+char s_wat_tods[P_WAT_TODS_MAX] = P_WAT_TODS;
+
 /* eeprom space */
 uint8_t eemem_p_wat_tods[P_WAT_TODS_MAX] EEMEM = P_WAT_TODS;
 
@@ -248,9 +248,12 @@ wat_tods_handler(void* request, void* response, uint8_t *buffer, uint16_t prefer
 }
 
 RESOURCE(wat_dur, METHOD_POST | METHOD_GET, "a/wat_dur", "title=\"Watering duration sec., POST time=XXX\";rt=\"Control\"");
-/* eeprom space */
+
 #define P_WAT_DUR "10"
-#define P_WAT_DUR_MAX 12
+#define P_WAT_DUR_MAX 6
+int i_wat_dur = 0;
+
+/* eeprom space */
 uint8_t eemem_p_wat_dur[P_WAT_DUR_MAX] EEMEM = P_WAT_DUR;
 
 /*
@@ -885,24 +888,28 @@ PROCESS_THREAD(rest_server_example, ev, data)
 #if REST_RES_WATERING
   uint8_t eebuffer[32];
   int length = 0;
-  char wat_dur[6];
+  char wat_dur[P_WAT_DUR_MAX] = P_WAT_DUR;
 
   rest_activate_resource(&resource_wat_dur);
-  cli();
+  // cli();
   eeprom_read_block (eebuffer, &eemem_p_wat_dur, sizeof(eemem_p_wat_dur));
-  sei();
+  // sei();
 
-  length = sizeof(eemem_p_wat_dur);
-  memcpy(wat_dur, &eebuffer, length);
-  wat_dur[length] = 0;
+  // length = sizeof(eemem_p_wat_dur);
+  length = P_WAT_TODS_MAX;
+  // PRINTF("Length of wat_dur eeprom var %d\n", length);
+
+  memcpy(&wat_dur, eebuffer, length);
+  // das war der Böse, wenn index out of range läufen die Timer gar nicht
+  wat_dur[P_WAT_DUR_MAX - 1] = 0;
   PRINTF("Initializing Watering Duration from EEPROM %s\n", wat_dur);
-  if ( wat_dur[0] > 30 && wat_dur[0] < 40)
+  if ( wat_dur[0] > 0x30 && wat_dur[0] < 0x40)
     i_wat_dur = atoi( wat_dur);
 
   rest_activate_resource(&resource_wat_tods);
-  cli();
+  // cli();
   eeprom_read_block (eebuffer, &eemem_p_wat_tods, sizeof(eemem_p_wat_tods));
-  sei();
+  // sei();
 
   length = sizeof(eemem_p_wat_tods);
   memcpy(&s_wat_tods, eebuffer, length);

@@ -2,8 +2,9 @@
 # For the new bootloader (using a jump-table) you want to use
 # BOOTLOADER_GET_MAC=0x0001ff80 (which is the current default)
 make clean TARGET=osd-merkur
-# make TARGET=osd-merkur BOOTLOADER_GET_MAC=0x0001f3a0
-make TARGET=osd-merkur
+# for Toms Board 34ab
+make TARGET=osd-merkur BOOTLOADER_GET_MAC=0x0001f3a0
+# make TARGET=osd-merkur
 
 # für das neu Board Mac 00:21:2e:ff:ff:00:66:5b
 # scheint es der alte Bootloader zu sein, da ich sonst nicht flashen kann
